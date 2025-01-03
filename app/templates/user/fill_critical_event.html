@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Fill Critical Event: {{ event.title }}</h1>
+    <p><strong>Description:</strong> {{ event.description }}</p>
+
+    {% if response and response.status != 'needs_revision' %}
+        <p>You have already submitted a response for this event.</p>
+    {% else %}
+        <form method="POST">
+            <label for="response">Your Response:</label>
+            <textarea id="response" name="response" required>
+                {% if response %}{{ response.response }}{% endif %}
+            </textarea>
+
+            <button type="submit">Submit</button>
+        </form>
+    {% endif %}
+{% endblock %}

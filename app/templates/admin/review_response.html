@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Review Response</h1>
+
+<div>
+    <h2>Response Details</h2>
+    <p><strong>Event:</strong> {{ response.event.title }}</p>
+    <p><strong>Team:</strong> {{ response.team.name }}</p>
+    <p><strong>Response:</strong> {{ response.response }}</p>
+    <p><strong>Status:</strong> {{ response.status }}</p>
+</div>
+
+<form method="POST">
+    <label for="action">Action:</label>
+    <select name="action" id="action">
+        <option value="approve">Approve</option>
+        <option value="reject">Reject</option>
+        <option value="needs_revision">Send for Revision</option>
+    </select>
+
+    <label for="points">Points (if approving):</label>
+    <input type="number" name="points" id="points" value="0">
+
+    <button type="submit">Submit</button>
+</form>
+
+<a href="{{ url_for('admin_critical_events') }}">Back to Critical Events</a>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>My Incidents</h1>
+    <ul>
+        {% for incident in incidents %}
+            <li>
+                <h2>{{ incident.title }}</h2>
+                <p>{{ incident.description }}</p>
+                <p><strong>Status:</strong> {{ incident.status }}</p>
+                <p><strong>Points Awarded:</strong> {{ incident.points_awarded }}</p>
+                {% if incident.status == 'needs_revision' %}
+                    <a href="{{ url_for('edit_incident', incident_id=incident.id) }}">Edit and Resubmit</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

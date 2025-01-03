@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Join Team</h1>
+    <form method="POST">
+        <label for="team_id">Select Team:</label>
+        <select id="team_id" name="team_id" required>
+            {% for team in teams %}
+                <option value="{{ team.id }}">{{ team.name }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <button type="submit">Join Team</button>
+    </form>
+{% endblock %}

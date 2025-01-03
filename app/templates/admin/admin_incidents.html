@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Администрирование инцидентов</h1>
+
+<!-- Вкладки для фильтрации -->
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link {% if status == 'pending' %}active{% endif %}" href="{{ url_for('admin_incidents', status='pending') }}">Ожидающие проверки</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if status == 'approved' %}active{% endif %}" href="{{ url_for('admin_incidents', status='approved') }}">Принятые</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if status == 'needs_revision' %}active{% endif %}" href="{{ url_for('admin_incidents', status='needs_revision') }}">Отправленные на доработку</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if status == 'rejected' %}active{% endif %}" href="{{ url_for('admin_incidents', status='rejected') }}">Отклоненные</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if status == 'all' %}active{% endif %}" href="{{ url_for('admin_incidents', status='all') }}">Все</a>
+    </li>
+</ul>
+
+<!-- Таблица с инцидентами -->
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Создатель</th>
+            <th>Статус</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for incident in incidents %}
+        <tr>
+            <td>{{ incident.title }}</td>
+            <td>{{ incident.user.username }}</td>
+            <td>{{ incident.status }}</td>
+            <td>
+                <a href="{{ url_for('review_incident', incident_id=incident.id) }}" class="btn btn-primary btn-sm">Просмотреть</a>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4">Нет инцидентов для отображения.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

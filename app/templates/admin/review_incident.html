@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Просмотр инцидента: {{ incident.title }}</h1>
+
+<div class="incident-details">
+    <h2>Детали инцидента</h2>
+    <table>
+        <tr>
+            <th>Поле</th>
+            <th>Значение</th>
+        </tr>
+        <tr>
+            <td>Название:</td>
+            <td>{{ incident.title }}</td>
+        </tr>
+        <tr>
+            <td>Описание:</td>
+            <td>{{ incident.description }}</td>
+        </tr>
+        <tr>
+            <td>Тип инцидента:</td>
+            <td>{{ incident.incident_type }}</td>
+        </tr>
+        <tr>
+            <td>Уровень критичности:</td>
+            <td>{{ incident.severity_level }}</td>
+        </tr>
+        <tr>
+            <td>Дата и время обнаружения:</td>
+            <td>{{ incident.detection_time.strftime('%Y-%m-%d %H:%M') if incident.detection_time else 'Не указано' }}</td>
+        </tr>
+        <tr>
+            <td>Дата и время возникновения:</td>
+            <td>{{ incident.occurrence_time.strftime('%Y-%m-%d %H:%M') if incident.occurrence_time else 'Не указано' }}</td>
+        </tr>
+        <tr>
+            <td>Источник инцидента:</td>
+            <td>{{ incident.source }}</td>
+        </tr>
+        <tr>
+            <td>Затронутые системы или данные:</td>
+            <td>{{ incident.affected_systems }}</td>
+        </tr>
+        <tr>
+            <td>Предполагаемая причина:</td>
+            <td>{{ incident.suspected_cause }}</td>
+        </tr>
+        <tr>
+            <td>Предпринятые действия:</td>
+            <td>{{ incident.actions_taken }}</td>
+        </tr>
+        <tr>
+            <td>Рекомендации по предотвращению:</td>
+            <td>{{ incident.prevention_recommendations }}</td>
+        </tr>
+        <tr>
+            <td>Статус:</td>
+            <td>{{ incident.status }}</td>
+        </tr>
+        <tr>
+            <td>Создатель:</td>
+            <td>{{ incident.user.username }}</td>
+        </tr>
+        <tr>
+            <td>Команда:</td>
+            <td>
+                {% if incident.team %}
+                    {{ incident.team.name }}
+                {% else %}
+                    Не указано
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- Форма для принятия, отклонения или отправки на доработку -->
+<h2>Действия администратора</h2>
+<form method="POST">
+    <label for="points">Баллы:</label>
+    <input type="number" name="points" id="points" value="0" min="0">
+    <button type="submit" name="action" value="approve">Одобрить</button>
+    <button type="submit" name="action" value="reject">Отклонить</button>
+    <button type="submit" name="action" value="needs_revision">Отправить на доработку</button>
+</form>
+
+<a href="{{ url_for('admin_incidents') }}">Назад к списку инцидентов</a>
+{% endblock %}

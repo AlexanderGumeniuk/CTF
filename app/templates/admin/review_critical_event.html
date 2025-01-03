@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Review Critical Event: {{ event.title }}</h1>
+
+{% if responses %}
+    <h2>Responses from Team: {{ team_id }}</h2>
+    <ul>
+        {% for response in responses %}
+        <li>
+            <p><strong>User:</strong> {{ response.user.username }}</p>
+            <p><strong>Response:</strong> {{ response.response }}</p>
+            <p><strong>Status:</strong> {{ response.status }}</p>
+            <form method="POST">
+                <input type="hidden" name="response_id" value="{{ response.id }}">
+                <label for="points">Points:</label>
+                <input type="number" name="points" id="points" value="0">
+                <button type="submit" name="action" value="approve">Approve</button>
+                <button type="submit" name="action" value="reject">Reject</button>
+                <button type="submit" name="action" value="needs_revision">Needs Revision</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No responses found for this team.</p>
+{% endif %}
+
+<a href="{{ url_for('admin_critical_events') }}">Back to Team Selection</a>
+{% endblock %}

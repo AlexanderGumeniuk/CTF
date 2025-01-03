@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Добавить задачу</h1>
+<form method="POST">
+    <label for="title">Название:</label>
+    <input type="text" name="title" id="title" required>
+
+    <label for="description">Описание:</label>
+    <textarea name="description" id="description" required></textarea>
+
+    <label for="flag">Флаг:</label>
+    <input type="text" name="flag" id="flag" required>
+
+    <label for="points">Баллы:</label>
+    <input type="number" name="points" id="points" required>
+
+    <label for="category">Категория:</label>
+    <select name="category" id="category">
+        <option value="Web">Web</option>
+        <option value="Crypto">Crypto</option>
+        <option value="Forensics">Forensics</option>
+        <option value="Other">Другое</option>
+    </select>
+
+    <!-- Поле для подсказки -->
+    <label for="hint">Подсказка:</label>
+    <textarea name="hint" id="hint"></textarea>
+
+    <!-- Поле для штрафа за использование подсказки -->
+    <label for="hint_penalty">Штраф за подсказку (%):</label>
+    <input type="number" name="hint_penalty" id="hint_penalty" min="0" max="100" value="10">
+
+    <button type="submit">Добавить задачу</button>
+</form>
+{% endblock %}

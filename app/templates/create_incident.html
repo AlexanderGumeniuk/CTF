@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Создать инцидент</h1>
+<form method="POST">
+    <label for="title">Название:</label>
+    <input type="text" name="title" id="title" required>
+
+    <label for="description">Описание:</label>
+    <textarea name="description" id="description" required></textarea>
+
+    <label for="incident_type">Тип инцидента:</label>
+    <select name="incident_type" id="incident_type">
+        <option value="Утечка данных">Утечка данных</option>
+        <option value="Фишинг">Фишинг</option>
+        <option value="DDoS-атака">DDoS-атака</option>
+        <option value="Вредоносное ПО">Вредоносное ПО</option>
+        <option value="Другое">Другое</option>
+    </select>
+
+    <label for="severity_level">Уровень критичности:</label>
+    <select name="severity_level" id="severity_level">
+        <option value="Низкий">Низкий</option>
+        <option value="Средний">Средний</option>
+        <option value="Высокий">Высокий</option>
+        <option value="Критический">Критический</option>
+    </select>
+
+    <label for="detection_time">Дата и время обнаружения:</label>
+    <input type="datetime-local" name="detection_time" id="detection_time">
+
+    <label for="occurrence_time">Дата и время возникновения:</label>
+    <input type="datetime-local" name="occurrence_time" id="occurrence_time">
+
+    <label for="source">Источник инцидента:</label>
+    <select name="source" id="source">
+        <option value="Внутренний источник">Внутренний источник</option>
+        <option value="Внешний источник">Внешний источник</option>
+    </select>
+
+    <label for="affected_systems">Затронутые системы или данные:</label>
+    <textarea name="affected_systems" id="affected_systems"></textarea>
+
+    <label for="suspected_cause">Предполагаемая причина:</label>
+    <textarea name="suspected_cause" id="suspected_cause"></textarea>
+
+    <label for="actions_taken">Предпринятые действия:</label>
+    <textarea name="actions_taken" id="actions_taken"></textarea>
+
+    <label for="prevention_recommendations">Рекомендации по предотвращению:</label>
+    <textarea name="prevention_recommendations" id="prevention_recommendations"></textarea>
+
+    <button type="submit">Создать инцидент</button>
+</form>
+{% endblock %}

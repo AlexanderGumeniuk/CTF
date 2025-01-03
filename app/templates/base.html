@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Стили для раскрывающегося списка */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('index') }}">Главная</a>
+		{% if current_user.is_admin %}
+		<a href="{{ url_for('add_challenge') }}">Добавить задачу</a>
+		{% endif %}
+        <a href="{{ url_for('challenges') }}">Задачи</a>
+        <a href="{{ url_for('leaderboard') }}">Рейтинг</a>
+        <a href="{{ url_for('team_leaderboard') }}">Рейтинг команд</a>
+        {% if current_user.is_authenticated %}
+            <!-- Раскрывающийся список для инцидентов -->
+            <div class="dropdown">
+                <a href="#" class="dropbtn">Инциденты</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('create_incident') }}">Создать инцидент</a>
+                    <a href="{{ url_for('my_incidents') }}">Мои инциденты</a>
+                    {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin_incidents') }}">Администрирование инцидентов</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Раскрывающийся список для критических событий -->
+            <div class="dropdown">
+                <a href="#" class="dropbtn">Критические события</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('user_critical_events') }}">Мои события</a>
+                    {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin_critical_events') }}">Администрирование событий</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <a href="{{ url_for('profile') }}">Профиль</a>
+            <a href="{{ url_for('logout') }}">Выйти</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Войти</a>
+            <a href="{{ url_for('register') }}">Регистрация</a>
+        {% endif %}
+    </nav>
+
+    <div class="container">
+        <!-- Отображение flash-сообщений -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Основное содержимое страницы -->
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
