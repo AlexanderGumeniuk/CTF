@@ -1,35 +1,189 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h1>Добавить задачу</h1>
-<form method="POST">
-    <label for="title">Название:</label>
-    <input type="text" name="title" id="title" required>
+<style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+  }
 
-    <label for="description">Описание:</label>
-    <textarea name="description" id="description" required></textarea>
+  /* Контейнер для формы */
+  .task-form-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+  }
 
-    <label for="flag">Флаг:</label>
-    <input type="text" name="flag" id="flag" required>
+  /* Заголовок */
+  h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
 
-    <label for="points">Баллы:</label>
-    <input type="number" name="points" id="points" required>
+  /* Основные стили для формы */
+  .task-form {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+  }
 
-    <label for="category">Категория:</label>
-    <select name="category" id="category">
-        <option value="Web">Web</option>
-        <option value="Crypto">Crypto</option>
-        <option value="Forensics">Forensics</option>
-        <option value="Other">Другое</option>
-    </select>
+  /* Группы полей */
+  .form-group {
+      margin-bottom: 1.5rem;
+  }
 
-    <!-- Поле для подсказки -->
-    <label for="hint">Подсказка:</label>
-    <textarea name="hint" id="hint"></textarea>
+  /* Лейблы */
+  .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+  }
 
-    <!-- Поле для штрафа за использование подсказки -->
-    <label for="hint_penalty">Штраф за подсказку (%):</label>
-    <input type="number" name="hint_penalty" id="hint_penalty" min="0" max="100" value="10">
+  /* Поля ввода */
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+  }
 
-    <button type="submit">Добавить задачу</button>
-</form>
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+  }
+
+  /* Стили для текстовых областей */
+  .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+  }
+
+  /* Стили для выпадающих списков */
+  .form-group select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.7rem top 50%;
+      background-size: 0.65rem auto;
+  }
+
+  /* Кнопка отправки */
+  .form-group button {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+  }
+
+  .form-group button:hover {
+      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+      .task-form {
+          padding: 1rem;
+      }
+
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+          padding: 0.6rem;
+      }
+
+      .form-group button {
+          padding: 0.8rem;
+          font-size: 1rem;
+      }
+  }
+</style>
+
+<div class="task-form-container">
+    <h1>Добавить задачу</h1>
+    <form method="POST" class="task-form">
+        <!-- Название задачи -->
+        <div class="form-group">
+            <label for="title">Название:</label>
+            <input type="text" name="title" id="title" required>
+        </div>
+
+        <!-- Описание задачи -->
+        <div class="form-group">
+            <label for="description">Описание:</label>
+            <textarea name="description" id="description" required></textarea>
+        </div>
+
+        <!-- Флаг -->
+        <div class="form-group">
+            <label for="flag">Флаг:</label>
+            <input type="text" name="flag" id="flag" required>
+        </div>
+
+        <!-- Баллы -->
+        <div class="form-group">
+            <label for="points">Баллы:</label>
+            <input type="number" name="points" id="points" required>
+        </div>
+
+        <!-- Категория -->
+        <div class="form-group">
+            <label for="category">Категория:</label>
+            <select name="category" id="category">
+                <option value="Web">Web</option>
+                <option value="Crypto">Crypto</option>
+                <option value="Forensics">Forensics</option>
+                <option value="Other">Другое</option>
+            </select>
+        </div>
+
+        <!-- Подсказка -->
+        <div class="form-group">
+            <label for="hint">Подсказка:</label>
+            <textarea name="hint" id="hint"></textarea>
+        </div>
+
+        <!-- Штраф за подсказку -->
+        <div class="form-group">
+            <label for="hint_penalty">Штраф за подсказку (%):</label>
+            <input type="number" name="hint_penalty" id="hint_penalty" min="0" max="100" value="10">
+        </div>
+
+        <!-- Кнопка отправки -->
+        <div class="form-group">
+            <button type="submit">Добавить задачу</button>
+        </div>
+    </form>
+</div>
 {% endblock %}

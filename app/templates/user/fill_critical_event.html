@@ -1,19 +1,87 @@
 {% extends "base.html" %}
-
 {% block content %}
-    <h1>Fill Critical Event: {{ event.title }}</h1>
-    <p><strong>Description:</strong> {{ event.description }}</p>
+<h1>Заполнение отчета для события: {{ event.title }}</h1>
 
-    {% if response and response.status != 'needs_revision' %}
-        <p>You have already submitted a response for this event.</p>
-    {% else %}
-        <form method="POST">
-            <label for="response">Your Response:</label>
-            <textarea id="response" name="response" required>
-                {% if response %}{{ response.response }}{% endif %}
-            </textarea>
+<form method="POST" id="report-form">
+    <div>
+        <label for="response">Отчет:</label>
+        <textarea id="response" name="response" required>{{ response.response if response else '' }}</textarea>
+    </div>
 
-            <button type="submit">Submit</button>
-        </form>
-    {% endif %}
+    <h2>Шаги</h2>
+    <div id="steps">
+        {% for step in steps %}
+            <div class="step" data-step-id="{{ step.id }}">
+                <input type="text" name="step_name[]" value="{{ step.step_name }}" placeholder="Название шага" required>
+                <textarea name="description[]" placeholder="Описание">{{ step.description }}</textarea>
+                <input type="text" name="responsible[]" value="{{ step.responsible }}" placeholder="Ответственный">
+                <input type="datetime-local" name="deadline[]" value="{{ step.deadline.strftime('%Y-%m-%dT%H:%M') if step.deadline else '' }}" placeholder="Срок выполнения">
+                <textarea name="resources[]" placeholder="Ресурсы">{{ step.resources }}</textarea>
+                <textarea name="risks[]" placeholder="Риски">{{ step.risks }}</textarea>
+                <textarea name="actions[]" placeholder="Действия">{{ step.actions }}</textarea>
+                <textarea name="results[]" placeholder="Результаты">{{ step.results }}</textarea>
+                <input type="text" name="status[]" value="{{ step.status }}" placeholder="Статус">
+                <textarea name="comments[]" placeholder="Комментарии">{{ step.comments }}</textarea>
+                <button type="button" class="remove-step">Удалить шаг</button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" id="add-step">Добавить шаг</button>
+    <button type="submit">Отправить на проверку</button>
+</form>
+
+<script>
+    // JavaScript для добавления новых шагов
+    document.getElementById('add-step').addEventListener('click', function() {
+        const stepsDiv = document.getElementById('steps');
+        const newStep = document.createElement('div');
+        newStep.className = 'step';
+        newStep.innerHTML = `
+            <input type="text" name="step_name[]" placeholder="Название шага" required>
+            <textarea name="description[]" placeholder="Описание"></textarea>
+            <input type="text" name="responsible[]" placeholder="Ответственный">
+            <input type="datetime-local" name="deadline[]" placeholder="Срок выполнения">
+            <textarea name="resources[]" placeholder="Ресурсы"></textarea>
+            <textarea name="risks[]" placeholder="Риски"></textarea>
+            <textarea name="actions[]" placeholder="Действия"></textarea>
+            <textarea name="results[]" placeholder="Результаты"></textarea>
+            <input type="text" name="status[]" placeholder="Статус">
+            <textarea name="comments[]" placeholder="Комментарии"></textarea>
+            <button type="button" class="remove-step">Удалить шаг</button>
+        `;
+        stepsDiv.appendChild(newStep);
+    });
+
+    // JavaScript для удаления шагов
+    document.addEventListener('click', function(event) {
+        if (event.target && event.target.classList.contains('remove-step')) {
+            const stepDiv = event.target.closest('.step');
+            stepDiv.remove();  // Удаляем шаг из DOM
+        }
+    });
+
+    // Обработка удаленных шагов перед отправкой формы
+    document.getElementById('report-form').addEventListener('submit', function() {
+        const stepsDiv = document.getElementById('steps');
+        const removedSteps = [];
+
+        // Собираем ID удаленных шагов
+        stepsDiv.querySelectorAll('.step').forEach(step => {
+            if (!step.dataset.stepId) return;  // Пропускаем новые шаги (без ID)
+            if (!document.body.contains(step)) {
+                removedSteps.push(step.dataset.stepId);
+            }
+        });
+
+        // Добавляем скрытое поле с ID удаленных шагов
+        removedSteps.forEach(stepId => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'removed_steps[]';
+            input.value = stepId;
+            this.appendChild(input);
+        });
+    });
+</script>
 {% endblock %}

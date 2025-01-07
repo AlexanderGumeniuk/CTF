@@ -1,28 +1,68 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Review Response</h1>
+<style>
+  body {
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+      margin: 0; /* Убираем стандартные отступы */
+      font-family: Arial, sans-serif;
+      background-color: #1e1e1e; /* Темный фон для всей страницы */
+      color: #ffffff; /* Белый цвет текста по умолчанию */
+  }
+</style>
+<h1>Проверка отчёта по событию "{{ response.event.title }}"</h1>
+<p><strong>Пользователь:</strong> {{ response.user.username }}</p>
+<p><strong>Команда:</strong> {{ response.team.name if response.team else 'Нет команды' }}</p>
+<p><strong>Статус:</strong> {{ response.status }}</p>
 
-<div>
-    <h2>Response Details</h2>
-    <p><strong>Event:</strong> {{ response.event.title }}</p>
-    <p><strong>Team:</strong> {{ response.team.name }}</p>
-    <p><strong>Response:</strong> {{ response.response }}</p>
-    <p><strong>Status:</strong> {{ response.status }}</p>
+<h2>Основной отчёт</h2>
+<div class="card mb-3">
+    <div class="card-body">
+        <p>{{ response.response }}</p>
+    </div>
 </div>
 
-<form method="POST">
-    <label for="action">Action:</label>
-    <select name="action" id="action">
-        <option value="approve">Approve</option>
-        <option value="reject">Reject</option>
-        <option value="needs_revision">Send for Revision</option>
-    </select>
+<h2>Шаги</h2>
+<div id="steps-accordion">
+    {% for step in response.event.steps %}
+    <div class="card mb-2">
+        <div class="card-header" id="step-heading-{{ step.id }}">
+            <h5 class="mb-0">
+                <button class="btn btn-link" data-toggle="collapse" data-target="#step-collapse-{{ step.id }}" aria-expanded="true" aria-controls="step-collapse-{{ step.id }}">
+                    Шаг {{ loop.index }}: {{ step.step_name }}
+                </button>
+            </h5>
+        </div>
+        <div id="step-collapse-{{ step.id }}" class="collapse" aria-labelledby="step-heading-{{ step.id }}" data-parent="#steps-accordion">
+            <div class="card-body">
+                <p><strong>Описание:</strong> {{ step.description }}</p>
+                <p><strong>Ответственный:</strong> {{ step.responsible }}</p>
+                <p><strong>Срок выполнения:</strong> {{ step.deadline.strftime('%Y-%m-%d %H:%M') if step.deadline else 'Не указан' }}</p>
+                <p><strong>Ресурсы:</strong> {{ step.resources }}</p>
+                <p><strong>Риски:</strong> {{ step.risks }}</p>
+                <p><strong>Действия:</strong> {{ step.actions }}</p>
+                <p><strong>Результаты:</strong> {{ step.results }}</p>
+                <p><strong>Статус выполнения:</strong> {{ step.status }}</p>
+                <p><strong>Комментарии:</strong> {{ step.comments }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 
-    <label for="points">Points (if approving):</label>
-    <input type="number" name="points" id="points" value="0">
-
-    <button type="submit">Submit</button>
+<!-- Кнопки для принятия/отклонения отчёта -->
+<form method="POST" class="mt-4">
+    <div class="form-group">
+        <label for="points">Начислить баллы</label>
+        <input type="number" class="form-control" id="points" name="points" value="{{ response.points_awarded if response.points_awarded else 0 }}">
+    </div>
+    <button type="submit" name="action" value="approve" class="btn btn-success">Принять отчёт</button>
+    <button type="submit" name="action" value="reject" class="btn btn-danger">Отклонить отчёт</button>
+    <button type="submit" name="action" value="needs_revision" class="btn btn-warning">Отправить на доработку</button>
 </form>
 
-<a href="{{ url_for('admin_critical_events') }}">Back to Critical Events</a>
+<!-- Подключение Bootstrap JS (для работы аккордеона) -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 {% endblock %}

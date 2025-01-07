@@ -1,88 +1,314 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h1>Просмотр инцидента: {{ incident.title }}</h1>
+<style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+  }
 
-<div class="incident-details">
-    <h2>Детали инцидента</h2>
-    <table>
-        <tr>
-            <th>Поле</th>
-            <th>Значение</th>
-        </tr>
-        <tr>
-            <td>Название:</td>
-            <td>{{ incident.title }}</td>
-        </tr>
-        <tr>
-            <td>Описание:</td>
-            <td>{{ incident.description }}</td>
-        </tr>
-        <tr>
-            <td>Тип инцидента:</td>
-            <td>{{ incident.incident_type }}</td>
-        </tr>
-        <tr>
-            <td>Уровень критичности:</td>
-            <td>{{ incident.severity_level }}</td>
-        </tr>
-        <tr>
-            <td>Дата и время обнаружения:</td>
-            <td>{{ incident.detection_time.strftime('%Y-%m-%d %H:%M') if incident.detection_time else 'Не указано' }}</td>
-        </tr>
-        <tr>
-            <td>Дата и время возникновения:</td>
-            <td>{{ incident.occurrence_time.strftime('%Y-%m-%d %H:%M') if incident.occurrence_time else 'Не указано' }}</td>
-        </tr>
-        <tr>
-            <td>Источник инцидента:</td>
-            <td>{{ incident.source }}</td>
-        </tr>
-        <tr>
-            <td>Затронутые системы или данные:</td>
-            <td>{{ incident.affected_systems }}</td>
-        </tr>
-        <tr>
-            <td>Предполагаемая причина:</td>
-            <td>{{ incident.suspected_cause }}</td>
-        </tr>
-        <tr>
-            <td>Предпринятые действия:</td>
-            <td>{{ incident.actions_taken }}</td>
-        </tr>
-        <tr>
-            <td>Рекомендации по предотвращению:</td>
-            <td>{{ incident.prevention_recommendations }}</td>
-        </tr>
-        <tr>
-            <td>Статус:</td>
-            <td>{{ incident.status }}</td>
-        </tr>
-        <tr>
-            <td>Создатель:</td>
-            <td>{{ incident.user.username }}</td>
-        </tr>
-        <tr>
-            <td>Команда:</td>
-            <td>
-                {% if incident.team %}
-                    {{ incident.team.name }}
-                {% else %}
-                    Не указано
-                {% endif %}
-            </td>
-        </tr>
-    </table>
+  /* Контейнер для контента */
+  .incident-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+  }
+
+  /* Заголовок */
+  h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  h2 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Таблица с деталями инцидента */
+  .incident-details table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      margin-bottom: 2rem;
+  }
+
+  .incident-details th,
+  .incident-details td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .incident-details th {
+      background: rgba(76, 175, 80, 0.8);
+      color: #fff;
+      font-weight: bold;
+  }
+
+  .incident-details td {
+      color: rgba(255, 255, 255, 0.8);
+  }
+
+  .incident-details a {
+      color: rgba(76, 175, 80, 0.8);
+      text-decoration: none;
+      transition: color 0.3s ease;
+  }
+
+  .incident-details a:hover {
+      color: rgba(76, 175, 80, 1);
+  }
+
+  /* Стили для скриншотов */
+  .screenshots-container {
+      margin-top: 2rem;
+  }
+
+  .screenshot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+  }
+
+  .screenshot-item img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+  }
+
+  .screenshot-item img:hover {
+      transform: scale(1.05);
+  }
+
+  /* Форма для действий администратора */
+  .admin-actions {
+      margin-top: 2rem;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .admin-actions label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+  }
+
+  .admin-actions input[type="number"] {
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+  }
+
+  .admin-actions input[type="number"]:focus {
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+  }
+
+  .admin-actions button {
+      margin-top: 1rem;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+  }
+
+  .admin-actions button:hover {
+      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Ссылка "Назад" */
+  .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: rgba(76, 175, 80, 0.8);
+      text-decoration: none;
+      transition: color 0.3s ease;
+  }
+
+  .back-link:hover {
+      color: rgba(76, 175, 80, 1);
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+      .incident-details th,
+      .incident-details td {
+          padding: 0.8rem;
+      }
+
+      .screenshot-grid {
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+
+      .admin-actions {
+          padding: 1rem;
+      }
+  }
+</style>
+
+<div class="incident-container">
+    <h1>Просмотр инцидента: {{ incident.title }}</h1>
+
+    <!-- Детали инцидента -->
+    <div class="incident-details">
+        <h2>Детали инцидента</h2>
+        <table>
+            <tr>
+                <th>Поле</th>
+                <th>Значение</th>
+            </tr>
+            <tr>
+                <td>Название:</td>
+                <td>{{ incident.title }}</td>
+            </tr>
+            <tr>
+                <td>Описание:</td>
+                <td>{{ incident.description }}</td>
+            </tr>
+            <tr>
+                <td>Время начала:</td>
+                <td>{{ incident.start_time.strftime('%Y-%m-%d %H:%M') if incident.start_time else 'Не указано' }}</td>
+            </tr>
+            <tr>
+                <td>Время окончания:</td>
+                <td>{{ incident.end_time.strftime('%Y-%m-%d %H:%M') if incident.end_time else 'Не указано' }}</td>
+            </tr>
+            <tr>
+                <td>IP-адрес источника:</td>
+                <td>{{ incident.source_ip }}</td>
+            </tr>
+            <tr>
+                <td>Порт источника:</td>
+                <td>{{ incident.source_port if incident.source_port else 'Не указано' }}</td>
+            </tr>
+            <tr>
+                <td>IP-адрес назначения:</td>
+                <td>{{ incident.destination_ip }}</td>
+            </tr>
+            <tr>
+                <td>Порт назначения:</td>
+                <td>{{ incident.destination_port if incident.destination_port else 'Не указано' }}</td>
+            </tr>
+            <tr>
+                <td>Тип события:</td>
+                <td>{{ incident.event_type }}</td>
+            </tr>
+            <tr>
+                <td>Связанные FQDN:</td>
+                <td>{{ incident.related_fqdn if incident.related_fqdn else 'Не указано' }}</td>
+            </tr>
+            <tr>
+                <td>Связанные DNS-имена:</td>
+                <td>{{ incident.related_dns if incident.related_dns else 'Не указано' }}</td>
+            </tr>
+            <tr>
+                <td>IOC (Indicators of Compromise):</td>
+                <td>{{ incident.ioc if incident.ioc else 'Не указано' }}</td>
+            </tr>
+            <tr>
+                <td>Хэш:</td>
+                <td>{{ incident.hash_value if incident.hash_value else 'Не указано' }}</td>
+            </tr>
+            <tr>
+                <td>ID события по матрице MITRE:</td>
+                <td>{{ incident.mitre_id if incident.mitre_id else 'Не указано' }}</td>
+            </tr>
+            <tr>
+                <td>ID события в SIEM:</td>
+                <td>{{ incident.siem_id if incident.siem_id else 'Не указано' }}</td>
+            </tr>
+            <tr>
+                <td>Ссылка на событие в SIEM:</td>
+                <td>
+                    {% if incident.siem_link %}
+                        <a href="{{ incident.siem_link }}" target="_blank">{{ incident.siem_link }}</a>
+                    {% else %}
+                        Не указано
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>Статус:</td>
+                <td>{{ incident.status }}</td>
+            </tr>
+            <tr>
+                <td>Создатель:</td>
+                <td>{{ incident.user.username }}</td>
+            </tr>
+            <tr>
+                <td>Команда:</td>
+                <td>
+                    {% if incident.team %}
+                        {{ incident.team.name }}
+                    {% else %}
+                        Не указано
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Блок для отображения скриншотов -->
+    {% if incident.screenshots %}
+        <div class="screenshots-container">
+            <h2>Скриншоты</h2>
+            <div class="screenshot-grid">
+                {% for screenshot in incident.screenshots %}
+                    <div class="screenshot-item">
+                        <img src="{{ url_for('static', filename='uploads/images/' + screenshot) }}" alt="Скриншот">
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <p>Скриншоты отсутствуют.</p>
+    {% endif %}
+
+    <!-- Форма для принятия, отклонения или отправки на доработку -->
+    <div class="admin-actions">
+        <h2>Действия администратора</h2>
+        <form method="POST">
+            <label for="points">Баллы:</label>
+            <input type="number" name="points" id="points" value="0" min="0">
+            <button type="submit" name="action" value="approve">Одобрить</button>
+            <button type="submit" name="action" value="reject">Отклонить</button>
+            <button type="submit" name="action" value="needs_revision">Отправить на доработку</button>
+        </form>
+    </div>
+
+    <!-- Ссылка "Назад" -->
+    <a href="{{ url_for('admin_incidents') }}" class="back-link">Назад к списку инцидентов</a>
 </div>
-
-<!-- Форма для принятия, отклонения или отправки на доработку -->
-<h2>Действия администратора</h2>
-<form method="POST">
-    <label for="points">Баллы:</label>
-    <input type="number" name="points" id="points" value="0" min="0">
-    <button type="submit" name="action" value="approve">Одобрить</button>
-    <button type="submit" name="action" value="reject">Отклонить</button>
-    <button type="submit" name="action" value="needs_revision">Отправить на доработку</button>
-</form>
-
-<a href="{{ url_for('admin_incidents') }}">Назад к списку инцидентов</a>
 {% endblock %}

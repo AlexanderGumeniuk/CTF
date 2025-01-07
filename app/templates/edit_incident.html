@@ -1,55 +1,336 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h1>Редактирование инцидента: {{ incident.title }}</h1>
+<style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+  }
 
-<form method="POST">
-    <label for="title">Название:</label>
-    <input type="text" name="title" id="title" value="{{ incident.title }}" required>
+  /* Контейнер для формы */
+  .incident-form-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh; /* Минимальная высота равна высоте окна */
+      padding: 20px; /* Отступы для адаптивности */
+  }
 
-    <label for="description">Описание:</label>
-    <textarea name="description" id="description" required>{{ incident.description }}</textarea>
+  /* Основные стили для формы */
+  .incident-form {
+      max-width: 1500px;
+      width: 100%;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+  }
 
-    <label for="incident_type">Тип инцидента:</label>
-    <select name="incident_type" id="incident_type">
-        <option value="Утечка данных" {% if incident.incident_type == 'Утечка данных' %}selected{% endif %}>Утечка данных</option>
-        <option value="Фишинг" {% if incident.incident_type == 'Фишинг' %}selected{% endif %}>Фишинг</option>
-        <option value="DDoS-атака" {% if incident.incident_type == 'DDoS-атака' %}selected{% endif %}>DDoS-атака</option>
-        <option value="Вредоносное ПО" {% if incident.incident_type == 'Вредоносное ПО' %}selected{% endif %}>Вредоносное ПО</option>
-        <option value="Другое" {% if incident.incident_type == 'Другое' %}selected{% endif %}>Другое</option>
-    </select>
+  /* Заголовок формы */
+  .incident-form h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
 
-    <label for="severity_level">Уровень критичности:</label>
-    <select name="severity_level" id="severity_level">
-        <option value="Низкий" {% if incident.severity_level == 'Низкий' %}selected{% endif %}>Низкий</option>
-        <option value="Средний" {% if incident.severity_level == 'Средний' %}selected{% endif %}>Средний</option>
-        <option value="Высокий" {% if incident.severity_level == 'Высокий' %}selected{% endif %}>Высокий</option>
-        <option value="Критический" {% if incident.severity_level == 'Критический' %}selected{% endif %}>Критический</option>
-    </select>
+  /* Группы полей */
+  .form-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+  }
 
-    <label for="detection_time">Дата и время обнаружения:</label>
-    <input type="datetime-local" name="detection_time" id="detection_time" value="{{ incident.detection_time.strftime('%Y-%m-%dT%H:%M') if incident.detection_time else '' }}">
+  /* Лейблы */
+  .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+  }
 
-    <label for="occurrence_time">Дата и время возникновения:</label>
-    <input type="datetime-local" name="occurrence_time" id="occurrence_time" value="{{ incident.occurrence_time.strftime('%Y-%m-%dT%H:%M') if incident.occurrence_time else '' }}">
+  /* Поля ввода */
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+  }
 
-    <label for="source">Источник инцидента:</label>
-    <select name="source" id="source">
-        <option value="Внутренний источник" {% if incident.source == 'Внутренний источник' %}selected{% endif %}>Внутренний источник</option>
-        <option value="Внешний источник" {% if incident.source == 'Внешний источник' %}selected{% endif %}>Внешний источник</option>
-    </select>
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+  }
 
-    <label for="affected_systems">Затронутые системы или данные:</label>
-    <textarea name="affected_systems" id="affected_systems">{{ incident.affected_systems }}</textarea>
+  /* Стили для текстовых областей */
+  .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+  }
 
-    <label for="suspected_cause">Предполагаемая причина:</label>
-    <textarea name="suspected_cause" id="suspected_cause">{{ incident.suspected_cause }}</textarea>
+  /* Стили для выпадающих списков */
+  .form-group select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.7rem top 50%;
+      background-size: 0.65rem auto;
+  }
 
-    <label for="actions_taken">Предпринятые действия:</label>
-    <textarea name="actions_taken" id="actions_taken">{{ incident.actions_taken }}</textarea>
+  /* Кнопка отправки */
+  .form-group button {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+  }
 
-    <label for="prevention_recommendations">Рекомендации по предотвращению:</label>
-    <textarea name="prevention_recommendations" id="prevention_recommendations">{{ incident.prevention_recommendations }}</textarea>
+  .form-group button:hover {
+      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  }
 
-    <button type="submit">Отправить на проверку</button>
-</form>
+  /* Анимация для формы */
+  @keyframes fadeIn {
+      from {
+          opacity: 0;
+          transform: translateY(20px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
+  }
+
+  .incident-form {
+      animation: fadeIn 0.8s ease-out;
+  }
+
+  /* Стили для файлового ввода */
+  .form-group input[type="file"] {
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+  }
+
+  .form-group input[type="file"]::file-selector-button {
+      padding: 0.5rem 1rem;
+      background: rgba(76, 175, 80, 0.8);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s ease;
+  }
+
+  .form-group input[type="file"]::file-selector-button:hover {
+      background: rgba(76, 175, 80, 1);
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+      .incident-form {
+          padding: 1rem;
+      }
+
+      .incident-form h1 {
+          font-size: 2rem;
+      }
+
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+          padding: 0.6rem;
+      }
+
+      .form-group button {
+          padding: 0.8rem;
+          font-size: 1rem;
+      }
+  }
+
+  /* Стили для скриншотов */
+  .screenshots-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+  }
+
+  .screenshot-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+  }
+
+  .screenshot-thumbnail {
+      max-width: 100px;
+      max-height: 100px;
+      border-radius: 8px;
+  }
+</style>
+
+<div class="incident-form-container">
+    <div class="incident-form">
+        <h1>Редактирование инцидента: {{ incident.title }}</h1>
+        <form method="POST" enctype="multipart/form-data">
+            <!-- Основные поля -->
+            <div class="form-group">
+                <label for="title">Название:</label>
+                <input type="text" name="title" id="title" value="{{ incident.title }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Описание:</label>
+                <textarea name="description" id="description" required>{{ incident.description }}</textarea>
+            </div>
+
+            <!-- Время начала и конца -->
+            <div class="form-group">
+                <label for="start_time">Время начала:</label>
+                <input type="datetime-local" name="start_time" id="start_time" value="{{ incident.start_time.strftime('%Y-%m-%dT%H:%M') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="end_time">Время окончания:</label>
+                <input type="datetime-local" name="end_time" id="end_time" value="{{ incident.end_time.strftime('%Y-%m-%dT%H:%M') }}" required>
+            </div>
+
+            <!-- IP и порт источника -->
+            <div class="form-group">
+                <label for="source_ip">IP-адрес источника:</label>
+                <input type="text" name="source_ip" id="source_ip" value="{{ incident.source_ip }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="source_port">Порт источника:</label>
+                <input type="number" name="source_port" id="source_port" value="{{ incident.source_port }}">
+            </div>
+
+            <!-- IP и порт назначения -->
+            <div class="form-group">
+                <label for="destination_ip">IP-адрес назначения:</label>
+                <input type="text" name="destination_ip" id="destination_ip" value="{{ incident.destination_ip }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="destination_port">Порт назначения:</label>
+                <input type="number" name="destination_port" id="destination_port" value="{{ incident.destination_port }}">
+            </div>
+
+            <!-- Тип события -->
+            <div class="form-group">
+                <label for="event_type">Тип события:</label>
+                <input type="text" name="event_type" id="event_type" value="{{ incident.event_type }}" required>
+            </div>
+
+            <!-- Связанные FQDN и DNS-имена -->
+            <div class="form-group">
+                <label for="related_fqdn">Связанные FQDN:</label>
+                <textarea name="related_fqdn" id="related_fqdn">{{ incident.related_fqdn }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="related_dns">Связанные DNS-имена:</label>
+                <textarea name="related_dns" id="related_dns">{{ incident.related_dns }}</textarea>
+            </div>
+
+            <!-- IOC и Hash -->
+            <div class="form-group">
+                <label for="ioc">IOC (Indicators of Compromise):</label>
+                <textarea name="ioc" id="ioc">{{ incident.ioc }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="hash_value">Хэш:</label>
+                <input type="text" name="hash_value" id="hash_value" value="{{ incident.hash_value }}">
+            </div>
+
+            <!-- ID события по матрице MITRE -->
+            <div class="form-group">
+                <label for="mitre_id">ID события по матрице MITRE:</label>
+                <input type="text" name="mitre_id" id="mitre_id" value="{{ incident.mitre_id }}">
+            </div>
+
+            <!-- ID или ссылки события в SIEM -->
+            <div class="form-group">
+                <label for="siem_id">ID события в SIEM:</label>
+                <input type="text" name="siem_id" id="siem_id" value="{{ incident.siem_id }}">
+            </div>
+
+            <div class="form-group">
+                <label for="siem_link">Ссылка на событие в SIEM:</label>
+                <input type="text" name="siem_link" id="siem_link" value="{{ incident.siem_link }}">
+            </div>
+
+            <!-- Поле для изменения статуса -->
+            <div class="form-group">
+                <label for="status">Статус:</label>
+                <select name="status" id="status">
+                    <option value="pending" {% if incident.status == 'pending' %}selected{% endif %}>На проверке</option>
+                    <option value="needs_revision" {% if incident.status == 'needs_revision' %}selected{% endif %}>Требует доработки</option>
+                    <option value="approved" {% if incident.status == 'approved' %}selected{% endif %}>Одобрен</option>
+                    <option value="rejected" {% if incident.status == 'rejected' %}selected{% endif %}>Отклонен</option>
+                </select>
+            </div>
+
+            <!-- Поле для загрузки новых скриншотов -->
+            <div class="form-group">
+                <label for="screenshots">Добавить скриншоты:</label>
+                <input type="file" name="screenshots" id="screenshots" multiple>
+                <small>Можно загрузить несколько файлов (PNG, JPG, JPEG, GIF).</small>
+            </div>
+
+            <!-- Отображение уже загруженных скриншотов с возможностью удаления -->
+            {% if incident.screenshots %}
+            <div class="form-group">
+                <label>Текущие скриншоты:</label>
+                <div class="screenshots-container">
+                    {% for screenshot in incident.screenshots %}
+                    <div class="screenshot-item">
+                        <img src="{{ url_for('static', filename='uploads/images/' + screenshot) }}" alt="Скриншот" class="screenshot-thumbnail">
+                        <a href="{{ url_for('static', filename='uploads/images/' + screenshot) }}" target="_blank">Открыть</a>
+                        <label>
+                            <input type="checkbox" name="delete_screenshots" value="{{ screenshot }}"> Удалить
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Кнопка отправки -->
+            <div class="form-group">
+                <button type="submit">Сохранить изменения</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

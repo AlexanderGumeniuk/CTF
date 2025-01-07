@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Отчёты по КС, ожидающие проверки</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Событие</th>
+            <th>Пользователь</th>
+            <th>Ответ</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for response in responses %}
+        <tr>
+            <td>{{ response.event.title }}</td>
+            <td>{{ response.user.username }}</td>
+            <td>{{ response.response }}</td>
+            <td>
+                <a href="{{ url_for('review_response', response_id=response.id) }}" class="btn btn-primary">Проверить</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

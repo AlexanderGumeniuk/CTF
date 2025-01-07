@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Добавить шаг к событию "{{ event.title }}"</h1>
+<form method="POST">
+    <div class="form-group">
+        <label for="step_name">Название шага</label>
+        <input type="text" class="form-control" id="step_name" name="step_name" required>
+    </div>
+    <div class="form-group">
+        <label for="description">Описание шага</label>
+        <textarea class="form-control" id="description" name="description"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="responsible">Ответственный</label>
+        <input type="text" class="form-control" id="responsible" name="responsible">
+    </div>
+    <div class="form-group">
+        <label for="deadline">Срок выполнения</label>
+        <input type="datetime-local" class="form-control" id="deadline" name="deadline">
+    </div>
+    <div class="form-group">
+        <label for="resources">Ресурсы</label>
+        <textarea class="form-control" id="resources" name="resources"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="risks">Риски</label>
+        <textarea class="form-control" id="risks" name="risks"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="actions">Действия</label>
+        <textarea class="form-control" id="actions" name="actions"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="results">Результаты</label>
+        <textarea class="form-control" id="results" name="results"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="status">Статус выполнения</label>
+        <select class="form-control" id="status" name="status">
+            <option value="Не начато">Не начато</option>
+            <option value="В процессе">В процессе</option>
+            <option value="Завершено">Завершено</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="comments">Комментарии</label>
+        <textarea class="form-control" id="comments" name="comments"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Добавить шаг</button>
+</form>
+{% endblock %}

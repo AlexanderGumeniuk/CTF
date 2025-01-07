@@ -1,84 +1,183 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h1>Admin Critical Events</h1>
+<style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+  }
 
-<!-- Форма для выбора команды -->
-<form method="GET">
-    <label for="team_id">Select Team:</label>
-    <select name="team_id" id="team_id">
-        <option value="">-- Select a Team --</option>
-        {% for team in teams %}
-        <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit">Show Events</button>
-</form>
+  /* Контейнер для таблицы */
+  .critical-events-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 20px;
+  }
 
-<!-- Ссылка на создание нового КС -->
-<a href="{{ url_for('create_critical_event') }}" class="btn btn-primary">
-    Create New Critical Event
-</a>
+  /* Заголовок */
+  h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
 
-<!-- Отображение КС и отчетов выбранной команды -->
-{% if selected_team_id %}
-    <h2>Critical Events for Team: {{ teams|selectattr('id', 'equalto', selected_team_id)|map(attribute='name')|first }}</h2>
-    <ul>
-        {% for event in events %}
-        <li>
-            <a href="{{ url_for('review_critical_event', event_id=event.id, team_id=selected_team_id) }}">
-                Review Event
-            </a>
-            <span>Status: {{ event.responses|selectattr('team_id', 'equalto', selected_team_id)|map(attribute='status')|first }}</span>
-        </li>
-        {% else %}
-        <li>No critical events pending for this team.</li>
-        {% endfor %}
-    </ul>
+  /* Кнопка создания */
+  .btn-primary {
+      display: inline-block;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+  }
 
-    <h2>Responses for Team: {{ teams|selectattr('id', 'equalto', selected_team_id)|map(attribute='name')|first }}</h2>
-    <ul>
-        {% for response in responses %}
-        <li>
-            <a href="{{ url_for('review_response', response_id=response.id) }}">
-                View Response
-            </a>
-            <span>Event ID: {{ response.event_id }}</span>
-            <span>Response: {{ response.response }}</span>
-            <span>Status: {{ response.status }}</span>
-            <span>Team: {{ response.team.name if response.team else 'No team' }}</span>
-        </li>
-        {% else %}
-        <li>No responses found for this team.</li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <h2>All Critical Events</h2>
-    <ul>
-        {% for event in events %}
-        <li>
-            <span>Event: {{ event.title }}</span>
-            <span>Status: {{ event.responses|map(attribute='status')|first }}</span>
-        </li>
-        {% else %}
-        <li>No critical events found.</li>
-        {% endfor %}
-    </ul>
+  .btn-primary:hover {
+      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  }
 
-    <h2>All Responses</h2>
-    <ul>
-        {% for response in responses %}
-        <li>
-            <a href="{{ url_for('review_response', response_id=response.id) }}">
-                View Response
-            </a>
-            <span>Event ID: {{ response.event_id }}</span>
-            <span>Response: {{ response.response }}</span>
-            <span>Status: {{ response.status }}</span>
-            <span>Team: {{ response.team.name if response.team else 'No team' }}</span>
-        </li>
-        {% else %}
-        <li>No responses found.</li>
-        {% endfor %}
-    </ul>
-{% endif %}
+  /* Таблица */
+  .table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .table th,
+  .table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .table th {
+      background: rgba(76, 175, 80, 0.8);
+      color: #fff;
+      font-weight: bold;
+  }
+
+  .table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Кнопки действий */
+  .btn-warning,
+  .btn-danger {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+  }
+
+  .btn-warning {
+      background: linear-gradient(145deg, rgba(255, 193, 7, 0.8), rgba(255, 152, 0, 0.8));
+      color: #fff;
+  }
+
+  .btn-warning:hover {
+      background: linear-gradient(145deg, rgba(255, 193, 7, 1), rgba(255, 152, 0, 1));
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .btn-danger {
+      background: linear-gradient(145deg, rgba(255, 77, 77, 0.8), rgba(204, 0, 0, 0.8));
+      color: #fff;
+  }
+
+  .btn-danger:hover {
+      background: linear-gradient(145deg, rgba(255, 77, 77, 1), rgba(204, 0, 0, 1));
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Текст для неактивных действий */
+  .text-muted {
+      color: rgba(255, 255, 255, 0.5);
+      font-style: italic;
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+      .critical-events-container {
+          padding: 1rem;
+      }
+
+      h1 {
+          font-size: 2rem;
+      }
+
+      .btn-primary {
+          padding: 0.6rem 1rem;
+          font-size: 0.9rem;
+      }
+
+      .table th,
+      .table td {
+          padding: 0.8rem;
+      }
+
+      .btn-warning,
+      .btn-danger {
+          padding: 0.4rem 0.8rem;
+          font-size: 0.8rem;
+      }
+  }
+</style>
+
+<div class="critical-events-container">
+    <h1>Все Критические События</h1>
+    <a href="{{ url_for('create_critical_event') }}" class="btn btn-primary">Создать новое КС</a>
+
+    <!-- Таблица с событиями -->
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Создатель</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td>{{ event.title }}</td>
+                <td>{{ event.description }}</td>
+                <td>{{ event.created_by_user.username }}</td>
+                <td>
+                    {% if event.created_by == current_user.id %}
+                        <a href="{{ url_for('edit_critical_event', event_id=event.id) }}" class="btn btn-warning">Редактировать</a>
+                        <form action="{{ url_for('delete_critical_event', event_id=event.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-danger">Удалить</button>
+                        </form>
+                    {% else %}
+                        <span class="text-muted">Только создатель может редактировать</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

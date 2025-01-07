@@ -1,17 +1,146 @@
 {% extends "base.html" %}
+
 {% block content %}
+<style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+  }
+
+  /* Контейнер для формы и списка инцидентов */
+  .incident-container {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Стили для списка инцидентов */
+  ul {
+      list-style-type: none;
+      padding: 0;
+  }
+
+  li {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+  }
+
+  /* Стили для кнопок */
+  button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+      background-color: #45a049;
+  }
+
+  /* Стили для пагинации */
+  .pagination {
+      margin-top: 20px;
+      text-align: center;
+  }
+
+  .pagination a {
+      color: #4CAF50;
+      text-decoration: none;
+      margin: 0 10px;
+  }
+
+  .pagination a:hover {
+      text-decoration: underline;
+  }
+
+  /* Стили для навигации по статусам */
+  .status-navigation {
+      margin-bottom: 20px;
+      text-align: center;
+  }
+
+  .status-navigation a {
+      color: #4CAF50;
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: bold;
+  }
+
+  .status-navigation a:hover {
+      text-decoration: underline;
+  }
+</style>
+
+<div class="incident-container">
     <h1>My Incidents</h1>
+
+
+
+    <!-- Фильтр по статусу -->
+    <form method="get" action="{{ url_for('my_incidents') }}">
+        <label for="status">Filter by status:</label>
+        <select name="status" id="status">
+            <option value="all" {% if status == 'all' %}selected{% endif %}>All</option>
+            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="approved" {% if status == 'approved' %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Rejected</option>
+            <option value="needs_revision" {% if status == 'needs_revision' %}selected{% endif %}>Needs Revision</option>
+        </select>
+        <button type="submit">Apply</button>
+    </form>
+
+    <!-- Список инцидентов -->
     <ul>
-        {% for incident in incidents %}
+        {% for incident in incidents.items %}
             <li>
                 <h2>{{ incident.title }}</h2>
                 <p>{{ incident.description }}</p>
-                <p><strong>Status:</strong> {{ incident.status }}</p>
-                <p><strong>Points Awarded:</strong> {{ incident.points_awarded }}</p>
+                <p>Status: {{ incident.status }}</p>
+                <p>Created by: {{ incident.user.username }}</p>
+                <p>Start Time: {{ incident.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p>End Time: {{ incident.end_time.strftime('%Y-%m-%d %H:%M') }}</p>
+
+                <!-- Кнопка "Редактировать" для инцидентов со статусом "needs_revision" -->
                 {% if incident.status == 'needs_revision' %}
-                    <a href="{{ url_for('edit_incident', incident_id=incident.id) }}">Edit and Resubmit</a>
+                    <a href="{{ url_for('edit_incident', incident_id=incident.id) }}">
+                        <button>Редактировать</button>
+                    </a>
+                {% endif %}
+
+                <!-- Ссылка для просмотра деталей (только для принятых и отклоненных инцидентов) -->
+                {% if incident.status in ['approved', 'rejected'] %}
+                    <a href="{{ url_for('view_incident', incident_id=incident.id) }}">
+                        <button>Просмотреть детали</button>
+                    </a>
                 {% endif %}
             </li>
         {% endfor %}
     </ul>
+
+    <!-- Пагинация -->
+    <div class="pagination">
+        {% if incidents.has_prev %}
+            <a href="{{ url_for('my_incidents', page=incidents.prev_num, status=status) }}">Previous</a>
+        {% endif %}
+        {% if incidents.has_next %}
+            <a href="{{ url_for('my_incidents', page=incidents.next_num, status=status) }}">Next</a>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

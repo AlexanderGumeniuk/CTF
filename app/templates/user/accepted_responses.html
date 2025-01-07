@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Принятые отчёты вашей команды</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Событие</th>
+            <th>Ответ</th>
+            <th>Начисленные баллы</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for response in responses %}
+        <tr>
+            <td>{{ response.event.title }}</td>
+            <td>{{ response.response }}</td>
+            <td>{{ response.points_awarded }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

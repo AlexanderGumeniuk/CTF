@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+  }
+
+  /* Контейнер для деталей инцидента */
+  .incident-details {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Стили для кнопки "Назад" */
+  .back-button {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #4CAF50;
+      text-decoration: none;
+      font-weight: bold;
+  }
+
+  .back-button:hover {
+      text-decoration: underline;
+  }
+</style>
+
+<div class="incident-details">
+    <!-- Кнопка "Назад" -->
+    <a href="{{ url_for('my_incidents') }}" class="back-button">← Назад к списку инцидентов</a>
+
+    <h1>{{ incident.title }}</h1>
+    <p><strong>Описание:</strong> {{ incident.description }}</p>
+    <p><strong>Статус:</strong> {{ incident.status }}</p>
+    <p><strong>Создатель:</strong> {{ incident.user.username }}</p>
+    <p><strong>Время начала:</strong> {{ incident.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>Время окончания:</strong> {{ incident.end_time.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>IP-адрес источника:</strong> {{ incident.source_ip }}</p>
+    <p><strong>Порт источника:</strong> {{ incident.source_port }}</p>
+    <p><strong>IP-адрес назначения:</strong> {{ incident.destination_ip }}</p>
+    <p><strong>Порт назначения:</strong> {{ incident.destination_port }}</p>
+    <p><strong>Тип события:</strong> {{ incident.event_type }}</p>
+    <p><strong>Связанные FQDN:</strong> {{ incident.related_fqdn }}</p>
+    <p><strong>Связанные DNS-имена:</strong> {{ incident.related_dns }}</p>
+    <p><strong>IOC (Indicators of Compromise):</strong> {{ incident.ioc }}</p>
+    <p><strong>Хэш:</strong> {{ incident.hash_value }}</p>
+    <p><strong>ID события по матрице MITRE:</strong> {{ incident.mitre_id }}</p>
+    <p><strong>ID события в SIEM:</strong> {{ incident.siem_id }}</p>
+    <p><strong>Ссылка на событие в SIEM:</strong> <a href="{{ incident.siem_link }}" target="_blank">{{ incident.siem_link }}</a></p>
+</div>
+{% endblock %}

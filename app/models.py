@@ -1,5 +1,6 @@
 from app import db, login_manager
 from flask_login import UserMixin
+from sqlalchemy.dialects.postgresql import JSON
 
 class UserChallenge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -71,7 +72,7 @@ class Team(db.Model):
 
     def __repr__(self):
         return f"Team('{self.name}')"
-        
+
 class Incident(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -83,15 +84,21 @@ class Incident(db.Model):
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
 
     # Новые поля
-    incident_type = db.Column(db.String(50), nullable=True)
-    severity_level = db.Column(db.String(20), nullable=True)
-    detection_time = db.Column(db.DateTime, nullable=True)
-    occurrence_time = db.Column(db.DateTime, nullable=True)
-    source = db.Column(db.String(50), nullable=True)
-    affected_systems = db.Column(db.Text, nullable=True)
-    suspected_cause = db.Column(db.Text, nullable=True)
-    actions_taken = db.Column(db.Text, nullable=True)
-    prevention_recommendations = db.Column(db.Text, nullable=True)
+    start_time = db.Column(db.DateTime, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=False)
+    source_ip = db.Column(db.String(50), nullable=False)
+    source_port = db.Column(db.Integer, nullable=True)
+    destination_ip = db.Column(db.String(50), nullable=False)
+    destination_port = db.Column(db.Integer, nullable=True)
+    event_type = db.Column(db.String(50), nullable=False)
+    related_fqdn = db.Column(db.Text, nullable=True)
+    related_dns = db.Column(db.Text, nullable=True)
+    ioc = db.Column(db.Text, nullable=True)
+    hash_value = db.Column(db.Text, nullable=True)
+    mitre_id = db.Column(db.String(50), nullable=True)
+    siem_id = db.Column(db.String(50), nullable=True)
+    siem_link = db.Column(db.Text, nullable=True)
+    screenshots = db.Column(JSON, nullable=True)  # Для PostgreSQL
 
     # Отношения
     team = db.relationship('Team', foreign_keys=[team_id])
@@ -100,7 +107,6 @@ class Incident(db.Model):
 
     def __repr__(self):
         return f"Incident('{self.title}', Status: '{self.status}')"
-
 class CriticalEventResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('critical_event.id'), nullable=False)
@@ -124,12 +130,32 @@ class CriticalEvent(db.Model):
     description = db.Column(db.Text, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.now())
-    admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Разрешаем NULL
-    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)  # Разрешаем NULL
+    admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
     responses = db.relationship('CriticalEventResponse', backref='event', lazy=True)
-
+    steps = db.relationship('CriticalEventStep', backref='event', lazy=True)  # Связь с шагами
     # Добавляем связь с пользователем
     created_by_user = db.relationship('User', backref='created_events', foreign_keys=[created_by])
 
     def __repr__(self):
         return f"CriticalEvent('{self.title}', Created by {self.created_by})"
+
+
+class CriticalEventStep(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('critical_event.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Обязательное поле
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)  # Связь с командой
+    step_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    responsible = db.Column(db.String(100), nullable=True)
+    deadline = db.Column(db.DateTime, nullable=True)
+    resources = db.Column(db.Text, nullable=True)
+    risks = db.Column(db.Text, nullable=True)
+    actions = db.Column(db.Text, nullable=True)
+    results = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(50), nullable=True)
+    comments = db.Column(db.Text, nullable=True)
+
+    def __repr__(self):
+        return f"CriticalEventStep('{self.step_name}', Event {self.event_id}, Team {self.team_id})"

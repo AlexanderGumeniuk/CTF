@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+  }
+
+  /* Контейнер для управления пользователями */
+  .manage-users-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      width: 90%;
+      max-width: 1200px;
+      margin: 2rem auto;
+  }
+
+  /* Заголовок */
+  h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Форма поиска пользователя */
+  .search-user-form {
+      margin-bottom: 2rem;
+  }
+
+  .search-user-form label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.8);
+  }
+
+  .search-user-form input {
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+  }
+
+  .search-user-form input:focus {
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+  }
+
+  /* Список пользователей */
+  .users-list {
+      list-style-type: none;
+      padding: 0;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+  }
+
+  .users-list li {
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: background 0.3s ease;
+  }
+
+  .users-list li:hover {
+      background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Форма редактирования пользователя */
+  .user-form {
+      margin-top: 2rem;
+  }
+
+  .user-form label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.8);
+  }
+
+  .user-form input,
+  .user-form select {
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+  }
+
+  .user-form input:focus,
+  .user-form select:focus {
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+  }
+
+  .user-form button {
+      padding: 0.8rem 1.5rem;
+      margin-right: 0.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+  }
+
+  .edit-button {
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      color: #fff;
+  }
+
+  .edit-button:hover {
+      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .delete-button {
+      background: linear-gradient(145deg, rgba(255, 77, 77, 0.8), rgba(204, 0, 0, 0.8));
+      color: #fff;
+  }
+
+  .delete-button:hover {
+      background: linear-gradient(145deg, rgba(255, 77, 77, 1), rgba(204, 0, 0, 1));
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+      .manage-users-container {
+          padding: 1.5rem;
+      }
+
+      h2 {
+          font-size: 2rem;
+      }
+
+      .search-user-form input,
+      .user-form input,
+      .user-form select {
+          padding: 0.6rem;
+      }
+
+      .user-form button {
+          padding: 0.6rem 1rem;
+          font-size: 0.9rem;
+      }
+  }
+</style>
+
+<div class="manage-users-container">
+    <h2>Управление пользователями</h2>
+
+    <!-- Поиск пользователя -->
+    <div class="search-user-form">
+        <label for="search_user">Поиск пользователя:</label>
+        <input type="text" id="search_user" placeholder="Начните вводить имя пользователя...">
+    </div>
+
+    <!-- Список пользователей -->
+    <ul id="users-list" class="users-list">
+        {% for user in users %}
+            <li data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}">
+                {{ user.username }} ({{ user.email }})
+            </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Форма редактирования пользователя -->
+    <div id="edit-user-form" class="user-form" style="display: none;">
+        <form method="POST">
+            <input type="hidden" name="user_id" id="edit_user_id">
+
+            <label for="username">Имя пользователя:</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label>
+                <input type="checkbox" name="is_admin" id="is_admin"> Администратор
+            </label>
+
+            <label for="team_id">Команда:</label>
+            <select id="team_id" name="team_id">
+                <option value="">-- Без команды --</option>
+                {% for team in teams %}
+                    <option value="{{ team.id }}">{{ team.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="points_change">Изменить баллы:</label>
+            <input type="number" id="points_change" name="points_change" placeholder="Введите число (например, +10 или -5)">
+
+            <button type="submit" name="edit_user" class="edit-button">Сохранить изменения</button>
+            <button type="submit" name="delete_user" class="delete-button">Удалить пользователя</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Функция для фильтрации списка пользователей
+    document.getElementById('search_user').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const usersList = document.getElementById('users-list').getElementsByTagName('li');
+
+        for (let user of usersList) {
+            const username = user.getAttribute('data-username').toLowerCase();
+            const email = user.getAttribute('data-email').toLowerCase();
+            if (username.includes(searchTerm) || email.includes(searchTerm)) {
+                user.style.display = 'block';
+            } else {
+                user.style.display = 'none';
+            }
+        }
+    });
+
+    // Функция для выбора пользователя
+    document.getElementById('users-list').addEventListener('click', function(event) {
+        const userLi = event.target.closest('li');
+        if (userLi) {
+            const userId = userLi.getAttribute('data-user-id');
+            const username = userLi.getAttribute('data-username');
+            const email = userLi.getAttribute('data-email');
+
+            // Заполняем форму редактирования
+            document.getElementById('edit_user_id').value = userId;
+            document.getElementById('username').value = username;
+            document.getElementById('email').value = email;
+
+            // Показываем форму редактирования
+            document.getElementById('edit-user-form').style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,136 @@
+/* Стили для раскрывающегося списка */
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    z-index: 1000; /* Высокий z-index для раскрывающегося списка */
+}
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1001; /* Выше, чем у dropdown */
+}
+.dropdown-content a {
+    color: white;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+
+
+
+
+
+/* Стили для анимации частиц */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #000;
+}
+canvas {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1; /* Помещаем canvas на задний план */
+}
+.container {
+    position: relative;
+    z-index: 1; /* Основное содержимое поверх canvas */
+    background-color: rgba(30, 31, 38, 0.9); /* Полупрозрачный фон */
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 95%
+}
+
+
+/* Навигация поверх canvas */
+nav {
+    position: relative;
+    z-index: 1000; /* Высокий z-index для навигации */
+    background-color: rgba(0, 0, 0, 0.8); /* Полупрозрачный фон для навигации */
+    padding: 10px;
+}
+nav a {
+    color: white;
+    margin: 0 10px;
+    text-decoration: none;
+}
+nav a:hover {
+    color: #ff0266;
+}
+/* Основные стили для текста */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #000; /* Темный фон */
+    color: #fff; /* Белый текст */
+    font-family: "ROBOTO", sans-serif;
+}
+
+/* Контейнер для основного содержимого */
+
+/* Стили для заголовков */
+h1, h2, h3 {
+    color: #03dac6; /* Цвет заголовков */
+}
+
+/* Стили для ссылок */
+a {
+    color: #03dac6; /* Цвет ссылок */
+    text-decoration: none;
+}
+
+a:hover {
+    color: #ff0266; /* Цвет ссылок при наведении */
+}
+
+/* Стили для навигации */
+nav {
+    position: relative;
+    z-index: 1000; /* Высокий z-index для навигации */
+    background-color: rgba(0, 0, 0, 0.8); /* Полупрозрачный фон для навигации */
+    padding: 10px;
+}
+
+nav a {
+    color: white;
+    margin: 0 10px;
+    text-decoration: none;
+}
+
+nav a:hover {
+    color: #ff0266;
+}
+
+/* Стили для раскрывающегося списка */
+.dropdown {
+    position: relative;
+    display: inline-block;
+    z-index: 1000; /* Высокий z-index для раскрывающегося списка */
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #1e1f26; /* Темный фон для выпадающего списка */
+    min-width: 160px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1001; /* Выше, чем у dropdown */
+}
+
+.dropdown-content a {
+    color: #fff; /* Белый текст в выпадающем

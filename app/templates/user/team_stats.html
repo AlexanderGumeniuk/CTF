@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="team-stats-container">
+    <h1>Статистика команды: {{ team.name }}</h1>
+
+    <!-- Общая информация о команде -->
+    <div class="team-info">
+        <p><strong>Место в рейтинге:</strong> {{ team_rank }}</p>
+        <p><strong>Общее количество баллов:</strong> {{ total_points }}</p>
+    </div>
+
+    <!-- Состав команды -->
+    <h2>Состав команды</h2>
+    <table class="team-members-table">
+        <thead>
+            <tr>
+                <th>Имя пользователя</th>
+                <th>Баллы</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in members %}
+            <tr>
+                <td>{{ member.username }}</td>
+                <td>{{ member.total_points }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Рейтинг команд -->
+    <h2>Рейтинг команд</h2>
+    <table class="team-ranking-table">
+        <thead>
+            <tr>
+                <th>Место</th>
+                <th>Название команды</th>
+                <th>Общее количество баллов</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in all_teams %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ t.name }}</td>
+                <td>{{ t.total_points }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

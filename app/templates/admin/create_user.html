@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+  }
+
+  /* Контейнер для формы */
+  .form-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      width: 100%;
+      max-width: 400px;
+      margin: 2rem auto;
+  }
+
+  /* Заголовок формы */
+  .form-container h2 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Лейблы */
+  .form-container label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+  }
+
+  /* Поля ввода */
+  .form-container input {
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+  }
+
+  .form-container input:focus {
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+  }
+
+  /* Чекбокс */
+  .form-container input[type="checkbox"] {
+      width: auto;
+      margin-right: 0.5rem;
+  }
+
+  .form-container label[for="is_admin"] {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+  }
+
+  /* Кнопка отправки */
+  .form-container button {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+  }
+
+  .form-container button:hover {
+      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+      .form-container {
+          padding: 1.5rem;
+      }
+
+      .form-container h2 {
+          font-size: 1.8rem;
+      }
+
+      .form-container input {
+          padding: 0.6rem;
+      }
+
+      .form-container button {
+          padding: 0.8rem;
+          font-size: 1rem;
+      }
+  }
+</style>
+
+<div class="form-container">
+    <h2>Создать пользователя</h2>
+    <form method="POST">
+        <!-- Имя пользователя -->
+        <label for="username">Имя пользователя:</label>
+        <input type="text" id="username" name="username" required>
+
+        <!-- Email -->
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+
+        <!-- Пароль -->
+        <label for="password">Пароль:</label>
+        <input type="password" id="password" name="password" required>
+
+        <!-- Подтверждение пароля -->
+        <label for="confirm_password">Подтвердите пароль:</label>
+        <input type="password" id="confirm_password" name="confirm_password" required>
+
+        <!-- Чекбокс для администратора -->
+        <label>
+            <input type="checkbox" name="is_admin"> Администратор
+        </label>
+
+        <!-- Кнопка отправки -->
+        <button type="submit">Создать</button>
+    </form>
+</div>
+{% endblock %}

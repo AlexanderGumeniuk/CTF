@@ -1,0 +1,119 @@
+
+.container {
+    max-width: 45% !important;
+    height: 400px !important;
+}
+/* Основные стили для контейнера */
+.login-container {
+    position: relative;
+    z-index: 1; /* Основное содержимое поверх canvas */
+    background-color: rgba(30, 31, 38, 0.9); /* Полупрозрачный фон */
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Стили для формы */
+.login-box {
+    background: rgba(255, 255, 255, 0.1); /* Прозрачный фон */
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px); /* Размытие фона */
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* Стили для заголовка */
+.login-box h2 {
+    color: #fff;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Стили для групп полей ввода */
+.input-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+    transform: skewX(-15deg); /* Наклон для 3D-эффекта */
+}
+
+/* Стили для полей ввода */
+.input-group input {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+    transform: skewX(15deg); /* Компенсация наклона для текста */
+    box-shadow:
+        4px 4px 6px rgba(0, 0, 0, 0.2), /* Тень для объема */
+        inset 2px 2px 4px rgba(255, 255, 255, 0.1); /* Внутренняя тень */
+}
+
+.input-group input:focus {
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow:
+        6px 6px 8px rgba(0, 0, 0, 0.3), /* Увеличенная тень */
+        inset 2px 2px 4px rgba(255, 255, 255, 0.2); /* Усиленная внутренняя тень */
+}
+
+/* Стили для лейблов */
+.input-group label {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%) skewX(15deg); /* Компенсация наклона */
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+.input-group input {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+}
+
+.login-button {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+}
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label {
+    top: 0;
+    left: 0.5rem;
+    font-size: 0.8rem;
+    color: #fff;
+}
+
+/* Стили для кнопки */
+.login-button {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    transform: skewX(-15deg); /* Наклон для 3D-эффекта */
+    box-shadow:
+        4px 4px 6px rgba(0, 0, 0, 0.2), /* Тень для объема */
+        inset 2px 2px 4px rgba(255, 255, 255, 0.1); /* Внутренняя тень */
+}
+
+.login-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow:
+        6px 6px 8px rgba(0, 0, 0, 0.3), /* Увеличенная тень */
+        inset 2px 2px 4px rgba(255, 255, 255, 0.2); /* Усиленная внутренняя тень */
+    transform: skewX(-15deg) translateY(-2px); /* Легкий подъем */
+}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+  }
+
+  /* Контейнер для админ-панели */
+  .admin-dashboard-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      width: 90%;
+      max-width: 1200px;
+      margin: 2rem auto;
+  }
+
+  /* Заголовок */
+  h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Сетка для кнопок */
+  .admin-links {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* Два столбца */
+      gap: 1rem; /* Расстояние между кнопками */
+  }
+
+  /* Стили для кнопок */
+  .admin-link {
+      display: block;
+      padding: 1rem;
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+  }
+
+  .admin-link:hover {
+      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+      .admin-dashboard-container {
+          padding: 1.5rem;
+      }
+
+      h2 {
+          font-size: 2rem;
+      }
+
+      .admin-links {
+          grid-template-columns: 1fr; /* Один столбец на мобильных устройствах */
+      }
+
+      .admin-link {
+          padding: 0.8rem;
+          font-size: 1rem;
+      }
+  }
+</style>
+
+<div class="admin-dashboard-container">
+    <h2>Администрирование</h2>
+
+    <!-- Сетка из кнопок -->
+    <div class="admin-links">
+        <a href="{{ url_for('add_challenge') }}" class="admin-link">Добавить задачу</a>
+        <a href="{{ url_for('create_user') }}" class="admin-link">Создать пользователя</a>
+        <a href="{{ url_for('manage_teams') }}" class="admin-link">Управление командами</a>
+        <a href="{{ url_for('manage_users') }}" class="admin-link">Управление пользователями</a>
+        <a href="{{ url_for('admin_incidents') }}" class="admin-link">Администрирование инцидентов</a>
+        <a href="{{ url_for('admin_critical_events') }}" class="admin-link">Критические события</a>
+        <a href="{{ url_for('admin_critical_event_responses') }}" class="admin-link">Отчёты по КС</a>
+        <a href="{{ url_for('admin_approved_responses') }}" class="admin-link">Принятые отчёты</a>
+    </div>
+</div>
+{% endblock %}

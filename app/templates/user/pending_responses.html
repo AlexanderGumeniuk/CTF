@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Отчеты, которые нужно заполнить</h1>
+
+{% if events %}
+    <ul>
+        {% for event in events %}
+            <li>
+                <h2>{{ event.title }}</h2>
+                <p>{{ event.description }}</p>
+                <a href="{{ url_for('fill_critical_event', event_id=event.id) }}" class="btn btn-primary">
+                    Заполнить отчет
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Нет отчетов, которые нужно заполнить.</p>
+{% endif %}{% endblock %}
