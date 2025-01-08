@@ -116,6 +116,9 @@
       filter: brightness(0) invert(1); /* Иконка стрелки становится белой */
       margin-left: auto; /* Стрелка справа */
   }
+  .modal-backdrop {
+    display: none !important;
+}
 </style>
 
 <h1>Проверка отчёта по событию "{{ response.event.title }}"</h1>
@@ -231,5 +234,6 @@
       });
   });
 </script>
+
 
 {% endblock %}

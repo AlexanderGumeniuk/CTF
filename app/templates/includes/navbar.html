@@ -70,15 +70,17 @@
         <a href="{{ url_for('challenges') }}" class="nav-link">Задачи</a>
         <a href="{{ url_for('leaderboard') }}" class="nav-link">Рейтинг</a>
         <a href="{{ url_for('team_leaderboard') }}" class="nav-link">Рейтинг команд</a>
+        <!-- Новая ссылка на описание инфраструктуры -->
+        <a href="{{ url_for('infrastructure') }}" class="nav-link">Инфраструктура</a>
 
         {% if current_user.is_authenticated and current_user.team %}
-    <div class="dropdown">
-        <a href="#" class="nav-link">Команда</a>
-        <div class="dropdown-content">
-            <a href="{{ url_for('team_stats') }}">Статистика команды</a>
-        </div>
-    </div>
-{% endif %}
+            <div class="dropdown">
+                <a href="#" class="nav-link">Команда</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('team_stats') }}">Статистика команды</a>
+                </div>
+            </div>
+        {% endif %}
 
         {% if current_user.is_authenticated %}
             <!-- Раскрывающийся список для инцидентов -->

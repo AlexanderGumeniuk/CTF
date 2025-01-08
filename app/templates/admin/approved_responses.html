@@ -1,24 +1,164 @@
 {% extends "base.html" %}
+
+{% block styles %}
+<style>
+  /* Добавляем скролл на body */
+  body {
+      overflow-y: auto; /* Вертикальный скролл */
+      overflow-x: hidden; /* Горизонтальный скролл скрыт */
+      scrollbar-width: thin; /* Для Firefox */
+      scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Цвет скроллбара */
+  }
+
+  /* Стилизация скроллбара для WebKit (Chrome, Safari) */
+  body::-webkit-scrollbar {
+      width: 8px; /* Ширина скроллбара */
+  }
+
+  body::-webkit-scrollbar-track {
+      background: transparent; /* Фон трека */
+  }
+
+  body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3); /* Цвет ползунка */
+      border-radius: 4px; /* Скругление углов */
+  }
+
+  body::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5); /* Цвет ползунка при наведении */
+  }
+
+  .accepted-reports-container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      margin-top: 100px;
+      padding: 20px;
+  }
+
+  .accepted-reports-box {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(20px);
+      width: 100%;
+      max-width: 1200px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      animation: fadeIn 0.8s ease-out;
+  }
+
+  .accepted-reports-box h1 {
+      color: #fff;
+      font-size: 2.8rem;
+      margin-bottom: 2rem;
+      font-weight: 700;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+  }
+
+  table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  th, td {
+      padding: 1.2rem;
+      text-align: left;
+      color: #fff;
+  }
+
+  th {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+  }
+
+  tr {
+      transition: all 0.3s ease;
+  }
+
+  tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.05);
+  }
+
+  tr:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(10px);
+  }
+
+  .points-awarded {
+      font-weight: 600;
+      color: #4caf50; /* Зеленый цвет для начисленных баллов */
+  }
+
+  @keyframes fadeIn {
+      from {
+          opacity: 0;
+          transform: translateY(30px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
+  }
+
+  @media (max-width: 768px) {
+      .accepted-reports-box {
+          width: 95%;
+          max-width: none;
+          padding: 1.5rem;
+      }
+
+      .accepted-reports-box h1 {
+          font-size: 2.2rem;
+      }
+
+      th, td {
+          padding: 1rem;
+          font-size: 0.9rem;
+      }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>Принятые отчёты по КС</h1>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Событие</th>
-            <th>Пользователь</th>
-            <th>Ответ</th>
-            <th>Начисленные баллы</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for response in responses %}
-        <tr>
-            <td>{{ response.event.title }}</td>
-            <td>{{ response.user.username }}</td>
-            <td>{{ response.response }}</td>
-            <td>{{ response.points_awarded }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="accepted-reports-container">
+    <div class="accepted-reports-box">
+        <h1>Принятые отчёты по КС</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Событие</th>
+                    <th>Пользователь</th>
+                    <th>Ответ</th>
+                    <th>Начисленные баллы</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for response in responses %}
+                <tr>
+                    <td>{{ response.event.title }}</td>
+                    <td>{{ response.user.username }}</td>
+                    <td>{{ response.response }}</td>
+                    <td class="points-awarded">{{ response.points_awarded }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

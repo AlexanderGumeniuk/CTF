@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Топология сети</title>
+    <!-- Подключение Vis.js -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        p {
+            text-align: center;
+            color: #666;
+        }
+        #topology-container {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            margin-top: 20px;
+        }
+        .btn-secondary {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            text-align: center;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .btn-secondary:hover {
+            background-color: #0056b3;
+        }
+        /* Стили для всплывающего окна */
+        #node-info {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Топология сети</h1>
+        <p>Здесь представлена схема сети и описание сетевого оборудования.</p>
+
+        <!-- Контейнер для топологии -->
+        <div id="topology-container"></div>
+
+        <!-- Всплывающее окно с информацией о узле -->
+        <div id="node-info">
+            <h3 id="node-name"></h3>
+            <p id="node-description"></p>
+            <h4>Интерфейсы:</h4>
+            <ul id="node-interfaces"></ul>
+            <h4>Доменное имя:</h4>
+            <p id="node-domain"></p>
+        </div>
+
+        <!-- Кнопка для возврата -->
+        <a href="{{ url_for('infrastructure') }}" class="btn-secondary">Назад</a>
+    </div>
+
+    <!-- Подключение Vis.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+
+    <!-- Скрипт для создания топологии -->
+    <script>
+        // Данные для топологии из Flask
+        const topologyData = {{ topology_data | tojson | safe }};
+
+        // Преобразуем данные для Vis.js
+        const nodes = new vis.DataSet(
+            topologyData.nodes.map(node => ({
+                id: node.id,
+                label: node.name,
+                shape: "circle",
+                color: "#007bff",
+                x: node.x || 0,
+                y: node.y || 0,
+                description: node.description,
+                interfaces: node.interfaces,
+                domain: node.domain
+            }))
+        );
+
+        const edges = new vis.DataSet(
+            topologyData.links.map(link => ({
+                from: link.source,
+                to: link.target
+            }))
+        );
+
+        // Контейнер для схемы
+        const container = document.getElementById("topology-container");
+
+        // Создание схемы
+        const data = {
+            nodes: nodes,
+            edges: edges
+        };
+        const options = {
+            nodes: {
+                font: {
+                    size: 14,
+                    color: "#ffffff"
+                }
+            },
+            edges: {
+                color: "#007bff",
+                width: 2,
+                smooth: false // Прямые линии
+            },
+            physics: false // Отключаем физическую симуляцию
+        };
+        const network = new vis.Network(container, data, options);
+
+        // Обработчик события нажатия на узел
+        network.on("click", function (params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const node = nodes.get(nodeId);
+
+                // Отображаем информацию о узле
+                document.getElementById("node-name").textContent = node.label;
+                document.getElementById("node-description").textContent = node.description;
+                document.getElementById("node-domain").textContent = node.domain;
+
+                // Очищаем список интерфейсов
+                const interfacesList = document.getElementById("node-interfaces");
+                interfacesList.innerHTML = "";
+
+                // Добавляем интерфейсы
+                node.interfaces.forEach(iface => {
+                    const li = document.createElement("li");
+                    li.textContent = `${iface.name}: ${iface.ip}`;
+                    interfacesList.appendChild(li);
+                });
+
+                // Показываем всплывающее окно
+                document.getElementById("node-info").style.display = "block";
+            } else {
+                // Скрываем всплывающее окно, если клик не на узле
+                document.getElementById("node-info").style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>

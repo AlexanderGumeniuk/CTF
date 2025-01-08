@@ -15,9 +15,13 @@
       margin-bottom: 15px;
       border-radius: 5px;
       background-color: #2d2d2d;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* Два столбца */
+      gap: 15px; /* Расстояние между элементами */
   }
   .step h3 {
       margin-top: 0;
+      grid-column: span 2; /* Заголовок занимает два столбца */
   }
   .screenshots img {
       max-width: 100%;
@@ -43,6 +47,12 @@
   }
   button:hover {
       background-color: #555;
+  }
+  .remove-step {
+      grid-column: span 2; /* Кнопка удаления занимает два столбца */
+  }
+  .screenshots {
+      grid-column: span 2; /* Скриншоты занимают два столбца */
   }
 </style>
 
@@ -80,8 +90,8 @@
 
                 <!-- Скриншоты -->
                 {% if step.screenshots %}
-                <p><strong>Скриншоты:</strong></p>
                 <div class="screenshots">
+                    <p><strong>Скриншоты:</strong></p>
                     {% for screenshot in step.screenshots %}
                     <p>Имя файла: {{ screenshot }}</p>
                     <img src="{{ url_for('static', filename='uploads/' + screenshot) }}" alt="Скриншот" class="img-fluid mb-2">

@@ -24,7 +24,7 @@
 
   /* Основные стили для формы */
   .incident-form {
-      max-width: 800px;
+      max-width: 1200px; /* Увеличим ширину формы */
       width: 100%;
       padding: 2rem;
       background: rgba(255, 255, 255, 0.1);
@@ -41,6 +41,13 @@
       margin-bottom: 2rem;
       color: #fff;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Сетка для полей формы */
+  .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* Два столбца */
+      gap: 1.5rem; /* Расстояние между элементами */
   }
 
   /* Группы полей */
@@ -156,6 +163,10 @@
 
   /* Адаптивность */
   @media (max-width: 768px) {
+      .form-grid {
+          grid-template-columns: 1fr; /* Один столбец на мобильных устройствах */
+      }
+
       .incident-form {
           padding: 1rem;
       }
@@ -181,120 +192,118 @@
     <div class="incident-form">
         <h1>Создать инцидент</h1>
         <form method="POST" enctype="multipart/form-data">
-            <!-- Основные поля -->
-            <div class="form-group">
-                <label for="title">Название:</label>
-                <input type="text" name="title" id="title" required>
-            </div>
+            <div class="form-grid">
+                <!-- Основные поля -->
+                <div class="form-group">
+                    <label for="title">Название:</label>
+                    <input type="text" name="title" id="title" required>
+                </div>
 
-            <div class="form-group">
-                <label for="description">Описание:</label>
-                <textarea name="description" id="description" required></textarea>
-            </div>
+                <div class="form-group">
+                    <label for="description">Описание:</label>
+                    <textarea name="description" id="description" required></textarea>
+                </div>
 
-            <!-- Время начала и конца -->
-            <div class="form-group">
-                <label for="start_time">Время начала:</label>
-                <input type="datetime-local" name="start_time" id="start_time" required>
-            </div>
+                <!-- Время начала и конца -->
+                <div class="form-group">
+                    <label for="start_time">Время начала:</label>
+                    <input type="datetime-local" name="start_time" id="start_time" required>
+                </div>
 
-            <div class="form-group">
-                <label for="end_time">Время окончания:</label>
-                <input type="datetime-local" name="end_time" id="end_time" required>
-            </div>
+                <div class="form-group">
+                    <label for="end_time">Время окончания:</label>
+                    <input type="datetime-local" name="end_time" id="end_time" required>
+                </div>
 
-            <!-- IP и порт источника -->
-            <div class="form-group">
-                <label for="source_ip">IP-адрес источника:</label>
-                <input type="text" name="source_ip" id="source_ip" required>
-            </div>
+                <!-- IP и порт источника -->
+                <div class="form-group">
+                    <label for="source_ip">IP-адрес источника:</label>
+                    <input type="text" name="source_ip" id="source_ip" required>
+                </div>
 
-            <div class="form-group">
-                <label for="source_port">Порт источника:</label>
-                <input type="number" name="source_port" id="source_port">
-            </div>
+                <div class="form-group">
+                    <label for="source_port">Порт источника:</label>
+                    <input type="number" name="source_port" id="source_port">
+                </div>
 
-            <!-- IP и порт назначения -->
-            <div class="form-group">
-                <label for="destination_ip">IP-адрес назначения:</label>
-                <input type="text" name="destination_ip" id="destination_ip" required>
-            </div>
+                <!-- IP и порт назначения -->
+                <div class="form-group">
+                    <label for="destination_ip">IP-адрес назначения:</label>
+                    <input type="text" name="destination_ip" id="destination_ip" required>
+                </div>
 
-            <div class="form-group">
-                <label for="destination_port">Порт назначения:</label>
-                <input type="number" name="destination_port" id="destination_port">
-            </div>
+                <div class="form-group">
+                    <label for="destination_port">Порт назначения:</label>
+                    <input type="number" name="destination_port" id="destination_port">
+                </div>
 
-            <!-- Тип события -->
-            <div class="form-group">
-                <label for="event_type">Тип события:</label>
-                <select name="event_type" id="event_type" required>
-                    <option value="Phishing">Фишинг</option>
-                    <option value="Malware">Вредоносное ПО</option>
-                    <option value="DDoS">DDoS-атака</option>
-                    <option value="BruteForce">Атака методом перебора</option>
-                    <option value="Exploit">Эксплойт</option>
-                    <option value="DataLeak">Утечка данных</option>
-                    <option value="InsiderThreat">Инсайдерская угроза</option>
-                    <option value="Ransomware">Рансомизация</option>
-                    <option value="SQLInjection">SQL-инъекция</option>
-                    <option value="XSS">Межсайтовый скриптинг (XSS)</option>
-                    <option value="PortScan">Сканирование портов</option>
-                    <option value="UnauthorizedAccess">Несанкционированный доступ</option>
-                    <option value="Misconfiguration">Ошибка конфигурации</option>
-                    <option value="SocialEngineering">Социальная инженерия</option>
-                    <option value="ZeroDay">Zero-day уязвимость</option>
-                </select>
-            </div>
+                <!-- Тип события -->
+                <div class="form-group">
+                    <label for="event_type">Тип события:</label>
+                    <select name="event_type" id="event_type" required>
+                        <option value="Phishing">Фишинг</option>
+                        <option value="Malware">Вредоносное ПО</option>
+                        <option value="DDoS">DDoS-атака</option>
+                        <option value="BruteForce">Атака методом перебора</option>
+                        <option value="Exploit">Эксплойт</option>
+                        <option value="DataLeak">Утечка данных</option>
+                        <option value="InsiderThreat">Инсайдерская угроза</option>
+                        <option value="Ransomware">Рансомизация</option>
+                        <option value="SQLInjection">SQL-инъекция</option>
+                        <option value="XSS">Межсайтовый скриптинг (XSS)</option>
+                        <option value="PortScan">Сканирование портов</option>
+                        <option value="UnauthorizedAccess">Несанкционированный доступ</option>
+                        <option value="Misconfiguration">Ошибка конфигурации</option>
+                        <option value="SocialEngineering">Социальная инженерия</option>
+                        <option value="ZeroDay">Zero-day уязвимость</option>
+                    </select>
+                </div>
 
-            <!-- Связанные FQDN и DNS-имена -->
-            <div class="form-group">
-                <label for="related_fqdn">Связанные FQDN:</label>
-                <textarea name="related_fqdn" id="related_fqdn"></textarea>
-            </div>
+                <!-- Связанные FQDN и DNS-имена -->
+                <div class="form-group">
+                    <label for="related_fqdn">Связанные FQDN:</label>
+                    <textarea name="related_fqdn" id="related_fqdn"></textarea>
+                </div>
 
-            <div class="form-group">
-                <label for="related_dns">Связанные DNS-имена:</label>
-                <textarea name="related_dns" id="related_dns"></textarea>
-            </div>
+                <div class="form-group">
+                    <label for="related_dns">Связанные DNS-имена:</label>
+                    <textarea name="related_dns" id="related_dns"></textarea>
+                </div>
 
-            <!-- IOC и Hash -->
-            <div class="form-group">
-                <label for="ioc">IOC (Indicators of Compromise):</label>
-                <textarea name="ioc" id="ioc"></textarea>
-            </div>
+                <!-- IOC и Hash -->
+                <div class="form-group">
+                    <label for="ioc">IOC (Indicators of Compromise):</label>
+                    <textarea name="ioc" id="ioc"></textarea>
+                </div>
 
-            <div class="form-group">
-                <label for="hash_value">Хэш:</label>
-                <input type="text" name="hash_value" id="hash_value">
-            </div>
+                <div class="form-group">
+                    <label for="hash_value">Хэш:</label>
+                    <input type="text" name="hash_value" id="hash_value">
+                </div>
 
-            <!-- ID события по матрице MITRE -->
-            <div class="form-group">
-                <label for="mitre_id">ID события по матрице MITRE:</label>
-                <input type="text" name="mitre_id" id="mitre_id">
-            </div>
+                <!-- ID события по матрице MITRE -->
+                <div class="form-group">
+                    <label for="mitre_id">ID события по матрице MITRE:</label>
+                    <input type="text" name="mitre_id" id="mitre_id">
+                </div>
 
-            <!-- ID или ссылки события в SIEM -->
-            <div class="form-group">
-                <label for="siem_id">ID события в SIEM:</label>
-                <input type="text" name="siem_id" id="siem_id">
-            </div>
+                <!-- ID или ссылки события в SIEM -->
+                <div class="form-group">
+                    <label for="siem_id">ID события в SIEM:</label>
+                    <input type="text" name="siem_id" id="siem_id">
+                </div>
 
-            <div class="form-group">
-                <label for="siem_link">Ссылка на событие в SIEM:</label>
-                <input type="text" name="siem_link" id="siem_link">
-            </div>
+                <div class="form-group">
+                    <label for="siem_link">Ссылка на событие в SIEM:</label>
+                    <input type="text" name="siem_link" id="siem_link">
+                </div>
 
-            <!-- Поле для загрузки скриншотов -->
-            <form method="POST" enctype="multipart/form-data">
-                <!-- Другие поля формы -->
+                <!-- Поле для загрузки скриншотов -->
                 <div class="form-group">
                     <label for="screenshots">Скриншоты</label>
                     <input type="file" class="form-control-file" id="screenshots" name="screenshots" multiple>
                 </div>
-                <button type="submit" class="btn btn-primary">Создать инцидент</button>
-            </form>
+            </div>
 
             <!-- Кнопка отправки -->
             <div class="form-group">

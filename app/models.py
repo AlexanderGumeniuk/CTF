@@ -2,6 +2,7 @@ from app import db, login_manager
 from flask_login import UserMixin
 from sqlalchemy.dialects.postgresql import JSON
 
+
 class UserChallenge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -174,3 +175,19 @@ class CriticalEventStep(db.Model):
 
     def __repr__(self):
         return f"CriticalEventStep('{self.step_name}', Event {self.event_id}, Team {self.team_id})"
+
+
+
+
+class Infrastructure(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    topology = db.Column(JSON, nullable=True)  # Топология (узлы)
+    links = db.Column(JSON, nullable=True)  # Связи между узлами
+    elements = db.Column(JSON, nullable=True)  # Прямоугольники и надписи
+    organization_description = db.Column(db.Text, nullable=False)
+    files = db.Column(JSON, nullable=True)
+
+    def __repr__(self):
+        return f"Infrastructure('{self.title}')"

@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request
 from app import app, db
-from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalEvent, CriticalEventResponse,CriticalEventStep
+from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalEvent, CriticalEventResponse,CriticalEventStep,Infrastructure
 from flask_login import login_user, current_user, logout_user, login_required
 from sqlalchemy import func
 from datetime import datetime
@@ -11,6 +11,8 @@ import os
 from sqlalchemy.orm.attributes import flag_modified
 from flask import request, flash, redirect, url_for, render_template
 from datetime import datetime
+from flask import send_from_directory
+from werkzeug.utils import secure_filename
 
 def generate_unique_filename(filename):
     """
@@ -1304,3 +1306,138 @@ def team_stats():
     team_rank = next((index + 1 for index, t in enumerate(all_teams) if t.id == team.id), None)
 
     return render_template('user/team_stats.html', team=team, members=team_members, total_points=total_points, team_rank=team_rank, all_teams=all_teams)
+
+@app.route('/infrastructure')
+@login_required
+def infrastructure():
+    # Получаем данные об инфраструктуре из базы данных
+    infra = Infrastructure.query.first()  # Предполагаем, что у нас только одна запись
+    if not infra:
+        flash('Информация об инфраструктуре пока недоступна.', 'warning')
+        return redirect(url_for('index'))
+
+    return render_template('infrastructure.html', infra=infra)
+
+@app.route('/download/<filename>')
+@login_required
+def download_file(filename):
+    # Убедитесь, что файл существует и безопасен для скачивания
+    if not filename or not filename.endswith(('.pdf', '.txt', '.docx')):
+        flash('Недопустимый файл.', 'danger')
+        return redirect(url_for('infrastructure'))
+
+    # Путь к папке с файлами
+    upload_folder = app.config['UPLOAD_FOLDER']
+    return send_from_directory(upload_folder, filename, as_attachment=True)
+
+
+
+
+
+@app.route('/upload', methods=['GET', 'POST'])
+@login_required
+#@admin_required Исправить
+def upload_file():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            flash('Файл успешно загружен!', 'success')
+            return redirect(url_for('infrastructure'))
+        else:
+            flash('Недопустимый формат файла.', 'danger')
+    return render_template('upload.html')
+
+
+@app.route('/infrastructure/topology')
+@login_required
+def infrastructure_topology():
+    # Получаем данные об инфраструктуре
+    infra = Infrastructure.query.first()
+    if not infra:
+        flash('Информация о топологии сети пока недоступна.', 'warning')
+        return redirect(url_for('infrastructure'))
+
+    # Преобразуем данные топологии в JSON
+    topology_data = {
+        "nodes": infra.topology.get("nodes", []),
+        "links": infra.topology.get("links", [])
+    }
+
+    return render_template('infrastructure_topology.html', topology_data=topology_data )
+
+from flask import request, redirect, url_for, flash
+
+import logging
+from flask import request, redirect, url_for, flash, jsonify
+import json
+
+# Настройка логирования
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
+@app.route('/admin/topology', methods=['GET', 'POST'])
+@login_required
+def admin_topology():
+    if not current_user.is_admin:
+        flash('У вас нет прав доступа к этой странице.', 'danger')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        try:
+            logger.debug("Начало обработки POST-запроса")
+
+            # Получаем данные из формы
+            topology_data = request.form.get('topology')
+            logger.debug(f"Полученные данные из формы: {topology_data}")
+
+            if not topology_data:
+                logger.error("Данные топологии не получены.")
+                flash('Данные топологии не получены.', 'danger')
+                return redirect(url_for('admin_topology'))
+
+            # Преобразуем JSON-строку в объект Python
+            try:
+                topology = json.loads(topology_data)
+                logger.debug(f"Преобразованные данные топологии: {topology}")
+            except json.JSONDecodeError as e:
+                logger.error(f"Ошибка при декодировании JSON: {e}")
+                flash('Ошибка при обработке данных топологии.', 'danger')
+                return redirect(url_for('admin_topology'))
+
+            # Получаем объект инфраструктуры
+            infra = Infrastructure.query.first()
+            if not infra:
+                logger.error("Инфраструктура не найдена.")
+                flash('Инфраструктура не найдена.', 'danger')
+                return redirect(url_for('admin_topology'))
+
+            # Обновляем топологию и элементы
+            infra.topology = topology.get('nodes', [])
+            infra.links = topology.get('links', [])  # Обновляем связи
+            infra.elements = topology.get('elements', [])
+            db.session.commit()
+            logger.debug("Топология и элементы успешно сохранены в базе данных.")
+
+            flash('Топология успешно сохранена!', 'success')
+            return redirect(url_for('admin_topology'))
+
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Ошибка при сохранении топологии: {str(e)}", exc_info=True)
+            flash(f'Ошибка при сохранении топологии: {str(e)}', 'danger')
+            return redirect(url_for('admin_topology'))
+
+    # Получаем данные топологии
+    infra = Infrastructure.query.first()
+    topology_data = {
+        'nodes': infra.topology if infra and isinstance(infra.topology, list) else [],
+        'links': infra.links if infra and isinstance(infra.links, list) else [],
+        'elements': infra.elements if infra and isinstance(infra.elements, list) else []
+    }
+    logger.debug(f"Текущая топология: {topology_data}")
+
+    return render_template('admin_topology.html', topology_data=topology_data)
