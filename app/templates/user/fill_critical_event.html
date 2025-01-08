@@ -1,8 +1,54 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+  body {
+      overflow-y: auto;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #1e1e1e;
+      color: #ffffff;
+  }
+  .step {
+      border: 1px solid #444;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      background-color: #2d2d2d;
+  }
+  .step h3 {
+      margin-top: 0;
+  }
+  .screenshots img {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+  }
+  textarea, input[type="text"], input[type="number"], input[type="datetime-local"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background-color: #333;
+      color: #fff;
+  }
+  button {
+      padding: 10px 20px;
+      background-color: #444;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+  }
+  button:hover {
+      background-color: #555;
+  }
+</style>
+
 <h1>Заполнение отчета для события: {{ event.title }}</h1>
 
-<form method="POST" id="report-form">
+<form method="POST" id="report-form" enctype="multipart/form-data">
     <div>
         <label for="response">Отчет:</label>
         <textarea id="response" name="response" required>{{ response.response if response else '' }}</textarea>
@@ -12,45 +58,109 @@
     <div id="steps">
         {% for step in steps %}
             <div class="step" data-step-id="{{ step.id }}">
+                <input type="hidden" name="step_id[]" value="{{ step.id }}">
                 <input type="text" name="step_name[]" value="{{ step.step_name }}" placeholder="Название шага" required>
                 <textarea name="description[]" placeholder="Описание">{{ step.description }}</textarea>
+
+                <!-- Новые поля -->
+                <input type="datetime-local" name="start_time[]" value="{{ step.start_time.strftime('%Y-%m-%dT%H:%M') if step.start_time else '' }}" placeholder="Время начала" required>
+                <input type="datetime-local" name="end_time[]" value="{{ step.end_time.strftime('%Y-%m-%dT%H:%M') if step.end_time else '' }}" placeholder="Время окончания" required>
+                <input type="text" name="source_ip[]" value="{{ step.source_ip }}" placeholder="Исходный IP" required>
+                <input type="number" name="source_port[]" value="{{ step.source_port }}" placeholder="Исходный порт">
+                <input type="text" name="destination_ip[]" value="{{ step.destination_ip }}" placeholder="Целевой IP" required>
+                <input type="number" name="destination_port[]" value="{{ step.destination_port }}" placeholder="Целевой порт">
+                <input type="text" name="event_type[]" value="{{ step.event_type }}" placeholder="Тип события" required>
+                <textarea name="related_fqdn[]" placeholder="Связанный FQDN">{{ step.related_fqdn }}</textarea>
+                <textarea name="related_dns[]" placeholder="Связанный DNS">{{ step.related_dns }}</textarea>
+                <textarea name="ioc[]" placeholder="Индикаторы компрометации (IOC)">{{ step.ioc }}</textarea>
+                <textarea name="hash_value[]" placeholder="Хэш-значение">{{ step.hash_value }}</textarea>
+                <input type="text" name="mitre_id[]" value="{{ step.mitre_id }}" placeholder="MITRE ID">
+                <input type="text" name="siem_id[]" value="{{ step.siem_id }}" placeholder="SIEM ID">
+                <textarea name="siem_link[]" placeholder="Ссылка на SIEM">{{ step.siem_link }}</textarea>
+
+                <!-- Скриншоты -->
+                {% if step.screenshots %}
+                <p><strong>Скриншоты:</strong></p>
+                <div class="screenshots">
+                    {% for screenshot in step.screenshots %}
+                    <p>Имя файла: {{ screenshot }}</p>
+                    <img src="{{ url_for('static', filename='uploads/' + screenshot) }}" alt="Скриншот" class="img-fluid mb-2">
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>Скриншоты отсутствуют.</p>
+                {% endif %}
+
+                <!-- Поле для загрузки новых скриншотов -->
+                <label for="screenshots_step_{{ step.id }}">Добавить скриншоты:</label>
+                <input type="file" name="screenshots_step_{{ step.id }}[]" multiple accept="image/*">
+
+                <!-- Дополнительные поля -->
                 <input type="text" name="responsible[]" value="{{ step.responsible }}" placeholder="Ответственный">
                 <input type="datetime-local" name="deadline[]" value="{{ step.deadline.strftime('%Y-%m-%dT%H:%M') if step.deadline else '' }}" placeholder="Срок выполнения">
-                <textarea name="resources[]" placeholder="Ресурсы">{{ step.resources }}</textarea>
-                <textarea name="risks[]" placeholder="Риски">{{ step.risks }}</textarea>
-                <textarea name="actions[]" placeholder="Действия">{{ step.actions }}</textarea>
-                <textarea name="results[]" placeholder="Результаты">{{ step.results }}</textarea>
                 <input type="text" name="status[]" value="{{ step.status }}" placeholder="Статус">
                 <textarea name="comments[]" placeholder="Комментарии">{{ step.comments }}</textarea>
+
                 <button type="button" class="remove-step">Удалить шаг</button>
             </div>
         {% endfor %}
     </div>
 
+    <!-- Новые шаги -->
+    <div id="new-steps">
+        <!-- Новые шаги будут добавляться сюда -->
+    </div>
+
+    <!-- Кнопка для добавления нового шага -->
     <button type="button" id="add-step">Добавить шаг</button>
+
+    <!-- Кнопка отправки формы -->
     <button type="submit">Отправить на проверку</button>
 </form>
 
 <script>
+    let stepCounter = {{ steps | length }}; // Счетчик для новых шагов
+
     // JavaScript для добавления новых шагов
     document.getElementById('add-step').addEventListener('click', function() {
-        const stepsDiv = document.getElementById('steps');
+        const newStepsContainer = document.getElementById('new-steps');
         const newStep = document.createElement('div');
         newStep.className = 'step';
         newStep.innerHTML = `
+            <input type="hidden" name="step_id[]" value="">
             <input type="text" name="step_name[]" placeholder="Название шага" required>
             <textarea name="description[]" placeholder="Описание"></textarea>
+
+            <!-- Новые поля -->
+            <input type="datetime-local" name="start_time[]" placeholder="Время начала" required>
+            <input type="datetime-local" name="end_time[]" placeholder="Время окончания" required>
+            <input type="text" name="source_ip[]" placeholder="Исходный IP" required>
+            <input type="number" name="source_port[]" placeholder="Исходный порт">
+            <input type="text" name="destination_ip[]" placeholder="Целевой IP" required>
+            <input type="number" name="destination_port[]" placeholder="Целевой порт">
+            <input type="text" name="event_type[]" placeholder="Тип события" required>
+            <textarea name="related_fqdn[]" placeholder="Связанный FQDN"></textarea>
+            <textarea name="related_dns[]" placeholder="Связанный DNS"></textarea>
+            <textarea name="ioc[]" placeholder="Индикаторы компрометации (IOC)"></textarea>
+            <textarea name="hash_value[]" placeholder="Хэш-значение"></textarea>
+            <input type="text" name="mitre_id[]" placeholder="MITRE ID">
+            <input type="text" name="siem_id[]" placeholder="SIEM ID">
+            <textarea name="siem_link[]" placeholder="Ссылка на SIEM"></textarea>
+
+            <!-- Поле для загрузки скриншотов -->
+            <label for="screenshots_step_new_${stepCounter}">Добавить скриншоты:</label>
+            <input type="file" name="screenshots_step_new_${stepCounter}[]" multiple accept="image/*">
+
+            <!-- Дополнительные поля -->
             <input type="text" name="responsible[]" placeholder="Ответственный">
             <input type="datetime-local" name="deadline[]" placeholder="Срок выполнения">
-            <textarea name="resources[]" placeholder="Ресурсы"></textarea>
-            <textarea name="risks[]" placeholder="Риски"></textarea>
-            <textarea name="actions[]" placeholder="Действия"></textarea>
-            <textarea name="results[]" placeholder="Результаты"></textarea>
             <input type="text" name="status[]" placeholder="Статус">
             <textarea name="comments[]" placeholder="Комментарии"></textarea>
+
             <button type="button" class="remove-step">Удалить шаг</button>
         `;
-        stepsDiv.appendChild(newStep);
+        newStepsContainer.appendChild(newStep);
+        stepCounter++;
     });
 
     // JavaScript для удаления шагов
@@ -68,9 +178,9 @@
 
         // Собираем ID удаленных шагов
         stepsDiv.querySelectorAll('.step').forEach(step => {
-            if (!step.dataset.stepId) return;  // Пропускаем новые шаги (без ID)
-            if (!document.body.contains(step)) {
-                removedSteps.push(step.dataset.stepId);
+            const stepId = step.querySelector('input[name="step_id[]"]').value;
+            if (stepId && !document.body.contains(step)) {
+                removedSteps.push(stepId);
             }
         });
 

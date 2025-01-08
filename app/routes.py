@@ -703,7 +703,7 @@ def delete_critical_event(event_id):
 @login_required
 def review_critical_event(event_id, team_id):
     if not current_user.is_admin:
-        flash('You do not have permission to access this page.', 'danger')
+        flash('У вас нет прав доступа к этой странице.', 'danger')
         return redirect(url_for('index'))
 
     # Получаем ответ на критическое событие для указанной команды
@@ -712,6 +712,17 @@ def review_critical_event(event_id, team_id):
         team_id=team_id
     ).first_or_404()
 
+    # Получаем все шаги, связанные с этим событием и командой
+    steps = CriticalEventStep.query.filter_by(
+        event_id=event_id,
+        team_id=team_id
+    ).all()
+
+    # Отладочный вывод
+    print(f"Найдено шагов: {len(steps)}")
+    for step in steps:
+        print(f"Шаг: {step.step_name}, ID: {step.id}, Event ID: {step.event_id}, Team ID: {step.team_id}")
+
     if request.method == 'POST':
         action = request.form.get('action')
         points = int(request.form.get('points', 0))
@@ -719,24 +730,21 @@ def review_critical_event(event_id, team_id):
         if action == 'approve':
             response.status = 'approved'
             response.points_awarded = points
-
-            # Начисляем баллы пользователю
             user = User.query.get(response.user_id)
             user.total_points += points
-            db.session.commit()
-
-            flash('Response approved! Points awarded.', 'success')
+            flash('Отчёт принят! Баллы начислены.', 'success')
         elif action == 'reject':
             response.status = 'rejected'
-            flash('Response rejected!', 'danger')
+            flash('Отчёт отклонён!', 'danger')
         elif action == 'needs_revision':
             response.status = 'needs_revision'
-            flash('Response sent for revision!', 'warning')
+            CriticalEventStep.query.filter_by(event_id=event_id, team_id=team_id).delete()
+            flash('Отчёт отправлен на доработку! Все шаги удалены.', 'warning')
 
         db.session.commit()
         return redirect(url_for('admin_critical_events'))
 
-    return render_template('admin/review_critical_event.html', response=response)
+    return render_template('admin/review_critical_event.html', response=response, steps=steps)
 
 @app.route('/request_hint/<int:challenge_id>', methods=['POST'])
 @login_required
@@ -752,7 +760,20 @@ def review_response(response_id):
         flash('У вас нет прав доступа к этой странице.', 'danger')
         return redirect(url_for('index'))
 
+    # Получаем отчет по ID
     response = CriticalEventResponse.query.get_or_404(response_id)
+
+    # Получаем все шаги, связанные с этим отчетом
+    steps = CriticalEventStep.query.filter_by(
+        event_id=response.event_id,
+        team_id=response.team_id
+    ).all()
+
+    # Преобразуем JSON-строку в список (если необходимо)
+    for step in steps:
+        logger.debug(f"Проверка инцидента: {step.screenshots}")
+        if step.screenshots and isinstance(step.screenshots, str):
+            step.screenshots = json.loads(step.screenshots)
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -761,27 +782,23 @@ def review_response(response_id):
         if action == 'approve':
             response.status = 'approved'
             response.points_awarded = points
-
-            # Начисляем баллы пользователю
             user = User.query.get(response.user_id)
             user.total_points += points
-            db.session.commit()
-
             flash('Отчёт принят! Баллы начислены.', 'success')
         elif action == 'reject':
             response.status = 'rejected'
             flash('Отчёт отклонён!', 'danger')
         elif action == 'needs_revision':
-            response.status = 'needs_revision'  # Меняем статус на "needs_revision"
-
-            # Удаляем все шаги, связанные с этим отчетом
+            response.status = 'needs_revision'
             CriticalEventStep.query.filter_by(event_id=response.event_id, team_id=response.team_id).delete()
             flash('Отчёт отправлен на доработку! Все шаги удалены.', 'warning')
 
         db.session.commit()
         return redirect(url_for('admin_critical_events'))
+    print(steps)
 
-    return render_template('admin/review_response.html', response=response)
+    return render_template('admin/review_response.html', response=response, steps=steps)
+
 
 @app.route('/edit_response/<int:response_id>', methods=['GET', 'POST'])
 @login_required
@@ -861,121 +878,225 @@ def fill_critical_event(event_id):
     response = CriticalEventResponse.query.filter_by(event_id=event.id, team_id=current_user.team_id).first()
 
     if request.method == 'POST':
-        # Обновляем или создаем отчет
-        if response:
-            response.response = request.form['response']
-            response.status = 'pending'  # Меняем статус на "pending"
-        else:
-            response = CriticalEventResponse(
-                event_id=event.id,
-                user_id=current_user.id,
-                team_id=current_user.team_id,
-                response=request.form['response'],
-                status='pending'
-            )
-            db.session.add(response)
-        # Удаляем шаги, которые были отмечены для удаления
-        removed_steps = request.form.getlist('removed_steps[]')
-        for step_id in removed_steps:
-            step = CriticalEventStep.query.get(step_id)
-            if step:
-                db.session.delete(step)
+        try:
+            # Логирование данных формы
+            logger.debug(f"Данные формы: {request.form}")
+            logger.debug(f"Файлы: {request.files}")
 
+            # Проверка обязательных полей
+            step_names = request.form.getlist('step_name[]')
+            start_times = request.form.getlist('start_time[]')
+            source_ips = request.form.getlist('source_ip[]')
+            destination_ips = request.form.getlist('destination_ip[]')
+            event_types = request.form.getlist('event_type[]')
 
-        CriticalEventStep.query.filter_by(event_id=event.id, team_id=current_user.team_id).delete()
+            for i, step_name in enumerate(step_names):
+                if not step_name or not start_times[i] or not source_ips[i] or not destination_ips[i] or not event_types[i]:
+                    flash('Все обязательные поля шага должны быть заполнены.', 'danger')
+                    return redirect(url_for('fill_critical_event', event_id=event_id))
 
-        # Обрабатываем шаги из формы
-        step_names = request.form.getlist('step_name[]')
-        descriptions = request.form.getlist('description[]')
-        responsibles = request.form.getlist('responsible[]')
-        deadlines = request.form.getlist('deadline[]')
-        resources = request.form.getlist('resources[]')
-        risks = request.form.getlist('risks[]')
-        actions = request.form.getlist('actions[]')
-        results = request.form.getlist('results[]')
-        statuses = request.form.getlist('status[]')
-        comments = request.form.getlist('comments[]')
+            # Обработка загрузки файлов для каждого шага
+            screenshot_paths = {}
+            for key, files in request.files.lists():
+                if key.startswith('screenshots_step_'):
+                    step_id = key.replace('screenshots_step_', '').replace('[]', '')
+                    screenshot_paths[step_id] = []
+                    for file in files:
+                        if file.filename != '' and allowed_file(file.filename):
+                            unique_filename = generate_unique_filename(file.filename)
+                            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                            file.save(file_path)
+                            screenshot_paths[step_id].append(unique_filename)
+                            logger.debug(f"Файл {file.filename} сохранен как {unique_filename} для шага {step_id}")
 
-        # Создаем или обновляем шаги
-        for i in range(len(step_names)):
-            step_id = request.form.getlist('step_id[]')[i] if 'step_id[]' in request.form else None
-            if step_id:
-                # Обновляем существующий шаг
+            # Обновляем или создаем отчет
+            if response:
+                response.response = request.form['response']
+                response.status = 'pending'  # Обновляем статус на "pending"
+            else:
+                response = CriticalEventResponse(
+                    event_id=event.id,
+                    user_id=current_user.id,
+                    team_id=current_user.team_id,
+                    response=request.form['response'],
+                    status='pending'  # Устанавливаем статус "pending"
+                )
+                db.session.add(response)
+
+            # Обработка шагов
+            step_ids = request.form.getlist('step_id[]')
+            descriptions = request.form.getlist('description[]')
+            end_times = request.form.getlist('end_time[]')
+            source_ports = request.form.getlist('source_port[]')
+            destination_ports = request.form.getlist('destination_port[]')
+            related_fqdns = request.form.getlist('related_fqdn[]')
+            related_dns = request.form.getlist('related_dns[]')
+            iocs = request.form.getlist('ioc[]')
+            hash_values = request.form.getlist('hash_value[]')
+            mitre_ids = request.form.getlist('mitre_id[]')
+            siem_ids = request.form.getlist('siem_id[]')
+            siem_links = request.form.getlist('siem_link[]')
+            responsibles = request.form.getlist('responsible[]')
+            deadlines = request.form.getlist('deadline[]')
+            statuses = request.form.getlist('status[]')
+            comments = request.form.getlist('comments[]')
+
+            for i, step_id in enumerate(step_ids):
+                if step_id:  # Обновление существующего шага
+                    step = CriticalEventStep.query.get(step_id)
+                    if step:
+                        step.step_name = step_names[i]
+                        step.description = descriptions[i]
+                        step.start_time = datetime.strptime(start_times[i], '%Y-%m-%dT%H:%M')
+                        step.end_time = datetime.strptime(end_times[i], '%Y-%m-%dT%H:%M') if end_times[i] else None
+                        step.source_ip = source_ips[i]
+                        step.source_port = int(source_ports[i]) if source_ports[i] else None
+                        step.destination_ip = destination_ips[i]
+                        step.destination_port = int(destination_ports[i]) if destination_ports[i] else None
+                        step.event_type = event_types[i]
+                        step.related_fqdn = related_fqdns[i]
+                        step.related_dns = related_dns[i]
+                        step.ioc = iocs[i]
+                        step.hash_value = hash_values[i]
+                        step.mitre_id = mitre_ids[i]
+                        step.siem_id = siem_ids[i]
+                        step.siem_link = siem_links[i]
+                        step.screenshots = screenshot_paths.get(step_id, [])
+                        step.responsible = responsibles[i]
+                        step.deadline = datetime.strptime(deadlines[i], '%Y-%m-%dT%H:%M') if deadlines[i] else None
+                        step.status = statuses[i]
+                        step.comments = comments[i]
+                else:  # Создание нового шага
+                    step = CriticalEventStep(
+                        event_id=event.id,
+                        user_id=current_user.id,
+                        team_id=current_user.team_id,
+                        step_name=step_names[i],
+                        description=descriptions[i],
+                        start_time=datetime.strptime(start_times[i], '%Y-%m-%dT%H:%M'),
+                        end_time=datetime.strptime(end_times[i], '%Y-%m-%dT%H:%M') if end_times[i] else None,
+                        source_ip=source_ips[i],
+                        source_port=int(source_ports[i]) if source_ports[i] else None,
+                        destination_ip=destination_ips[i],
+                        destination_port=int(destination_ports[i]) if destination_ports[i] else None,
+                        event_type=event_types[i],
+                        related_fqdn=related_fqdns[i],
+                        related_dns=related_dns[i],
+                        ioc=iocs[i],
+                        hash_value=hash_values[i],
+                        mitre_id=mitre_ids[i],
+                        siem_id=siem_ids[i],
+                        siem_link=siem_links[i],
+                        screenshots=screenshot_paths.get(f"new_{i}", []),
+                        responsible=responsibles[i],
+                        deadline=datetime.strptime(deadlines[i], '%Y-%m-%dT%H:%M') if deadlines[i] else None,
+                        status=statuses[i],
+                        comments=comments[i]
+                    )
+                    db.session.add(step)
+
+            # Удаление шагов, отмеченных для удаления
+            removed_steps = request.form.getlist('removed_steps[]')
+            for step_id in removed_steps:
                 step = CriticalEventStep.query.get(step_id)
                 if step:
-                    step.step_name = step_names[i]
-                    step.description = descriptions[i]
-                    step.responsible = responsibles[i]
-                    step.deadline = datetime.strptime(deadlines[i], '%Y-%m-%dT%H:%M') if deadlines[i] else None
-                    step.resources = resources[i]
-                    step.risks = risks[i]
-                    step.actions = actions[i]
-                    step.results = results[i]
-                    step.status = statuses[i]
-                    step.comments = comments[i]
-            else:
-                # Создаем новый шаг
-                step = CriticalEventStep(
-                    event_id=event.id,
-                    team_id=current_user.team_id,
-                    step_name=step_names[i],
-                    description=descriptions[i],
-                    responsible=responsibles[i],
-                    deadline=datetime.strptime(deadlines[i], '%Y-%m-%dT%H:%M') if deadlines[i] else None,
-                    resources=resources[i],
-                    risks=risks[i],
-                    actions=actions[i],
-                    results=results[i],
-                    status=statuses[i],
-                    comments=comments[i]
-                )
-                db.session.add(step)
+                    db.session.delete(step)
 
-        db.session.commit()
-        flash('Отчет и шаги успешно сохранены и отправлены на проверку!', 'success')
-        return redirect(url_for('user_pending_responses'))
+            db.session.commit()
+            flash('Отчет и шаги успешно сохранены и отправлены на проверку!', 'success')
+            return redirect(url_for('user_pending_responses'))
 
-    # Получаем уже добавленные шаги (если они есть)
+        except IntegrityError as e:
+            db.session.rollback()
+            flash('Ошибка: Некоторые обязательные поля не заполнены.', 'danger')
+            logger.error(f"Ошибка IntegrityError: {e}")
+        except Exception as e:
+            db.session.rollback()
+            flash('Произошла ошибка при сохранении отчета.', 'danger')
+            logger.error(f"Ошибка при сохранении в базу данных: {e}")
+
     steps = CriticalEventStep.query.filter_by(event_id=event.id, team_id=current_user.team_id).all()
     return render_template('user/fill_critical_event.html', event=event, response=response, steps=steps)
+
+from flask import request, flash, redirect, url_for
+import os
+import uuid
+from datetime import datetime
+from werkzeug.utils import secure_filename
 
 @app.route('/add_steps/<int:event_id>', methods=['POST'])
 @login_required
 def add_steps(event_id):
-    event = CriticalEvent.query.get_or_404(event_id)
+    if not current_user.team:
+        flash('Вы не состоите в команде.', 'warning')
+        return redirect(url_for('index'))
+
+    # Обработка загрузки скриншотов
+    screenshot_paths = []
+    if 'screenshots' in request.files:
+        files = request.files.getlist('screenshots')
+        for file in files:
+            if file.filename != '' and allowed_file(file.filename):
+                # Генерируем уникальное имя файла
+                unique_filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                file.save(file_path)
+                screenshot_paths.append(unique_filename)  # Сохраняем имя файла
 
     # Получаем данные из формы
-    step_names = request.form.getlist('step_name[]')
-    descriptions = request.form.getlist('description[]')
-    responsibles = request.form.getlist('responsible[]')
-    deadlines = request.form.getlist('deadline[]')
-    resources = request.form.getlist('resources[]')
-    risks = request.form.getlist('risks[]')
-    actions = request.form.getlist('actions[]')
-    results = request.form.getlist('results[]')
-    statuses = request.form.getlist('status[]')
-    comments = request.form.getlist('comments[]')
+    step_name = request.form.get('step_name')
+    description = request.form.get('description')
+    start_time = datetime.strptime(request.form.get('start_time'), '%Y-%m-%dT%H:%M')
+    end_time = datetime.strptime(request.form.get('end_time'), '%Y-%m-%dT%H:%M')
+    source_ip = request.form.get('source_ip')
+    source_port = int(request.form.get('source_port')) if request.form.get('source_port') else None
+    destination_ip = request.form.get('destination_ip')
+    destination_port = int(request.form.get('destination_port')) if request.form.get('destination_port') else None
+    event_type = request.form.get('event_type')
+    related_fqdn = request.form.get('related_fqdn')
+    related_dns = request.form.get('related_dns')
+    ioc = request.form.get('ioc')
+    hash_value = request.form.get('hash_value')
+    mitre_id = request.form.get('mitre_id')
+    siem_id = request.form.get('siem_id')
+    siem_link = request.form.get('siem_link')
+    responsible = request.form.get('responsible')
+    deadline = datetime.strptime(request.form.get('deadline'), '%Y-%m-%dT%H:%M') if request.form.get('deadline') else None
+    status = request.form.get('status')
+    comments = request.form.get('comments')
 
-    # Сохраняем каждый шаг в базе данных
-    for i in range(len(step_names)):
-        step = CriticalEventStep(
-            event_id=event.id,
-            step_name=step_names[i],
-            description=descriptions[i],
-            responsible=responsibles[i],
-            deadline=datetime.strptime(deadlines[i], '%Y-%m-%dT%H:%M') if deadlines[i] else None,
-            resources=resources[i],
-            risks=risks[i],
-            actions=actions[i],
-            results=results[i],
-            status=statuses[i],
-            comments=comments[i]
-        )
-        db.session.add(step)
-
+    # Создаем новый шаг
+    step = CriticalEventStep(
+        event_id=event_id,
+        user_id=current_user.id,
+        team_id=current_user.team_id,
+        step_name=step_name,
+        description=description,
+        start_time=start_time,
+        end_time=end_time,
+        source_ip=source_ip,
+        source_port=source_port,
+        destination_ip=destination_ip,
+        destination_port=destination_port,
+        event_type=event_type,
+        related_fqdn=related_fqdn,
+        related_dns=related_dns,
+        ioc=ioc,
+        hash_value=hash_value,
+        mitre_id=mitre_id,
+        siem_id=siem_id,
+        siem_link=siem_link,
+        screenshots=screenshot_paths,
+        responsible=responsible,
+        deadline=deadline,
+        status=status,
+        comments=comments
+    )
+    db.session.add(step)
     db.session.commit()
-    flash('Шаги успешно добавлены!', 'success')
-    return redirect(url_for('view_event', event_id=event.id))
+
+    flash('Шаг успешно добавлен!', 'success')
+    return redirect(url_for('fill_critical_event', event_id=event_id))
 
 @app.route('/view_event/<int:event_id>')
 @login_required

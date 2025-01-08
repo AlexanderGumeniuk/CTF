@@ -144,18 +144,33 @@ class CriticalEvent(db.Model):
 class CriticalEventStep(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('critical_event.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Обязательное поле
-    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)  # Связь с командой
-    step_name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    responsible = db.Column(db.String(100), nullable=True)
-    deadline = db.Column(db.DateTime, nullable=True)
-    resources = db.Column(db.Text, nullable=True)
-    risks = db.Column(db.Text, nullable=True)
-    actions = db.Column(db.Text, nullable=True)
-    results = db.Column(db.Text, nullable=True)
-    status = db.Column(db.String(50), nullable=True)
-    comments = db.Column(db.Text, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    step_name = db.Column(db.String(100), nullable=False)  # Название шага
+    description = db.Column(db.Text, nullable=True)  # Описание шага
+
+    # Поля, аналогичные модели Incident
+    start_time = db.Column(db.DateTime, nullable=False)  # Время начала
+    end_time = db.Column(db.DateTime, nullable=False)  # Время окончания
+    source_ip = db.Column(db.String(50), nullable=False)  # Исходный IP
+    source_port = db.Column(db.Integer, nullable=True)  # Исходный порт
+    destination_ip = db.Column(db.String(50), nullable=False)  # Целевой IP
+    destination_port = db.Column(db.Integer, nullable=True)  # Целевой порт
+    event_type = db.Column(db.String(50), nullable=False)  # Тип события
+    related_fqdn = db.Column(db.Text, nullable=True)  # Связанный FQDN
+    related_dns = db.Column(db.Text, nullable=True)  # Связанный DNS
+    ioc = db.Column(db.Text, nullable=True)  # Индикаторы компрометации (IOC)
+    hash_value = db.Column(db.Text, nullable=True)  # Хэш-значение
+    mitre_id = db.Column(db.String(50), nullable=True)  # MITRE ID
+    siem_id = db.Column(db.String(50), nullable=True)  # SIEM ID
+    siem_link = db.Column(db.Text, nullable=True)  # Ссылка на SIEM
+    screenshots = db.Column(JSON, nullable=True)  # Скриншоты (для PostgreSQL)
+
+    # Дополнительные поля для шагов
+    responsible = db.Column(db.String(100), nullable=True)  # Ответственный
+    deadline = db.Column(db.DateTime, nullable=True)  # Срок выполнения
+    status = db.Column(db.String(50), nullable=True)  # Статус шага
+    comments = db.Column(db.Text, nullable=True)  # Комментарии
 
     def __repr__(self):
         return f"CriticalEventStep('{self.step_name}', Event {self.event_id}, Team {self.team_id})"

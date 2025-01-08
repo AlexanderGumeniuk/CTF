@@ -1,15 +1,123 @@
 {% extends "base.html" %}
 {% block content %}
+<!-- Подключение Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
 <style>
   body {
-      overflow-y: auto; /* Включаем вертикальную прокрутку */
-      height: 100vh; /* Высота body равна высоте окна браузера */
-      margin: 0; /* Убираем стандартные отступы */
+      overflow-y: auto;
+      height: 100vh;
+      margin: 0;
       font-family: Arial, sans-serif;
-      background-color: #1e1e1e; /* Темный фон для всей страницы */
-      color: #ffffff; /* Белый цвет текста по умолчанию */
+      background-color: #1e1e1e;
+      color: #ffffff;
+  }
+  .card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      margin-bottom: 15px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.8s ease-out;
+  }
+  .card-body {
+      padding: 15px;
+  }
+  .screenshots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+  }
+  .screenshots img {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+  }
+  .screenshots img:hover {
+      transform: scale(1.05);
+  }
+  .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  .btn-success {
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(76, 175, 80, 0.6));
+      color: #fff;
+  }
+  .btn-danger {
+      background: linear-gradient(145deg, rgba(244, 67, 54, 0.8), rgba(244, 67, 54, 0.6));
+      color: #fff;
+  }
+  .btn-warning {
+      background: linear-gradient(145deg, rgba(255, 193, 7, 0.8), rgba(255, 193, 7, 0.6));
+      color: #fff;
+  }
+  .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3);
+  }
+  .form-control {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 10px;
+      box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  .form-control:focus {
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3);
+  }
+  @keyframes fadeIn {
+      from {
+          opacity: 0;
+          transform: translateY(20px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
+  }
+  .accordion-button {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 1rem;
+      transition: all 0.3s ease;
+      text-align: left;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+  }
+  .accordion-button:not(.collapsed) {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      box-shadow: none;
+  }
+  .accordion-button:focus {
+      box-shadow: none;
+  }
+  .accordion-button::after {
+      filter: brightness(0) invert(1); /* Иконка стрелки становится белой */
+      margin-left: auto; /* Стрелка справа */
   }
 </style>
+
 <h1>Проверка отчёта по событию "{{ response.event.title }}"</h1>
 <p><strong>Пользователь:</strong> {{ response.user.username }}</p>
 <p><strong>Команда:</strong> {{ response.team.name if response.team else 'Нет команды' }}</p>
@@ -23,32 +131,58 @@
 </div>
 
 <h2>Шаги</h2>
-<div id="steps-accordion">
-    {% for step in response.event.steps %}
+{% if steps %}
+<div class="accordion" id="steps-accordion">
+    {% for step in steps %}
     <div class="card mb-2">
         <div class="card-header" id="step-heading-{{ step.id }}">
             <h5 class="mb-0">
-                <button class="btn btn-link" data-toggle="collapse" data-target="#step-collapse-{{ step.id }}" aria-expanded="true" aria-controls="step-collapse-{{ step.id }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step-collapse-{{ step.id }}" aria-expanded="false" aria-controls="step-collapse-{{ step.id }}">
                     Шаг {{ loop.index }}: {{ step.step_name }}
                 </button>
             </h5>
         </div>
-        <div id="step-collapse-{{ step.id }}" class="collapse" aria-labelledby="step-heading-{{ step.id }}" data-parent="#steps-accordion">
+        <div id="step-collapse-{{ step.id }}" class="accordion-collapse collapse" aria-labelledby="step-heading-{{ step.id }}" data-bs-parent="#steps-accordion">
             <div class="card-body">
                 <p><strong>Описание:</strong> {{ step.description }}</p>
-                <p><strong>Ответственный:</strong> {{ step.responsible }}</p>
+                <p><strong>Время начала:</strong> {{ step.start_time.strftime('%Y-%m-%d %H:%M') if step.start_time else 'Не указано' }}</p>
+                <p><strong>Время окончания:</strong> {{ step.end_time.strftime('%Y-%m-%d %H:%M') if step.end_time else 'Не указано' }}</p>
+                <p><strong>Исходный IP:</strong> {{ step.source_ip }}</p>
+                <p><strong>Исходный порт:</strong> {{ step.source_port if step.source_port else 'Не указан' }}</p>
+                <p><strong>Целевой IP:</strong> {{ step.destination_ip }}</p>
+                <p><strong>Целевой порт:</strong> {{ step.destination_port if step.destination_port else 'Не указан' }}</p>
+                <p><strong>Тип события:</strong> {{ step.event_type }}</p>
+                <p><strong>Связанный FQDN:</strong> {{ step.related_fqdn if step.related_fqdn else 'Не указан' }}</p>
+                <p><strong>Связанный DNS:</strong> {{ step.related_dns if step.related_dns else 'Не указан' }}</p>
+                <p><strong>Индикаторы компрометации (IOC):</strong> {{ step.ioc if step.ioc else 'Не указаны' }}</p>
+                <p><strong>Хэш-значение:</strong> {{ step.hash_value if step.hash_value else 'Не указано' }}</p>
+                <p><strong>MITRE ID:</strong> {{ step.mitre_id if step.mitre_id else 'Не указан' }}</p>
+                <p><strong>SIEM ID:</strong> {{ step.siem_id if step.siem_id else 'Не указан' }}</p>
+                <p><strong>Ссылка на SIEM:</strong> {{ step.siem_link if step.siem_link else 'Не указана' }}</p>
+                <p><strong>Ответственный:</strong> {{ step.responsible if step.responsible else 'Не указан' }}</p>
                 <p><strong>Срок выполнения:</strong> {{ step.deadline.strftime('%Y-%m-%d %H:%M') if step.deadline else 'Не указан' }}</p>
-                <p><strong>Ресурсы:</strong> {{ step.resources }}</p>
-                <p><strong>Риски:</strong> {{ step.risks }}</p>
-                <p><strong>Действия:</strong> {{ step.actions }}</p>
-                <p><strong>Результаты:</strong> {{ step.results }}</p>
-                <p><strong>Статус выполнения:</strong> {{ step.status }}</p>
-                <p><strong>Комментарии:</strong> {{ step.comments }}</p>
+                <p><strong>Статус выполнения:</strong> {{ step.status if step.status else 'Не указан' }}</p>
+                <p><strong>Комментарии:</strong> {{ step.comments if step.comments else 'Нет комментариев' }}</p>
+
+                <!-- Скриншоты -->
+                {% if step.screenshots %}
+                <p><strong>Скриншоты:</strong></p>
+                <div class="screenshots">
+                    {% for screenshot in step.screenshots %}
+                    <img src="{{ url_for('static', filename='uploads/images/' + screenshot) }}" alt="Скриншот" class="img-fluid" data-bs-toggle="modal" data-bs-target="#imageModal" data-bs-image="{{ url_for('static', filename='uploads/images/' + screenshot) }}">
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
+{% else %}
+<div class="alert alert-info">
+    Шаги не добавлены.
+</div>
+{% endif %}
 
 <!-- Кнопки для принятия/отклонения отчёта -->
 <form method="POST" class="mt-4">
@@ -61,8 +195,41 @@
     <button type="submit" name="action" value="needs_revision" class="btn btn-warning">Отправить на доработку</button>
 </form>
 
-<!-- Подключение Bootstrap JS (для работы аккордеона) -->
+<!-- Модальное окно для изображений -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Просмотр изображения</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Увеличенное изображение" class="img-fluid">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Подключение Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+
+<script>
+  // Обработчик для открытия модального окна с изображением
+  document.addEventListener('DOMContentLoaded', function () {
+      const imageModal = document.getElementById('imageModal');
+      const modalImage = document.getElementById('modalImage');
+
+      imageModal.addEventListener('show.bs.modal', function (event) {
+          const button = event.relatedTarget; // Кнопка, которая вызвала модальное окно
+          const imageSrc = button.getAttribute('data-bs-image'); // Получаем путь к изображению
+          modalImage.src = imageSrc; // Устанавливаем изображение в модальное окно
+      });
+  });
+</script>
+
 {% endblock %}
