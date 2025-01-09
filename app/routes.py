@@ -1408,6 +1408,12 @@ def admin_topology():
                 flash('Ошибка при обработке данных топологии.', 'danger')
                 return redirect(url_for('admin_topology'))
 
+            # Валидация данных топологии
+            if not isinstance(topology, dict) or 'nodes' not in topology or 'links' not in topology:
+                logger.error("Некорректная структура данных топологии.")
+                flash('Некорректная структура данных топологии.', 'danger')
+                return redirect(url_for('admin_topology'))
+
             # Получаем объект инфраструктуры
             infra = Infrastructure.query.first()
             if not infra:
@@ -1417,7 +1423,7 @@ def admin_topology():
 
             # Обновляем топологию и элементы
             infra.topology = topology.get('nodes', [])
-            infra.links = topology.get('links', [])  # Обновляем связи
+            infra.links = topology.get('links', [])
             infra.elements = topology.get('elements', [])
             db.session.commit()
             logger.debug("Топология и элементы успешно сохранены в базе данных.")

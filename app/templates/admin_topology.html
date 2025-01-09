@@ -241,27 +241,203 @@
 
     <!-- Скрипт для создания топологии -->
     <script>
+        // Глобальные переменные
+        let topologyData, nodes, edges, network, container, nodeImages;
+
+        // Глобальные функции для открытия и закрытия модальных окон
+        function openAddNodeModal() {
+            document.getElementById("add-node-modal").style.display = "block";
+        }
+
+        function closeAddNodeModal() {
+            document.getElementById("add-node-modal").style.display = "none";
+        }
+
+        function openAddRectangleModal() {
+            document.getElementById("add-rectangle-modal").style.display = "block";
+        }
+
+        function closeAddRectangleModal() {
+            document.getElementById("add-rectangle-modal").style.display = "none";
+        }
+
+        function openAddLabelModal() {
+            document.getElementById("add-label-modal").style.display = "block";
+        }
+
+        function closeAddLabelModal() {
+            document.getElementById("add-label-modal").style.display = "none";
+        }
+
+        function openEditNodeModal() {
+            document.getElementById("edit-node-modal").style.display = "block";
+        }
+
+        function closeEditNodeModal() {
+            document.getElementById("edit-node-modal").style.display = "none";
+        }
+
+        function deleteNode() {
+            alert("Узел удален!");
+        }
+
+        function startLinking() {
+            alert("Режим соединения элементов активирован!");
+        }
+
+        function startDeletingEdges() {
+            alert("Режим удаления связей активирован!");
+        }
+
+        // Глобальные функции для добавления элементов
+        function addNode() {
+            const name = document.getElementById("node-name-input").value;
+            const description = document.getElementById("node-description-input").value;
+            const domain = document.getElementById("node-domain-input").value;
+            const type = document.getElementById("node-type-input").value;
+
+            if (!name || !domain) {
+                alert("Введите название узла и доменное имя!");
+                return;
+            }
+
+            const newId = nodes.length ? Math.max(...nodes.getIds()) + 1 : 1;
+
+            nodes.add({
+                id: newId,
+                label: domain,
+                name: name,
+                description: description,
+                domain: domain,
+                type: type,
+                shape: "image",
+                image: nodeImages[type],
+                size: 30,
+                x: 0,
+                y: 0
+            });
+
+            closeAddNodeModal();
+        }
+
+        function addRectangle() {
+            const name = document.getElementById("rectangle-name-input").value;
+            const width = parseInt(document.getElementById("rectangle-width-input").value);
+            const height = parseInt(document.getElementById("rectangle-height-input").value);
+            const x = parseInt(document.getElementById("rectangle-x-input").value);
+            const y = parseInt(document.getElementById("rectangle-y-input").value);
+
+            if (!name || isNaN(width) || isNaN(height) || isNaN(x) || isNaN(y)) {
+                alert("Заполните все поля корректно!");
+                return;
+            }
+
+            const newRectangle = {
+                id: `rectangle-${Date.now()}`,
+                type: "rectangle",
+                name: name,
+                width: width,
+                height: height,
+                x: x,
+                y: y
+            };
+
+            if (!topologyData.elements) {
+                topologyData.elements = [];
+            }
+            topologyData.elements.push(newRectangle);
+
+            updateTopologyDisplay();
+
+            closeAddRectangleModal();
+        }
+
+        function addLabel() {
+            const text = document.getElementById("label-text-input").value;
+            const x = parseInt(document.getElementById("label-x-input").value);
+            const y = parseInt(document.getElementById("label-y-input").value);
+
+            if (!text || isNaN(x) || isNaN(y)) {
+                alert("Заполните все поля корректно!");
+                return;
+            }
+
+            const newLabel = {
+                id: `label-${Date.now()}`,
+                type: "label",
+                text: text,
+                x: x,
+                y: y
+            };
+
+            if (!topologyData.elements) {
+                topologyData.elements = [];
+            }
+            topologyData.elements.push(newLabel);
+
+            updateTopologyDisplay();
+
+            closeAddLabelModal();
+        }
+
+        function updateTopologyDisplay() {
+            container.innerHTML = "";
+            network.setData({ nodes: nodes, edges: edges });
+
+            if (topologyData.elements) {
+                topologyData.elements.forEach(element => {
+                    if (element.type === "rectangle") {
+                        const rect = document.createElement("div");
+                        rect.style.position = "absolute";
+                        rect.style.left = `${element.x}px`;
+                        rect.style.top = `${element.y}px`;
+                        rect.style.width = `${element.width}px`;
+                        rect.style.height = `${element.height}px`;
+                        rect.style.border = "2px solid black";
+                        rect.style.backgroundColor = "rgba(0, 123, 255, 0.1)";
+                        rect.style.zIndex = 100;
+                        container.appendChild(rect);
+                    } else if (element.type === "label") {
+                        const label = document.createElement("div");
+                        label.style.position = "absolute";
+                        label.style.left = `${element.x}px`;
+                        label.style.top = `${element.y}px`;
+                        label.style.color = "black";
+                        label.style.fontSize = "14px";
+                        label.style.zIndex = 100;
+                        label.textContent = element.text;
+                        container.appendChild(label);
+                    }
+                });
+            }
+        }
+
+        function saveTopology() {
+            const updatedTopology = {
+                nodes: nodes.get().map(node => ({
+                    id: node.id,
+                    label: node.domain,
+                    name: node.name,
+                    x: node.x,
+                    y: node.y,
+                    description: node.description,
+                    domain: node.domain,
+                    type: node.type,
+                    size: node.size
+                })),
+                links: edges.get().map(edge => ({ id: edge.id, source: edge.from, target: edge.to })),
+                elements: topologyData.elements || []
+            };
+
+            document.getElementById("topology-data").value = JSON.stringify(updatedTopology);
+            document.getElementById("topology-form").submit();
+        }
+
+        // Инициализация данных и сети
         document.addEventListener("DOMContentLoaded", function () {
-            // Данные для топологии из Flask
-            const topologyData = {{ topology_data | tojson | safe }};
-            console.log("Данные, полученные с сервера:", topologyData);
-
-            // Проверка данных
-            if (!topologyData.nodes || !Array.isArray(topologyData.nodes)) {
-                console.error("topologyData.nodes не является массивом или отсутствует");
-                topologyData.nodes = [];  // Инициализируем пустым массивом
-            }
-            if (!topologyData.links || !Array.isArray(topologyData.links)) {
-                console.error("topologyData.links не является массивом или отсутствует");
-                topologyData.links = [];  // Инициализируем пустым массивом
-            }
-            if (!topologyData.elements || !Array.isArray(topologyData.elements)) {
-                console.error("topologyData.elements не является массивом или отсутствует");
-                topologyData.elements = [];  // Инициализируем пустым массивом
-            }
-
-            // Пути к изображениям для каждого типа узла
-            const nodeImages = {
+            topologyData = {{ topology_data | tojson | safe }};
+            container = document.getElementById("topology-container");
+            nodeImages = {
                 server: "{{ url_for('static', filename='images/server.png') }}",
                 workstation: "{{ url_for('static', filename='images/workstation.png') }}",
                 switch: "{{ url_for('static', filename='images/switch.png') }}",
@@ -269,11 +445,7 @@
                 firewall: "{{ url_for('static', filename='images/firewall.png') }}"
             };
 
-            // Инициализация контейнера
-            const container = document.getElementById("topology-container");
-
-            // Инициализация nodes и edges
-            const nodes = new vis.DataSet(
+            nodes = new vis.DataSet(
                 topologyData.nodes.map(node => ({
                     id: node.id,
                     label: node.label || "Нет домена",
@@ -288,7 +460,7 @@
                 }))
             );
 
-            const edges = new vis.DataSet(
+            edges = new vis.DataSet(
                 topologyData.links.map(link => ({
                     id: link.id,
                     from: link.source,
@@ -296,7 +468,6 @@
                 }))
             );
 
-            // Инициализация сети
             const data = { nodes: nodes, edges: edges };
             const options = {
                 nodes: {
@@ -315,197 +486,7 @@
                 },
                 physics: false
             };
-            const network = new vis.Network(container, data, options);
-
-            // Отображение элементов
-            updateTopologyDisplay();
-
-            // Логика для добавления узла
-            function openAddNodeModal() {
-                document.getElementById("add-node-modal").style.display = "block";
-            }
-
-            function closeAddNodeModal() {
-                document.getElementById("add-node-modal").style.display = "none";
-            }
-
-            function addNode() {
-                const name = document.getElementById("node-name-input").value;
-                const description = document.getElementById("node-description-input").value;
-                const domain = document.getElementById("node-domain-input").value;
-                const type = document.getElementById("node-type-input").value;
-
-                if (!name || !domain) {
-                    alert("Введите название узла и доменное имя!");
-                    return;
-                }
-
-                // Генерация уникального ID
-                const newId = nodes.length ? Math.max(...nodes.getIds()) + 1 : 1;
-
-                // Добавление нового узла
-                nodes.add({
-                    id: newId,
-                    label: domain,
-                    name: name,
-                    description: description,
-                    domain: domain,
-                    type: type,
-                    shape: "image",
-                    image: nodeImages[type],
-                    size: 30,
-                    x: 0,
-                    y: 0
-                });
-
-                closeAddNodeModal();
-            }
-
-            // Логика для добавления прямоугольника
-            function openAddRectangleModal() {
-                document.getElementById("add-rectangle-modal").style.display = "block";
-            }
-
-            function closeAddRectangleModal() {
-                document.getElementById("add-rectangle-modal").style.display = "none";
-            }
-
-            function addRectangle() {
-                const name = document.getElementById("rectangle-name-input").value;
-                const width = parseInt(document.getElementById("rectangle-width-input").value);
-                const height = parseInt(document.getElementById("rectangle-height-input").value);
-                const x = parseInt(document.getElementById("rectangle-x-input").value);
-                const y = parseInt(document.getElementById("rectangle-y-input").value);
-
-                if (!name || isNaN(width) || isNaN(height) || isNaN(x) || isNaN(y)) {
-                    alert("Заполните все поля корректно!");
-                    return;
-                }
-
-                const newRectangle = {
-                    id: `rectangle-${Date.now()}`,
-                    type: "rectangle",
-                    name: name,
-                    width: width,
-                    height: height,
-                    x: x,
-                    y: y
-                };
-
-                // Добавляем прямоугольник в данные
-                if (!topologyData.elements) {
-                    topologyData.elements = [];
-                }
-                topologyData.elements.push(newRectangle);
-
-                // Обновляем отображение
-                updateTopologyDisplay();
-
-                closeAddRectangleModal();
-            }
-
-            // Логика для добавления надписи
-            function openAddLabelModal() {
-                document.getElementById("add-label-modal").style.display = "block";
-            }
-
-            function closeAddLabelModal() {
-                document.getElementById("add-label-modal").style.display = "none";
-            }
-
-            function addLabel() {
-                const text = document.getElementById("label-text-input").value;
-                const x = parseInt(document.getElementById("label-x-input").value);
-                const y = parseInt(document.getElementById("label-y-input").value);
-
-                if (!text || isNaN(x) || isNaN(y)) {
-                    alert("Заполните все поля корректно!");
-                    return;
-                }
-
-                const newLabel = {
-                    id: `label-${Date.now()}`,
-                    type: "label",
-                    text: text,
-                    x: x,
-                    y: y
-                };
-
-                // Добавляем надпись в данные
-                if (!topologyData.elements) {
-                    topologyData.elements = [];
-                }
-                topologyData.elements.push(newLabel);
-
-                // Обновляем отображение
-                updateTopologyDisplay();
-
-                closeAddLabelModal();
-            }
-
-            // Функция для обновления отображения топологии
-            function updateTopologyDisplay() {
-                // Очищаем контейнер
-                container.innerHTML = "";
-
-                // Отображаем узлы и связи
-                network.setData({ nodes: nodes, edges: edges });
-
-                // Отображаем прямоугольники и надписи
-                if (topologyData.elements) {
-                    topologyData.elements.forEach(element => {
-                        if (element.type === "rectangle") {
-                            const rect = document.createElement("div");
-                            rect.style.position = "absolute";
-                            rect.style.left = `${element.x}px`;
-                            rect.style.top = `${element.y}px`;
-                            rect.style.width = `${element.width}px`;
-                            rect.style.height = `${element.height}px`;
-                            rect.style.border = "2px solid black";
-                            rect.style.backgroundColor = "rgba(0, 123, 255, 0.1)";
-                            rect.style.zIndex = 100;
-                            container.appendChild(rect);
-                        } else if (element.type === "label") {
-                            const label = document.createElement("div");
-                            label.style.position = "absolute";
-                            label.style.left = `${element.x}px`;
-                            label.style.top = `${element.y}px`;
-                            label.style.color = "black";
-                            label.style.fontSize = "14px";
-                            label.style.zIndex = 100;
-                            label.textContent = element.text;
-                            container.appendChild(label);
-                        }
-                    });
-                }
-            }
-
-            // Логика для сохранения топологии
-            function saveTopology() {
-                const updatedTopology = {
-                    nodes: nodes.get().map(node => ({
-                        id: node.id,
-                        label: node.domain,
-                        name: node.name,
-                        x: node.x,
-                        y: node.y,
-                        description: node.description,
-                        domain: node.domain,
-                        type: node.type,
-                        size: node.size
-                    })),
-                    links: edges.get().map(edge => ({ id: edge.id, source: edge.from, target: edge.to })),
-                    elements: topologyData.elements || []
-                };
-
-                console.log("Данные для сохранения:", updatedTopology);
-
-                // Заполняем скрытое поле формы
-                document.getElementById("topology-data").value = JSON.stringify(updatedTopology);
-
-                // Отправляем форму
-                document.getElementById("topology-form").submit();
-            }
+            network = new vis.Network(container, data, options);
         });
     </script>
 </body>
