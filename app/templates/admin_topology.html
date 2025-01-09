@@ -9,7 +9,16 @@
 <body>
     <div class="container">
         <h1>Просмотр топологии сети (Админ)</h1>
-        <p>Здесь вы можете просматривать текущую топологию сети.</p>
+        <p>Здесь вы можете просматривать и редактировать текущую топологию сети.</p>
+
+        <!-- Кнопка для добавления нового элемента -->
+        <button id="add-node-button">Добавить элемент</button>
+
+        <!-- Кнопка для добавления связи -->
+        <button id="add-edge-button">Добавить связь</button>
+
+        <!-- Кнопка для сохранения топологии -->
+        <button id="save-topology-button">Сохранить топологию</button>
 
         <!-- Скрытый элемент для передачи данных -->
         <div id="topology-data"
@@ -19,6 +28,8 @@
              data-switch-image="{{ url_for('static', filename='images/switch.png') }}"
              data-router-image="{{ url_for('static', filename='images/router.png') }}"
              data-firewall-image="{{ url_for('static', filename='images/firewall.png') }}"
+             data-zone1-image="{{ url_for('static', filename='images/zone1.png') }}"
+             data-zone2-image="{{ url_for('static', filename='images/zone2.png') }}"
              style="display: none;">
         </div>
 
@@ -26,8 +37,62 @@
         <div id="topology-container"></div>
     </div>
 
+    <!-- Модальное окно для добавления узла -->
+    <div id="add-node-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Добавить новый узел</h2>
+            <form id="node-form">
+                <label for="node-type">Тип узла:</label>
+                <select id="node-type" name="node-type" required>
+                    <option value="server">Сервер</option>
+                    <option value="workstation">Рабочая станция</option>
+                    <option value="switch">Коммутатор</option>
+                    <option value="router">Роутер</option>
+                    <option value="firewall">Фаервол</option>
+                    <option value="zone1">Зона 1</option>
+                    <option value="zone2">Зона 2</option>
+                </select>
+
+                <label for="node-name">Имя узла:</label>
+                <input type="text" id="node-name" name="node-name" required>
+
+                <!-- Поле для описания -->
+                <label for="node-description">Описание:</label>
+                <textarea id="node-description" name="node-description" rows="3"></textarea>
+
+                <div id="interfaces-container">
+                    <div class="interface">
+                        <label>Интерфейс 1:</label>
+                        <input type="text" placeholder="Имя интерфейса" class="interface-name" required>
+                        <input type="text" placeholder="IP-адрес" class="interface-ip" required>
+                    </div>
+                </div>
+
+                <button type="button" id="add-interface-button">Добавить интерфейс</button>
+                <button type="submit">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно для отображения данных узла -->
+    <div id="node-info-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Информация о узле</h2>
+            <div id="node-info-content">
+                <!-- Сюда будет вставляться информация о узле -->
+            </div>
+            <div id="node-info-actions">
+                <button id="edit-node-button">Редактировать</button>
+                <button id="delete-node-button">Удалить</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Подключение Vis.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <!-- Подключение JavaScript -->
     <script src="{{ url_for('static', filename='js/admin_topology.js') }}"></script>
 </body>
 </html>

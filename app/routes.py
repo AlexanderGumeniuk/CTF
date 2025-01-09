@@ -1371,8 +1371,6 @@ def infrastructure_topology():
 from flask import request, redirect, url_for, flash
 
 
-
-# Настройка логирования
 @app.route('/admin/topology', methods=['GET'])
 @login_required
 def admin_topology():
@@ -1382,11 +1380,66 @@ def admin_topology():
 
     # Получаем данные топологии
     infra = Infrastructure.query.first()
+
+    # Проверяем, что данные существуют
+    if not infra:
+        flash('Данные об инфраструктуре отсутствуют.', 'warning')
+        return redirect(url_for('index'))
+
+    # Проверяем и преобразуем данные
+    topology = infra.topology if infra.topology else {}
+    links = infra.links if infra.links else []
+    elements = infra.elements if infra.elements else []
+
+    # Убедимся, что topology содержит nodes
+    if "nodes" not in topology:
+        topology["nodes"] = []
+
+    # Формируем данные для передачи в шаблон
     topology_data = {
-        'nodes': infra.topology if infra and isinstance(infra.topology, list) else [],
-        'links': infra.links if infra and isinstance(infra.links, list) else [],
-        'elements': infra.elements if infra and isinstance(infra.elements, list) else []
+        'nodes': topology["nodes"],  # Узлы
+        'links': links,              # Связи
+        'elements': elements         # Элементы
     }
 
     # Передаем данные в шаблон как объект JSON
     return render_template('admin_topology.html', topology_data=topology_data)
+
+
+
+from flask import request, jsonify
+
+@app.route('/save_topology', methods=['POST'])
+@login_required
+def save_topology():
+    if not current_user.is_admin:
+        return jsonify({"success": False, "message": "У вас нет прав доступа к этой странице."})
+
+    # Получаем данные из запроса
+    data = request.get_json()
+
+    # Логируем полученные данные
+    print("Полученные данные:", data)
+
+    # Проверяем, что данные существуют
+    if not data:
+        return jsonify({"success": False, "message": "Нет данных для сохранения."})
+
+    # Получаем объект инфраструктуры из базы данных
+    infra = Infrastructure.query.first()
+    if not infra:
+        return jsonify({"success": False, "message": "Инфраструктура не найдена."})
+
+    try:
+        # Обновляем данные топологии
+        infra.topology = {
+            "nodes": data["nodes"],  # Сохраняем все узлы (новые и отредактированные)
+            "links": data["links"]   # Сохраняем все связи (новые и существующие)
+        }
+        db.session.commit()
+        print("Топология успешно сохранена в базе данных.")
+        return jsonify({"success": True, "message": "Топология успешно сохранена."})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Ошибка при сохранении топологии: {str(e)}")
+        return jsonify({"success": False, "message": f"Ошибка при сохранении топологии: {str(e)}"})
