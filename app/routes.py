@@ -1370,72 +1370,15 @@ def infrastructure_topology():
 
 from flask import request, redirect, url_for, flash
 
-import logging
-from flask import request, redirect, url_for, flash, jsonify
-import json
+
 
 # Настройка логирования
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-
-@app.route('/admin/topology', methods=['GET', 'POST'])
+@app.route('/admin/topology', methods=['GET'])
 @login_required
 def admin_topology():
     if not current_user.is_admin:
         flash('У вас нет прав доступа к этой странице.', 'danger')
         return redirect(url_for('index'))
-
-    if request.method == 'POST':
-        try:
-            logger.debug("Начало обработки POST-запроса")
-
-            # Получаем данные из формы
-            topology_data = request.form.get('topology')
-            logger.debug(f"Полученные данные из формы: {topology_data}")
-
-            if not topology_data:
-                logger.error("Данные топологии не получены.")
-                flash('Данные топологии не получены.', 'danger')
-                return redirect(url_for('admin_topology'))
-
-            # Преобразуем JSON-строку в объект Python
-            try:
-                topology = json.loads(topology_data)
-                logger.debug(f"Преобразованные данные топологии: {topology}")
-            except json.JSONDecodeError as e:
-                logger.error(f"Ошибка при декодировании JSON: {e}")
-                flash('Ошибка при обработке данных топологии.', 'danger')
-                return redirect(url_for('admin_topology'))
-
-            # Валидация данных топологии
-            if not isinstance(topology, dict) or 'nodes' not in topology or 'links' not in topology:
-                logger.error("Некорректная структура данных топологии.")
-                flash('Некорректная структура данных топологии.', 'danger')
-                return redirect(url_for('admin_topology'))
-
-            # Получаем объект инфраструктуры
-            infra = Infrastructure.query.first()
-            if not infra:
-                logger.error("Инфраструктура не найдена.")
-                flash('Инфраструктура не найдена.', 'danger')
-                return redirect(url_for('admin_topology'))
-
-            # Обновляем топологию и элементы
-            infra.topology = topology.get('nodes', [])
-            infra.links = topology.get('links', [])
-            infra.elements = topology.get('elements', [])
-            db.session.commit()
-            logger.debug("Топология и элементы успешно сохранены в базе данных.")
-
-            flash('Топология успешно сохранена!', 'success')
-            return redirect(url_for('admin_topology'))
-
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Ошибка при сохранении топологии: {str(e)}", exc_info=True)
-            flash(f'Ошибка при сохранении топологии: {str(e)}', 'danger')
-            return redirect(url_for('admin_topology'))
 
     # Получаем данные топологии
     infra = Infrastructure.query.first()
@@ -1444,6 +1387,6 @@ def admin_topology():
         'links': infra.links if infra and isinstance(infra.links, list) else [],
         'elements': infra.elements if infra and isinstance(infra.elements, list) else []
     }
-    logger.debug(f"Текущая топология: {topology_data}")
 
+    # Передаем данные в шаблон как объект JSON
     return render_template('admin_topology.html', topology_data=topology_data)
