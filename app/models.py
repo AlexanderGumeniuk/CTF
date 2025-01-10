@@ -25,6 +25,7 @@ class Challenge(db.Model):
     hint = db.Column(db.Text, nullable=True)  # Новое поле: подсказка
     hint_penalty = db.Column(db.Integer, default=10)  # Штраф за использование подсказки (например, 10% от points)
 
+    user_challenges = db.relationship('UserChallenge', backref='challenge', cascade='all, delete-orphan')
     def solved_by_user(self, user):
         # Проверяем, решил ли пользователь задачу
         return UserChallenge.query.filter_by(

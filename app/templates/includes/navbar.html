@@ -68,7 +68,7 @@
     <div class="nav-container">
         <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
         <a href="{{ url_for('challenges') }}" class="nav-link">Задачи</a>
-        <a href="{{ url_for('leaderboard') }}" class="nav-link">Рейтинг</a>
+        <a href="{{ url_for('leaderboard') }}" class="nav-link">Рейтинг Пользователей</a>
         <a href="{{ url_for('team_leaderboard') }}" class="nav-link">Рейтинг команд</a>
         <!-- Новая ссылка на описание инфраструктуры -->
         <a href="{{ url_for('infrastructure') }}" class="nav-link">Инфраструктура</a>
@@ -83,36 +83,31 @@
         {% endif %}
 
         {% if current_user.is_authenticated %}
+        {% if not current_user.is_admin %}
             <!-- Раскрывающийся список для инцидентов -->
             <div class="dropdown">
                 <a href="#" class="nav-link">Инциденты</a>
                 <div class="dropdown-content">
-                    {% if not current_user.is_admin %}
+
                         <a href="{{ url_for('create_incident') }}">Создать инцидент</a>
                         <a href="{{ url_for('my_incidents') }}">Мои инциденты</a>
-                    {% endif %}
-                    {% if current_user.is_admin %}
-                        <a href="{{ url_for('admin_incidents') }}">Администрирование инцидентов</a>
-                    {% endif %}
+
                 </div>
             </div>
-
+            {% endif %}
             <!-- Раскрывающийся список для критических событий -->
+            {% if current_user.team %}
             <div class="dropdown">
                 <a href="#" class="nav-link">Критические события</a>
                 <div class="dropdown-content">
-                    {% if current_user.team %}
+
                         <a href="{{ url_for('user_accepted_responses') }}">Принятые отчёты</a>
                         <a href="{{ url_for('user_pending_responses') }}">Отчёты для заполнения</a>
                         <a href="{{ url_for('user_under_review_responses') }}">Отчёты на проверке</a>
-                    {% endif %}
-                    {% if current_user.is_admin %}
-                        <a href="{{ url_for('admin_critical_events') }}">Мои КС</a>
-                        <a href="{{ url_for('admin_critical_event_responses') }}">Отчёты по КС</a>
-                        <a href="{{ url_for('admin_approved_responses') }}">Принятые отчёты</a>
-                    {% endif %}
                 </div>
             </div>
+            {% endif %}
+
 
             <!-- Ссылка на администрирование (только для админа) -->
             {% if current_user.is_admin %}

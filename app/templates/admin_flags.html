@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block styles %}
+{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_flags.css') }}">
+    <style>
+        /* Основные стили для body */
+        body {
+            background-color: #1e1e1e;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        /* Стили для заголовка */
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            color: #FFFFFF; /* Белый текст */
+        }
+
+        .container {
+            background-color: unset;
+            padding: 20px;
+        }
+
+        /* Стили для кнопки добавления флага */
+        #add-flag-button {
+            background: rgba(147, 112, 219, 0.3); /* Фиолетовый фон */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        #add-flag-button:hover {
+            background: rgba(147, 112, 219, 0.5); /* Ярче при наведении */
+        }
+
+        /* Стили для таблицы */
+        #flags-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 auto;
+            background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон таблицы */
+            overflow: hidden;
+            box-shadow: 0px 0px 20px rgba(147, 112, 219, 0.2); /* Фиолетовая тень */
+        }
+
+        #flags-table th,
+        #flags-table td {
+            padding: 1rem;
+            text-align: left;
+            color: #fff; /* Белый текст */
+        }
+
+        #flags-table th {
+            background: linear-gradient(145deg, rgba(147, 112, 219, 0.2), rgba(147, 112, 219, 0.1)); /* Фиолетовый градиент */
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+        }
+
+        #flags-table tr {
+            transition: all 0.3s ease;
+        }
+
+        #flags-table tr:nth-child(even) {
+            background: rgba(147, 112, 219, 0.05); /* Фиолетовый фон для чётных строк */
+        }
+
+        #flags-table tr:hover {
+            background: rgba(147, 112, 219, 0.15); /* Фиолетовый фон при наведении */
+            transform: translateX(5px);
+        }
+
+        /* Стили для кнопок действий */
+        .edit-flag-button,
+        .delete-flag-button {
+            background: rgba(147, 112, 219, 0.3); /* Фиолетовый фон */
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .edit-flag-button:hover {
+            background: rgba(147, 112, 219, 0.5); /* Ярче при наведении */
+        }
+
+        .delete-flag-button {
+            background: rgba(255, 99, 71, 0.3); /* Красный фон */
+        }
+
+        .delete-flag-button:hover {
+            background: rgba(255, 99, 71, 0.5); /* Ярче при наведении */
+        }
+
+        /* Стили для модального окна */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон */
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
+            border-radius: 15px;
+            width: 50%;
+            max-width: 500px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0px 0px 30px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
+        }
+
+        .modal-content h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-content label {
+            color: #fff;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .modal-content input,
+        .modal-content textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
+            color: #fff;
+        }
+
+        .modal-content button {
+            background: rgba(147, 112, 219, 0.3); /* Фиолетовый фон */
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-content button:hover {
+            background: rgba(147, 112, 219, 0.5); /* Ярче при наведении */
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #fff;
+        }
+
+        /* Анимация появления */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 90%;
+                max-width: none;
+            }
+
+            #flags-table th,
+            #flags-table td {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+
+    <div class="container">
+        <h1>Управление флагами</h1>
+
+        <!-- Кнопка для добавления нового флага -->
+        <button id="add-flag-button">Добавить флаг</button>
+
+        <!-- Таблица с флагами -->
+        <table id="flags-table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Описание</th>
+                    <th>Флаг</th>
+                    <th>Баллы</th>
+                    <th>Категория</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for challenge in challenges %}
+                    <tr data-challenge-id="{{ challenge.id }}">
+                        <td>{{ challenge.title }}</td>
+                        <td>{{ challenge.description }}</td>
+                        <td>{{ challenge.flag }}</td>
+                        <td>{{ challenge.points }}</td>
+                        <td>{{ challenge.category }}</td>
+                        <td>
+                            <button class="edit-flag-button" data-challenge-id="{{ challenge.id }}">Редактировать</button>
+                            <button class="delete-flag-button" data-challenge-id="{{ challenge.id }}">Удалить</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Модальное окно для добавления/редактирования флага -->
+    <div id="flag-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Добавить флаг</h2>
+            <form id="flag-form">
+                <input type="hidden" id="challenge-id">
+                <label for="title">Название:</label>
+                <input type="text" id="title" required>
+                <label for="description">Описание:</label>
+                <textarea id="description" required></textarea>
+                <label for="flag">Флаг:</label>
+                <input type="text" id="flag" required>
+                <label for="points">Баллы:</label>
+                <input type="number" id="points" required>
+                <!-- Подсказка о уровнях сложности -->
+                <div class="difficulty-hint">
+                    <p>
+                        <strong>Уровни сложности:</strong><br>
+                        - 0–100: Низкий<br>
+                        - 100–500: Средний<br>
+                        - 500–1000: Сложный<br>
+                        - 1000–2000: Очень сложный
+                    </p>
+                </div>
+                <label for="category">Категория:</label>
+                <input type="text" id="category" required>
+                <button type="submit">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Подключение JavaScript -->
+    <script src="{{ url_for('static', filename='js/admin_flags.js') }}"></script>
+{% endblock %}

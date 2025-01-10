@@ -163,40 +163,10 @@ def submit_flag(challenge_id):
 
     return redirect(url_for('challenges'))
 
-@app.route('/add_challenge', methods=['GET', 'POST'])
-@login_required
-def add_challenge():
-    if not current_user.is_admin:
-        flash('У вас нет прав доступа к этой странице.', 'danger')
-        return redirect(url_for('index'))
-
-    if request.method == 'POST':
-        title = request.form['title']
-        description = request.form['description']
-        flag = request.form['flag']
-        points = int(request.form['points'])
-        category = request.form['category']
-        hint = request.form.get('hint', None)  # Подсказка (может быть пустой)
-        hint_penalty = int(request.form.get('hint_penalty', 10))  # Штраф за подсказку (по умолчанию 10%)
-
-        challenge = Challenge(
-            title=title,
-            description=description,
-            flag=flag,
-            points=points,
-            category=category,
-            hint=hint,
-            hint_penalty=hint_penalty
-        )
-        db.session.add(challenge)
-        db.session.commit()
-        flash('Задача успешно добавлена!', 'success')
-        return redirect(url_for('challenges'))
-
-    return render_template('add_challenge.html')
 
 
 @app.route('/leaderboard')
+@login_required
 def leaderboard():
     # Подсчитываем общее количество баллов для каждого пользователя
     leaderboard_data = db.session.query(
@@ -209,6 +179,7 @@ def leaderboard():
 
 
 @app.route('/team_leaderboard')
+@login_required
 def team_leaderboard():
     # Подсчитываем общее количество баллов для каждой команды
     leaderboard_data = db.session.query(
@@ -1436,3 +1407,103 @@ def save_topology():
         db.session.rollback()
         print(f"Ошибка при сохранении топологии: {str(e)}")
         return jsonify({"success": False, "message": f"Ошибка при сохранении топологии: {str(e)}"})
+
+from flask import request, jsonify, render_template
+
+# Страница управления флагами
+@app.route('/admin/flags', methods=['GET'])
+@login_required
+def admin_flags():
+    if not current_user.is_admin:
+        flash('У вас нет прав доступа к этой странице.', 'danger')
+        return redirect(url_for('index'))
+
+    # Получаем все задачи (флаги)
+    challenges = Challenge.query.all()
+    return render_template('admin_flags.html', challenges=challenges)
+
+# Добавление нового флага
+@app.route('/admin/add_flag', methods=['POST'])
+@login_required
+def add_flag():
+    if not current_user.is_admin:
+        return jsonify({"success": False, "message": "У вас нет прав доступа к этой странице."})
+
+    # Получаем данные из запроса
+    data = request.get_json()
+    title = data.get("title")
+    description = data.get("description")
+    flag = data.get("flag")
+    points = data.get("points")
+    category = data.get("category")
+
+    if not all([title, description, flag, points, category]):
+        return jsonify({"success": False, "message": "Все поля обязательны для заполнения."})
+
+    try:
+        # Создаем новую задачу
+        challenge = Challenge(
+            title=title,
+            description=description,
+            flag=flag,
+            points=points,
+            category=category
+        )
+        db.session.add(challenge)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Флаг успешно добавлен."})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": f"Ошибка при добавлении флага: {str(e)}"})
+
+# Редактирование флага
+@app.route('/admin/edit_flag/<int:challenge_id>', methods=['POST'])
+@login_required
+def edit_flag(challenge_id):
+    if not current_user.is_admin:
+        return jsonify({"success": False, "message": "У вас нет прав доступа к этой странице."})
+
+    # Получаем данные из запроса
+    data = request.get_json()
+    title = data.get("title")
+    description = data.get("description")
+    flag = data.get("flag")
+    points = data.get("points")
+    category = data.get("category")
+
+    if not all([title, description, flag, points, category]):
+        return jsonify({"success": False, "message": "Все поля обязательны для заполнения."})
+
+    # Находим задачу по ID
+    challenge = Challenge.query.get_or_404(challenge_id)
+
+    try:
+        # Обновляем данные задачи
+        challenge.title = title
+        challenge.description = description
+        challenge.flag = flag
+        challenge.points = points
+        challenge.category = category
+        db.session.commit()
+        return jsonify({"success": True, "message": "Флаг успешно обновлен."})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": f"Ошибка при обновлении флага: {str(e)}"})
+
+@app.route('/admin/delete_flag/<int:challenge_id>', methods=['POST'])
+@login_required
+def delete_flag(challenge_id):
+    if not current_user.is_admin:
+        return jsonify({"success": False, "message": "У вас нет прав доступа к этой странице."})
+
+    # Находим задачу по ID
+    challenge = Challenge.query.get_or_404(challenge_id)
+
+    try:
+        # Удаляем задачу (каскадное удаление удалит связанные записи)
+        db.session.delete(challenge)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Флаг и все связанные данные успешно удалены."})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": f"Ошибка при удалении флага: {str(e)}"})
