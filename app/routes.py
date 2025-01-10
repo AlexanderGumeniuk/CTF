@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request
 from app import app, db
-from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalEvent, CriticalEventResponse,CriticalEventStep,Infrastructure
+from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalEvent, CriticalEventResponse,CriticalEventStep,Infrastructure,PointsHistory
 from flask_login import login_user, current_user, logout_user, login_required
 from sqlalchemy import func
 from datetime import datetime
@@ -10,10 +10,11 @@ import uuid
 import os
 from sqlalchemy.orm.attributes import flag_modified
 from flask import request, flash, redirect, url_for, render_template
-from datetime import datetime
 from flask import send_from_directory
-from werkzeug.utils import secure_filename
-
+import logging
+# Настройка логирования
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 def generate_unique_filename(filename):
     """
     Генерирует уникальное имя файла, сохраняя его расширение.
@@ -108,6 +109,7 @@ def admin():
         flash('You do not have permission to access this page', 'danger')
         return redirect(url_for('index'))
 
+  # Импортируем модель PointsHistory
 
 @app.route('/submit_flag/<int:challenge_id>', methods=['POST'])
 @login_required
@@ -133,6 +135,15 @@ def submit_flag(challenge_id):
 
             # Начисляем баллы текущему пользователю
             current_user.total_points += challenge.points
+
+            # Добавляем запись в историю начисления баллов
+            points_history = PointsHistory(
+                user_id=current_user.id,
+                points=challenge.points,
+                note=f"За решение задачи: {challenge.title}"
+            )
+            db.session.add(points_history)
+
             db.session.commit()
 
             # Если пользователь в команде, отмечаем задачу как решённую для всех членов команды
@@ -153,6 +164,17 @@ def submit_flag(challenge_id):
                             )
                             db.session.add(member_challenge)
 
+                            # Начисляем баллы члену команды
+                            member.total_points += challenge.points
+
+                            # Добавляем запись в историю начисления баллов для члена команды
+                            member_points_history = PointsHistory(
+                                user_id=member.id,
+                                points=challenge.points,
+                                note=f"За решение задачи: {challenge.title} (командное начисление)"
+                            )
+                            db.session.add(member_points_history)
+
                 db.session.commit()
 
             flash('Correct flag! Well done!', 'success')
@@ -164,19 +186,18 @@ def submit_flag(challenge_id):
     return redirect(url_for('challenges'))
 
 
-
 @app.route('/leaderboard')
 @login_required
 def leaderboard():
-    # Подсчитываем общее количество баллов для каждого пользователя
+    # Запрашиваем данные пользователей, включая аватарки
     leaderboard_data = db.session.query(
         User.username,
-        User.total_points.label('total_points')
+        User.total_points,
+        User.avatar  # Добавляем поле avatar
     ).order_by(User.total_points.desc()) \
      .all()
 
     return render_template('leaderboard.html', leaderboard=leaderboard_data)
-
 
 @app.route('/team_leaderboard')
 @login_required
@@ -403,13 +424,6 @@ def admin_incidents():
     return render_template('admin/admin_incidents.html', incidents=incidents, status=status)
 
 
-import os
-import logging
-from flask import request, flash, redirect, url_for, render_template
-
-# Настройка логирования
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 @app.route('/admin/review_incident/<int:incident_id>', methods=['GET', 'POST'])
 @login_required
@@ -423,6 +437,11 @@ def review_incident(incident_id):
     logger.debug(f"Проверка инцидента: {incident.id}")
 
     if request.method == 'POST':
+        # Проверяем, что инцидент находится в статусе "pending" (ожидает проверки)
+        if incident.status != 'pending':
+            flash('Этот инцидент уже был проверен и не может быть изменен.', 'warning')
+            return redirect(url_for('admin_incidents'))
+
         action = request.form['action']
         points = int(request.form.get('points', 0))
 
@@ -434,6 +453,14 @@ def review_incident(incident_id):
             # Начисляем баллы пользователю
             user = User.query.get(incident.user_id)
             user.total_points += points
+
+            # Добавляем запись в историю начисления баллов
+            points_history = PointsHistory(
+                user_id=incident.user_id,
+                points=points,
+                note=f"За инцидент: {incident.title}"
+            )
+            db.session.add(points_history)
 
             flash('Инцидент одобрен! Баллы начислены.', 'success')
 
@@ -473,24 +500,6 @@ def review_incident(incident_id):
 
     # Передаем инцидент и скриншоты в шаблон
     return render_template('admin/review_incident.html', incident=incident)
-
-
-
-
-
-# Настройка логирования
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-import os
-import logging
-from flask import request, flash, redirect, url_for, render_template
-from datetime import datetime
-
-# Настройка логирования
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
 @app.route('/edit_incident/<int:incident_id>', methods=['GET', 'POST'])
 @login_required
 def edit_incident(incident_id):
@@ -671,60 +680,15 @@ def delete_critical_event(event_id):
     flash('Critical event deleted successfully!', 'success')
     return redirect(url_for('admin_critical_events'))
 
-
-@app.route('/admin/review_critical_event/<int:event_id>/<int:team_id>', methods=['GET', 'POST'])
-@login_required
-def review_critical_event(event_id, team_id):
-    if not current_user.is_admin:
-        flash('У вас нет прав доступа к этой странице.', 'danger')
-        return redirect(url_for('index'))
-
-    # Получаем ответ на критическое событие для указанной команды
-    response = CriticalEventResponse.query.filter_by(
-        event_id=event_id,
-        team_id=team_id
-    ).first_or_404()
-
-    # Получаем все шаги, связанные с этим событием и командой
-    steps = CriticalEventStep.query.filter_by(
-        event_id=event_id,
-        team_id=team_id
-    ).all()
-
-    # Отладочный вывод
-    print(f"Найдено шагов: {len(steps)}")
-    for step in steps:
-        print(f"Шаг: {step.step_name}, ID: {step.id}, Event ID: {step.event_id}, Team ID: {step.team_id}")
-
-    if request.method == 'POST':
-        action = request.form.get('action')
-        points = int(request.form.get('points', 0))
-
-        if action == 'approve':
-            response.status = 'approved'
-            response.points_awarded = points
-            user = User.query.get(response.user_id)
-            user.total_points += points
-            flash('Отчёт принят! Баллы начислены.', 'success')
-        elif action == 'reject':
-            response.status = 'rejected'
-            flash('Отчёт отклонён!', 'danger')
-        elif action == 'needs_revision':
-            response.status = 'needs_revision'
-            CriticalEventStep.query.filter_by(event_id=event_id, team_id=team_id).delete()
-            flash('Отчёт отправлен на доработку! Все шаги удалены.', 'warning')
-
-        db.session.commit()
-        return redirect(url_for('admin_critical_events'))
-
-    return render_template('admin/review_critical_event.html', response=response, steps=steps)
-
 @app.route('/request_hint/<int:challenge_id>', methods=['POST'])
 @login_required
 def request_hint(challenge_id):
     # Заглушка: просто сообщаем, что подсказка запрошена
     flash('Запрос на подсказку отправлен. В будущем подсказка будет отправлена через Rocket.Chat.', 'info')
     return redirect(url_for('challenges'))
+
+from datetime import datetime
+from app.models import PointsHistory  # Импортируем модель PointsHistory
 
 @app.route('/admin/review_response/<int:response_id>', methods=['GET', 'POST'])
 @login_required
@@ -753,44 +717,44 @@ def review_response(response_id):
         points = int(request.form.get('points', 0))
 
         if action == 'approve':
+            # Одобрение отчета
             response.status = 'approved'
             response.points_awarded = points
+
+            # Начисляем баллы пользователю
             user = User.query.get(response.user_id)
             user.total_points += points
+
+            # Добавляем запись в историю начисления баллов
+            points_history = PointsHistory(
+                user_id=response.user_id,
+                points=points,
+                note=f"За критическое событие: {response.event.title}"
+            )
+            db.session.add(points_history)
+
             flash('Отчёт принят! Баллы начислены.', 'success')
+
         elif action == 'reject':
+            # Отклонение отчета
             response.status = 'rejected'
             flash('Отчёт отклонён!', 'danger')
+
         elif action == 'needs_revision':
+            # Отправка на доработку
             response.status = 'needs_revision'
             CriticalEventStep.query.filter_by(event_id=response.event_id, team_id=response.team_id).delete()
             flash('Отчёт отправлен на доработку! Все шаги удалены.', 'warning')
 
+        # Сохраняем изменения в базе данных
         db.session.commit()
+
         return redirect(url_for('admin_critical_events'))
-    print(steps)
 
     return render_template('admin/review_response.html', response=response, steps=steps)
 
 
-@app.route('/edit_response/<int:response_id>', methods=['GET', 'POST'])
-@login_required
-def edit_response(response_id):
-    response = CriticalEventResponse.query.get_or_404(response_id)
 
-    # Проверяем, что отчет принадлежит текущему пользователю и его статус "needs_revision"
-    if response.user_id != current_user.id or response.status != 'needs_revision':
-        flash('You cannot edit this response.', 'danger')
-        return redirect(url_for('user_pending_responses'))
-
-    if request.method == 'POST':
-        response.response = request.form['response']
-        response.status = 'pending'  # Меняем статус на "pending" для повторной проверки
-        db.session.commit()
-        flash('Response updated and submitted for review!', 'success')
-        return redirect(url_for('user_pending_responses'))
-
-    return render_template('edit_response.html', response=response)
 
 @app.route('/user/accepted_responses')
 @login_required
@@ -992,10 +956,6 @@ def fill_critical_event(event_id):
     return render_template('user/fill_critical_event.html', event=event, response=response, steps=steps)
 
 from flask import request, flash, redirect, url_for
-import os
-import uuid
-from datetime import datetime
-from werkzeug.utils import secure_filename
 
 @app.route('/add_steps/<int:event_id>', methods=['POST'])
 @login_required
@@ -1202,7 +1162,10 @@ def manage_users():
             email = request.form['email']
             is_admin = 'is_admin' in request.form
             team_id = request.form.get('team_id')
-            points_change = int(request.form.get('points_change', 0))  # Изменение баллов
+
+            # Обработка points_change
+            points_change_str = request.form.get('points_change', '0')  # Получаем значение как строку
+            points_change = int(points_change_str) if points_change_str.strip() else 0  # Преобразуем в int, если не пусто
 
             user = User.query.get(user_id)
             if user:
@@ -1210,9 +1173,15 @@ def manage_users():
                 user.email = email
                 user.is_admin = is_admin
                 user.team_id = team_id if team_id else None
-                user.total_points += points_change  # Изменяем баллы
+
+                # Изменяем баллы только если points_change не равен 0
+                if points_change != 0:
+                    user.total_points += points_change
+                    flash(f'Баллы пользователя "{username}" изменены на {points_change}.', 'success')
+                else:
+                    flash(f'Баллы пользователя "{username}" не изменены.', 'info')
+
                 db.session.commit()
-                flash(f'Данные пользователя "{username}" успешно обновлены!', 'success')
                 selected_user = user  # Обновляем выбранного пользователя
 
         # Обработка удаления пользователя
@@ -1507,3 +1476,75 @@ def delete_flag(challenge_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": f"Ошибка при удалении флага: {str(e)}"})
+
+@app.route('/upload_avatar', methods=['POST'])
+@login_required
+def upload_avatar():
+    if 'avatar' not in request.files:
+        flash('Файл не выбран', 'danger')
+        return redirect(url_for('profile'))
+
+    file = request.files['avatar']
+    if file.filename == '':
+        flash('Файл не выбран', 'danger')
+        return redirect(url_for('profile'))
+
+    if file and allowed_file(file.filename):
+        current_user.update_avatar(file)
+        flash('Аватар успешно обновлен', 'success')
+    else:
+        flash('Недопустимый формат файла', 'danger')
+
+    return redirect(url_for('profile'))
+
+
+
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    if request.method == 'POST':
+        # Обновляем имя пользователя
+        new_username = request.form.get('username')
+        if new_username and new_username != current_user.username:
+            current_user.username = new_username
+
+        # Обновляем пароль
+        new_password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        if new_password and confirm_password:
+            if new_password == confirm_password:
+                current_user.set_password(new_password)
+            else:
+                flash('Пароли не совпадают', 'danger')
+                return redirect(url_for('edit_profile'))
+
+        # Обновляем аватар
+        if 'avatar' in request.files:
+            file = request.files['avatar']
+            if file.filename != '':
+                if file and allowed_file(file.filename):
+                    # Генерируем уникальное имя файла
+                    filename = secure_filename(file.filename)
+                    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                    file.save(file_path)
+
+                    # Удаляем старый аватар, если он существует
+                    if current_user.avatar:
+                        old_avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], current_user.avatar)
+                        if os.path.exists(old_avatar_path):
+                            os.remove(old_avatar_path)
+
+                    # Сохраняем новое имя файла в базе данных
+                    current_user.avatar = unique_filename
+                else:
+                    flash('Недопустимый формат файла', 'danger')
+                    return redirect(url_for('edit_profile'))
+
+        # Сохраняем изменения в базе данных
+        db.session.commit()
+        flash('Профиль успешно обновлен', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template('edit_profile.html')

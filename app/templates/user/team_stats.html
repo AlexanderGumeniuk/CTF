@@ -29,25 +29,100 @@
         </tbody>
     </table>
 
-    <!-- Рейтинг команд -->
-    <h2>Рейтинг команд</h2>
-    <table class="team-ranking-table">
+    <!-- История изменений баллов команды -->
+    <h2>История изменений баллов</h2>
+    <table class="points-history-table">
         <thead>
             <tr>
-                <th>Место</th>
-                <th>Название команды</th>
-                <th>Общее количество баллов</th>
+                <th>Имя пользователя</th>
+                <th>Дата</th>
+                <th>Баллы</th>
+                <th>Примечание</th>
             </tr>
         </thead>
         <tbody>
-            {% for t in all_teams %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ t.name }}</td>
-                <td>{{ t.total_points }}</td>
-            </tr>
+            {% for member in members %}
+                {% for record in member.points_history %}
+                <tr>
+                    <td>{{ member.username }}</td>
+                    <td>{{ record.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ record.points }}</td>
+                    <td>{{ record.note }}</td>
+                </tr>
+                {% endfor %}
             {% endfor %}
         </tbody>
     </table>
+
+    <!-- Рейтинг команд -->
 </div>
+
+<style>
+    .team-stats-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .team-info {
+        margin-bottom: 2rem;
+    }
+
+    .team-info p {
+        font-size: 1.2rem;
+        margin: 0.5rem 0;
+    }
+
+    .team-members-table,
+    .points-history-table,
+    .team-ranking-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .team-members-table th,
+    .team-members-table td,
+    .points-history-table th,
+    .points-history-table td,
+    .team-ranking-table th,
+    .team-ranking-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .team-members-table th,
+    .points-history-table th,
+    .team-ranking-table th {
+        background-color: rgba(76, 175, 80, 0.8);
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .team-members-table tr:hover,
+    .points-history-table tr:hover,
+    .team-ranking-table tr:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    h1, h2 {
+        color: #fff;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+    }
+
+    h2 {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+</style>
 {% endblock %}

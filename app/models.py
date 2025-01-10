@@ -1,7 +1,10 @@
 from app import db, login_manager
 from flask_login import UserMixin
 from sqlalchemy.dialects.postgresql import JSON
+from werkzeug.security import generate_password_hash, check_password_hash
 
+import os
+import uuid
 
 class UserChallenge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,7 +44,6 @@ class Challenge(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -51,6 +53,7 @@ class User(db.Model, UserMixin):
     is_admin = db.Column(db.Boolean, default=False)
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
     total_points = db.Column(db.Integer, default=0)
+    avatar = db.Column(db.String(255), nullable=True)  # Поле для хранения пути к аватару
 
     # Связь с командой (без backref, так как он уже определен в Team)
     team = db.relationship('Team', foreign_keys=[team_id])
@@ -65,6 +68,23 @@ class User(db.Model, UserMixin):
     # Метод для проверки пароля
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    # Метод для генерации уникального имени файла аватара
+    @staticmethod
+    def generate_avatar_filename(filename):
+        ext = os.path.splitext(filename)[1]  # Получаем расширение файла
+        unique_name = f"{uuid.uuid4().hex}{ext}"  # Генерируем уникальное имя
+        return unique_name
+
+    # Метод для обновления аватара
+    def update_avatar(self, file):
+        if file:
+            # Генерируем уникальное имя файла
+            filename = self.generate_avatar_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)  # Сохраняем файл на сервере
+            self.avatar = filename  # Сохраняем имя файла в базе данных
+            db.session.commit()
 
 
 class Team(db.Model):
@@ -192,3 +212,20 @@ class Infrastructure(db.Model):
 
     def __repr__(self):
         return f"Infrastructure('{self.title}')"
+
+
+from datetime import datetime
+from app import db
+
+class PointsHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)  # Уникальный идентификатор записи
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Связь с пользователем
+    points = db.Column(db.Integer, nullable=False)  # Количество начисленных баллов
+    note = db.Column(db.Text, nullable=True)  # Примечание (например, за что начислены баллы)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Дата и время начисления баллов
+
+    # Связь с пользователем
+    user = db.relationship('User', backref='points_history')
+
+    def __repr__(self):
+        return f"PointsHistory(User {self.user_id}, Points {self.points}, Note: {self.note})"

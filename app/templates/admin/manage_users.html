@@ -189,7 +189,11 @@
     <ul id="users-list" class="users-list">
         {% for user in users %}
             <li data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}">
-                {{ user.username }} ({{ user.email }})
+
+                <div class="user-info">
+                    <span class="username">{{ user.username }} || </span>
+                    <span class="email">{{ user.email }}</span>
+                </div>
             </li>
         {% endfor %}
     </ul>
@@ -218,7 +222,7 @@
             </select>
 
             <label for="points_change">Изменить баллы:</label>
-            <input type="number" id="points_change" name="points_change" placeholder="Введите число (например, +10 или -5)">
+            <input type="number" id="points_change" name="points_change" value="0">
 
             <button type="submit" name="edit_user" class="edit-button">Сохранить изменения</button>
             <button type="submit" name="delete_user" class="delete-button">Удалить пользователя</button>
@@ -258,6 +262,17 @@
 
             // Показываем форму редактирования
             document.getElementById('edit-user-form').style.display = 'block';
+        }
+    });
+
+    // Валидация поля "Изменить баллы"
+    document.querySelector('form').addEventListener('submit', function(event) {
+        const pointsChangeInput = document.getElementById('points_change');
+        const pointsChangeValue = pointsChangeInput.value.trim();
+
+        if (pointsChangeValue === '' || isNaN(pointsChangeValue)) {
+            alert('Поле "Изменить баллы" должно содержать число.');
+            event.preventDefault(); // Остановить отправку формы
         }
     });
 </script>

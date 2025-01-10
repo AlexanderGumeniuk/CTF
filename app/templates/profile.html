@@ -6,8 +6,8 @@
             position: relative;
             z-index: 1;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            flex-direction: column;
+            align-items: center;
             min-height: 100vh;
             padding: 2rem 0;
         }
@@ -19,10 +19,11 @@
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); /* Белая подсветка */
             backdrop-filter: blur(15px);
             width: 100%;
-            max-width: 500px;
+            max-width: 800px; /* Увеличили ширину для таблицы */
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.5); /* Белая рамка */
             animation: fadeIn 0.8s ease-out;
+            margin-bottom: 2rem; /* Отступ снизу */
         }
 
         .profile-box h1 {
@@ -49,12 +50,18 @@
         .profile-avatar img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: cover; /* Чтобы изображение заполняло круг */
+            border-radius: 50%; /* Круглая форма */
         }
 
         .profile-avatar .default-avatar {
             font-size: 4rem;
             color: rgba(255, 255, 255, 0.5); /* Полупрозрачный белый */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
         }
 
         .profile-info {
@@ -93,6 +100,49 @@
             box-shadow: 0 0 15px rgba(147, 112, 219, 0.6); /* Подсветка при наведении */
         }
 
+        /* Стили для таблицы истории баллов */
+        .points-history {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(30, 30, 30, 0.9); /* Тёмный фон */
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); /* Белая подсветка */
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.5); /* Белая рамка */
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .points-history h2 {
+            color: #FFFFFF; /* Белый текст */
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .points-history table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #F5F5F5; /* Светлый текст */
+        }
+
+        .points-history th,
+        .points-history td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Полупрозрачная граница */
+        }
+
+        .points-history th {
+            background-color: rgba(147, 112, 219, 0.2); /* Фиолетовый фон для заголовков */
+            font-weight: 600;
+        }
+
+        .points-history tr:hover {
+            background-color: rgba(255, 255, 255, 0.05); /* Подсветка строк при наведении */
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -105,7 +155,8 @@
         }
 
         @media (max-width: 768px) {
-            .profile-box {
+            .profile-box,
+            .points-history {
                 width: 90%;
                 max-width: none;
             }
@@ -114,28 +165,58 @@
 
     <!-- Центральный контейнер -->
     <div class="profile-container">
+        <!-- Блок с информацией о пользователе -->
         <div class="profile-box">
             <h1>Личный кабинет</h1>
 
-            <!-- Аватарка (заготовка) -->
+            <!-- Аватарка -->
             <div class="profile-avatar">
-                <div class="default-avatar">👤</div>
-                <!-- В будущем можно добавить загрузку аватарки -->
+                {% if current_user.avatar %}
+                    <img src="{{ url_for('static', filename='uploads/images/' + current_user.avatar) }}" alt="Аватар">
+                {% else %}
+                    <div class="default-avatar">👤</div>
+                {% endif %}
             </div>
 
-            <!-- Информация о пользователе (заготовка) -->
+            <!-- Информация о пользователе -->
             <div class="profile-info">
                 <p><strong>Имя пользователя:</strong> {{ current_user.username }}</p>
                 <p><strong>Email:</strong> {{ current_user.email }}</p>
-                <!-- В будущем можно добавить больше полей, например, дату регистрации -->
+                <p><strong>Общее количество баллов:</strong> {{ current_user.total_points }}</p>
             </div>
 
-            <!-- Кнопки для действий (заготовка) -->
+            <!-- Кнопки для действий -->
             <div class="profile-actions">
-                <button class="profile-button" onclick="location.href='#'">Изменить профиль</button>
+                <a href="{{ url_for('edit_profile') }}" class="profile-button">Редактировать профиль</a>
                 <button class="profile-button" onclick="location.href='#'">Выход</button>
-                <!-- В будущем можно добавить больше кнопок -->
             </div>
+        </div>
+
+        <!-- Блок с историей начисления баллов -->
+        <div class="points-history">
+            <h2>История начисления баллов</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Баллы</th>
+                        <th>Примечание</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in current_user.points_history %}
+                        <tr>
+                            <td>{{ record.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ record.points }}</td>
+                            <td>{{ record.note }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="3" style="text-align: center;">История начисления баллов отсутствует.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 {% endblock %}

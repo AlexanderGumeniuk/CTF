@@ -297,16 +297,23 @@
     {% endif %}
 
     <!-- Форма для принятия, отклонения или отправки на доработку -->
-    <div class="admin-actions">
-        <h2>Действия администратора</h2>
-        <form method="POST">
-            <label for="points">Баллы:</label>
-            <input type="number" name="points" id="points" value="0" min="0">
-            <button type="submit" name="action" value="approve">Одобрить</button>
-            <button type="submit" name="action" value="reject">Отклонить</button>
-            <button type="submit" name="action" value="needs_revision">Отправить на доработку</button>
-        </form>
-    </div>
+    {% if incident.status == 'pending' %}
+        <div class="admin-actions">
+            <h2>Действия администратора</h2>
+            <form method="POST">
+                <label for="points">Баллы:</label>
+                <input type="number" name="points" id="points" value="0" min="0">
+                <button type="submit" name="action" value="approve">Одобрить</button>
+                <button type="submit" name="action" value="reject">Отклонить</button>
+                <button type="submit" name="action" value="needs_revision">Отправить на доработку</button>
+            </form>
+        </div>
+    {% else %}
+        <div class="admin-actions">
+            <h2>Действия администратора</h2>
+            <p>Этот инцидент уже был проверен и не может быть изменен.</p>
+        </div>
+    {% endif %}
 
     <!-- Ссылка "Назад" -->
     <a href="{{ url_for('admin_incidents') }}" class="back-link">Назад к списку инцидентов</a>

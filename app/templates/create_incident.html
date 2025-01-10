@@ -1,315 +1,228 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-  /* Основные стили для body */
-  body {
-      background-color: #1e1e1e;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      overflow-y: auto; /* Включаем вертикальную прокрутку */
-      height: 100vh; /* Высота body равна высоте окна браузера */
-  }
-
-  /* Контейнер для формы */
-  .incident-form-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh; /* Минимальная высота равна высоте окна */
-      padding: 20px; /* Отступы для адаптивности */
-  }
-
-  /* Основные стили для формы */
-  .incident-form {
-      max-width: 1200px; /* Увеличим ширину формы */
-      width: 100%;
-      padding: 2rem;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 15px;
-      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  /* Заголовок формы */
-  .incident-form h1 {
-      text-align: center;
-      font-size: 2.5rem;
-      margin-bottom: 2rem;
-      color: #fff;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  }
-
-  /* Сетка для полей формы */
-  .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr); /* Два столбца */
-      gap: 1.5rem; /* Расстояние между элементами */
-  }
-
-  /* Группы полей */
-  .form-group {
-      margin-bottom: 1.5rem;
-      position: relative;
-  }
-
-  /* Лейблы */
-  .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 1rem;
-  }
-
-  /* Поля ввода */
-  .form-group input,
-  .form-group textarea,
-  .form-group select {
-      width: 100%;
-      padding: 0.8rem;
-      border: none;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
-      font-size: 1rem;
-      outline: none;
-      transition: all 0.3s ease;
-  }
-
-  .form-group input:focus,
-  .form-group textarea:focus,
-  .form-group select:focus {
-      background: rgba(255, 255, 255, 0.3);
-      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
-  }
-
-  /* Стили для текстовых областей */
-  .form-group textarea {
-      resize: vertical;
-      min-height: 100px;
-  }
-
-  /* Стили для выпадающих списков */
-  .form-group select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.7rem top 50%;
-      background-size: 0.65rem auto;
-  }
-
-  /* Кнопка отправки */
-  .form-group button {
-      width: 100%;
-      padding: 1rem;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
-      color: #fff;
-      font-size: 1.2rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-  }
-
-  .form-group button:hover {
-      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
-      transform: translateY(-2px);
-      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
-  }
-
-  /* Анимация для формы */
-  @keyframes fadeIn {
-      from {
-          opacity: 0;
-          transform: translateY(20px);
-      }
-      to {
-          opacity: 1;
-          transform: translateY(0);
-      }
-  }
-
-  .incident-form {
-      animation: fadeIn 0.8s ease-out;
-  }
-
-  /* Стили для файлового ввода */
-  .form-group input[type="file"] {
-      padding: 0.5rem;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      color: #fff;
-  }
-
-  .form-group input[type="file"]::file-selector-button {
-      padding: 0.5rem 1rem;
-      background: rgba(76, 175, 80, 0.8);
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      cursor: pointer;
-      transition: background 0.3s ease;
-  }
-
-  .form-group input[type="file"]::file-selector-button:hover {
-      background: rgba(76, 175, 80, 1);
-  }
-
-  /* Адаптивность */
-  @media (max-width: 768px) {
-      .form-grid {
-          grid-template-columns: 1fr; /* Один столбец на мобильных устройствах */
-      }
-
-      .incident-form {
-          padding: 1rem;
-      }
-
-      .incident-form h1 {
-          font-size: 2rem;
-      }
-
-      .form-group input,
-      .form-group textarea,
-      .form-group select {
-          padding: 0.6rem;
-      }
-
-      .form-group button {
-          padding: 0.8rem;
-          font-size: 1rem;
-      }
-  }
-</style>
-
 <div class="incident-form-container">
-    <div class="incident-form">
-        <h1>Создать инцидент</h1>
-        <form method="POST" enctype="multipart/form-data">
-            <div class="form-grid">
-                <!-- Основные поля -->
-                <div class="form-group">
-                    <label for="title">Название:</label>
-                    <input type="text" name="title" id="title" required>
-                </div>
+    <h1>Создание отчета об инциденте</h1>
+    <form method="POST" action="{{ url_for('create_incident') }}" onsubmit="handleFormSubmission(event)">
+        <!-- Название инцидента -->
+        <div class="form-group">
+            <label for="title">Название инцидента:</label>
+            <input type="text" id="title" name="title" class="form-control" placeholder="Введите название">
+        </div>
 
-                <div class="form-group">
-                    <label for="description">Описание:</label>
-                    <textarea name="description" id="description" required></textarea>
-                </div>
+        <!-- Описание инцидента -->
+        <div class="form-group">
+            <label for="description">Описание инцидента:</label>
+            <textarea id="description" name="description" class="form-control" placeholder="Опишите инцидент"></textarea>
+        </div>
 
-                <!-- Время начала и конца -->
-                <div class="form-group">
-                    <label for="start_time">Время начала:</label>
-                    <input type="datetime-local" name="start_time" id="start_time" required>
-                </div>
+        <!-- Время начала -->
+        <div class="form-group">
+            <label for="start_time">Время начала:</label>
+            <input type="datetime-local" id="start_time" name="start_time" class="form-control" required>
+        </div>
 
-                <div class="form-group">
-                    <label for="end_time">Время окончания:</label>
-                    <input type="datetime-local" name="end_time" id="end_time" required>
-                </div>
+        <!-- Время окончания -->
+        <div class="form-group">
+            <label for="end_time">Время окончания:</label>
+            <input type="datetime-local" id="end_time" name="end_time" class="form-control" required>
+        </div>
 
-                <!-- IP и порт источника -->
-                <div class="form-group">
-                    <label for="source_ip">IP-адрес источника:</label>
-                    <input type="text" name="source_ip" id="source_ip" required>
-                </div>
+        <!-- IP-адрес источника -->
+        <div class="form-group">
+            <label for="source_ip">IP-адрес источника:</label>
+            <input type="text" id="source_ip" name="source_ip" class="form-control" placeholder="Введите IP-адрес">
+        </div>
 
-                <div class="form-group">
-                    <label for="source_port">Порт источника:</label>
-                    <input type="number" name="source_port" id="source_port">
-                </div>
+        <!-- Порт источника -->
+        <div class="form-group">
+            <label for="source_port">Порт источника:</label>
+            <input type="number" id="source_port" name="source_port" class="form-control" placeholder="Введите порт">
+        </div>
 
-                <!-- IP и порт назначения -->
-                <div class="form-group">
-                    <label for="destination_ip">IP-адрес назначения:</label>
-                    <input type="text" name="destination_ip" id="destination_ip" required>
-                </div>
+        <!-- IP-адрес назначения -->
+        <div class="form-group">
+            <label for="destination_ip">IP-адрес назначения:</label>
+            <input type="text" id="destination_ip" name="destination_ip" class="form-control" placeholder="Введите IP-адрес">
+        </div>
 
-                <div class="form-group">
-                    <label for="destination_port">Порт назначения:</label>
-                    <input type="number" name="destination_port" id="destination_port">
-                </div>
+        <!-- Порт назначения -->
+        <div class="form-group">
+            <label for="destination_port">Порт назначения:</label>
+            <input type="number" id="destination_port" name="destination_port" class="form-control" placeholder="Введите порт">
+        </div>
 
-                <!-- Тип события -->
-                <div class="form-group">
-                    <label for="event_type">Тип события:</label>
-                    <select name="event_type" id="event_type" required>
-                        <option value="Phishing">Фишинг</option>
-                        <option value="Malware">Вредоносное ПО</option>
-                        <option value="DDoS">DDoS-атака</option>
-                        <option value="BruteForce">Атака методом перебора</option>
-                        <option value="Exploit">Эксплойт</option>
-                        <option value="DataLeak">Утечка данных</option>
-                        <option value="InsiderThreat">Инсайдерская угроза</option>
-                        <option value="Ransomware">Рансомизация</option>
-                        <option value="SQLInjection">SQL-инъекция</option>
-                        <option value="XSS">Межсайтовый скриптинг (XSS)</option>
-                        <option value="PortScan">Сканирование портов</option>
-                        <option value="UnauthorizedAccess">Несанкционированный доступ</option>
-                        <option value="Misconfiguration">Ошибка конфигурации</option>
-                        <option value="SocialEngineering">Социальная инженерия</option>
-                        <option value="ZeroDay">Zero-day уязвимость</option>
-                    </select>
-                </div>
+        <!-- Тип события -->
+        <div class="form-group">
+            <label for="event_type">Тип события:</label>
+            <input type="text" id="event_type" name="event_type" class="form-control" placeholder="Введите тип события">
+        </div>
 
-                <!-- Связанные FQDN и DNS-имена -->
-                <div class="form-group">
-                    <label for="related_fqdn">Связанные FQDN:</label>
-                    <textarea name="related_fqdn" id="related_fqdn"></textarea>
-                </div>
+        <!-- Связанные FQDN -->
+        <div class="form-group">
+            <label for="related_fqdn">Связанные FQDN:</label>
+            <input type="text" id="related_fqdn" name="related_fqdn" class="form-control" placeholder="Введите FQDN">
+        </div>
 
-                <div class="form-group">
-                    <label for="related_dns">Связанные DNS-имена:</label>
-                    <textarea name="related_dns" id="related_dns"></textarea>
-                </div>
+        <!-- Связанные DNS-имена -->
+        <div class="form-group">
+            <label for="related_dns">Связанные DNS-имена:</label>
+            <input type="text" id="related_dns" name="related_dns" class="form-control" placeholder="Введите DNS-имена">
+        </div>
 
-                <!-- IOC и Hash -->
-                <div class="form-group">
-                    <label for="ioc">IOC (Indicators of Compromise):</label>
-                    <textarea name="ioc" id="ioc"></textarea>
-                </div>
+        <!-- Индикаторы компрометации (IOC) -->
+        <div class="form-group">
+            <label for="ioc">Индикаторы компрометации (IOC):</label>
+            <input type="text" id="ioc" name="ioc" class="form-control" placeholder="Введите IOC">
+        </div>
 
-                <div class="form-group">
-                    <label for="hash_value">Хэш:</label>
-                    <input type="text" name="hash_value" id="hash_value">
-                </div>
+        <!-- Хэш-значение -->
+        <div class="form-group">
+            <label for="hash_value">Хэш-значение:</label>
+            <input type="text" id="hash_value" name="hash_value" class="form-control" placeholder="Введите хэш">
+        </div>
 
-                <!-- ID события по матрице MITRE -->
-                <div class="form-group">
-                    <label for="mitre_id">ID события по матрице MITRE:</label>
-                    <input type="text" name="mitre_id" id="mitre_id">
-                </div>
+        <!-- ID события по матрице MITRE -->
+        <div class="form-group">
+            <label for="mitre_id">ID события по матрице MITRE:</label>
+            <input type="text" id="mitre_id" name="mitre_id" class="form-control" placeholder="Введите MITRE ID">
+        </div>
 
-                <!-- ID или ссылки события в SIEM -->
-                <div class="form-group">
-                    <label for="siem_id">ID события в SIEM:</label>
-                    <input type="text" name="siem_id" id="siem_id">
-                </div>
+        <!-- ID события в SIEM -->
+        <div class="form-group">
+            <label for="siem_id">ID события в SIEM:</label>
+            <input type="text" id="siem_id" name="siem_id" class="form-control" placeholder="Введите SIEM ID">
+        </div>
 
-                <div class="form-group">
-                    <label for="siem_link">Ссылка на событие в SIEM:</label>
-                    <input type="text" name="siem_link" id="siem_link">
-                </div>
+        <!-- Ссылка на событие в SIEM -->
+        <div class="form-group">
+            <label for="siem_link">Ссылка на событие в SIEM:</label>
+            <input type="text" id="siem_link" name="siem_link" class="form-control" placeholder="Введите ссылку">
+        </div>
 
-                <!-- Поле для загрузки скриншотов -->
-                <div class="form-group">
-                    <label for="screenshots">Скриншоты</label>
-                    <input type="file" class="form-control-file" id="screenshots" name="screenshots" multiple>
-                </div>
-            </div>
+        <!-- Скриншоты -->
+        <div class="form-group">
+            <label for="screenshots">Скриншоты:</label>
+            <input type="file" id="screenshots" name="screenshots" class="form-control" multiple>
+        </div>
 
-            <!-- Кнопка отправки -->
-            <div class="form-group">
-                <button type="submit">Создать инцидент</button>
-            </div>
-        </form>
-    </div>
+        <!-- Кнопка отправки формы -->
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Создать отчет</button>
+        </div>
+    </form>
 </div>
+
+<script>
+    function handleFormSubmission(event) {
+        event.preventDefault(); // Отменяем стандартное поведение формы
+
+        // Получаем значения обязательных полей
+        const title = document.getElementById('title').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const startTime = document.getElementById('start_time').value;
+        const endTime = document.getElementById('end_time').value;
+        const screenshots = document.getElementById('screenshots').files;
+
+        // Проверка на заполнение обязательных полей
+        if (!title) {
+            alert('Пожалуйста, заполните поле "Название инцидента".');
+            return;
+        }
+
+        if (!description) {
+            alert('Пожалуйста, заполните поле "Описание инцидента".');
+            return;
+        }
+
+        if (!startTime || !endTime) {
+            alert('Пожалуйста, заполните оба поля: "Время начала" и "Время окончания".');
+            return;
+        }
+
+        if (screenshots.length === 0) {
+            alert('Пожалуйста, прикрепите хотя бы один скриншот.');
+            return;
+        }
+
+        // Получаем все поля формы
+        const form = event.target;
+        const inputs = form.querySelectorAll('input, textarea');
+
+        // Проходим по всем полям и заменяем пустые значения на "Не указано"
+        inputs.forEach(input => {
+            if (input.value.trim() === '' && input.type !== 'file') {
+                input.value = 'Не указано';
+            }
+        });
+
+        // Отправляем форму
+        form.submit();
+    }
+</script>
+
+<style>
+    .incident-form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: rgba(30, 30, 30, 0.9);
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #fff;
+        font-size: 1.1rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: none;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .btn {
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+        background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+</style>
 {% endblock %}

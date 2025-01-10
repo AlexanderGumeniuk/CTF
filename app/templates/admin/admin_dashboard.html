@@ -18,12 +18,13 @@
       background: rgba(255, 255, 255, 0.1);
       padding: 2rem;
       border-radius: 15px;
-      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 0px 30px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
       backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
       width: 90%;
       max-width: 1200px;
       margin: 2rem auto;
+      animation: fadeIn 0.8s ease-out;
   }
 
   /* Заголовок */
@@ -46,7 +47,7 @@
   .admin-link {
       display: block;
       padding: 1rem;
-      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.8), rgba(123, 104, 238, 0.8)); /* Фиолетовый градиент */
       color: #fff;
       text-decoration: none;
       border-radius: 8px;
@@ -57,9 +58,21 @@
   }
 
   .admin-link:hover {
-      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 1), rgba(123, 104, 238, 1)); /* Яркий фиолетовый градиент */
       transform: translateY(-2px);
-      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.4); /* Фиолетовая тень */
+  }
+
+  /* Анимация появления */
+  @keyframes fadeIn {
+      from {
+          opacity: 0;
+          transform: translateY(20px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
   }
 
   /* Адаптивность */

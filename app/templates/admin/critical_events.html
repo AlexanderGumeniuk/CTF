@@ -27,6 +27,7 @@
       margin-bottom: 1.5rem;
       color: #fff;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 1s ease-out;
   }
 
   /* Кнопка создания */
@@ -35,19 +36,20 @@
       padding: 0.8rem 1.5rem;
       border: none;
       border-radius: 8px;
-      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.8), rgba(123, 104, 238, 0.8)); /* Фиолетовый градиент */
       color: #fff;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
       text-decoration: none;
+      animation: fadeIn 1.2s ease-out;
   }
 
   .btn-primary:hover {
-      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 1), rgba(123, 104, 238, 1)); /* Яркий фиолетовый градиент */
       transform: translateY(-2px);
-      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.4); /* Фиолетовая тень */
   }
 
   /* Таблица */
@@ -57,7 +59,8 @@
       background: rgba(255, 255, 255, 0.1);
       border-radius: 15px;
       overflow: hidden;
-      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 0px 30px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
+      animation: fadeIn 1.4s ease-out;
   }
 
   .table th,
@@ -68,13 +71,18 @@
   }
 
   .table th {
-      background: rgba(76, 175, 80, 0.8);
+      background: rgba(147, 112, 219, 0.8); /* Фиолетовый фон для заголовков */
       color: #fff;
       font-weight: bold;
   }
 
+  .table tbody tr {
+      transition: all 0.3s ease;
+  }
+
   .table tbody tr:hover {
       background: rgba(255, 255, 255, 0.05);
+      transform: translateX(5px);
   }
 
   /* Кнопки действий */
@@ -90,31 +98,43 @@
   }
 
   .btn-warning {
-      background: linear-gradient(145deg, rgba(255, 193, 7, 0.8), rgba(255, 152, 0, 0.8));
+      background: linear-gradient(145deg, rgba(255, 193, 7, 0.8), rgba(255, 152, 0, 0.8)); /* Жёлтый градиент */
       color: #fff;
   }
 
   .btn-warning:hover {
       background: linear-gradient(145deg, rgba(255, 193, 7, 1), rgba(255, 152, 0, 1));
       transform: translateY(-2px);
-      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 4px 15px rgba(255, 193, 7, 0.3); /* Жёлтая тень */
   }
 
   .btn-danger {
-      background: linear-gradient(145deg, rgba(255, 77, 77, 0.8), rgba(204, 0, 0, 0.8));
+      background: linear-gradient(145deg, rgba(255, 77, 77, 0.8), rgba(204, 0, 0, 0.8)); /* Красный градиент */
       color: #fff;
   }
 
   .btn-danger:hover {
       background: linear-gradient(145deg, rgba(255, 77, 77, 1), rgba(204, 0, 0, 1));
       transform: translateY(-2px);
-      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 4px 15px rgba(255, 77, 77, 0.3); /* Красная тень */
   }
 
   /* Текст для неактивных действий */
   .text-muted {
       color: rgba(255, 255, 255, 0.5);
       font-style: italic;
+  }
+
+  /* Анимация появления */
+  @keyframes fadeIn {
+      from {
+          opacity: 0;
+          transform: translateY(20px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
   }
 
   /* Адаптивность */

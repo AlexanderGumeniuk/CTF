@@ -73,6 +73,29 @@
       transform: translateX(5px);
   }
 
+  .leaderboard-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
+      border: 1px solid rgba(255, 255, 255, 0.3); /* Белая рамка */
+  }
+
+  .leaderboard-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* Чтобы изображение заполняло круг */
+  }
+
+  .leaderboard-avatar .default-avatar {
+      font-size: 1.5rem;
+      color: rgba(255, 255, 255, 0.5); /* Полупрозрачный белый */
+  }
+
   @keyframes fadeIn {
       from {
           opacity: 0;
@@ -107,6 +130,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>Аватар</th> <!-- Новый столбец для аватарок -->
                     <th>Имя пользователя</th>
                     <th>Общее количество очков</th>
                 </tr>
@@ -114,7 +138,19 @@
             <tbody>
                 {% for user in leaderboard %}
                     <tr>
+                        <td>
+                            <!-- Аватарка пользователя -->
+                            <div class="leaderboard-avatar">
+                                {% if user.avatar %}
+
+                                    <img src="{{ url_for('static', filename='uploads/images/' + user.avatar) }}" alt="Аватар">
+                                {% else %}
+                                    <div class="default-avatar">👤</div>
+                                {% endif %}
+                            </div>
+                        </td>
                         <td>{{ user.username }}</td>
+                        
                         <td>{{ user.total_points }}</td>
                     </tr>
                 {% endfor %}

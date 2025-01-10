@@ -2,19 +2,7 @@
 
 {% block content %}
 <style>
-  /* Основные стили для body */
-  body {
-      background-color: #1e1e1e;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      overflow-y: auto; /* Включаем вертикальную прокрутку */
-      height: 100vh; /* Высота body равна высоте окна браузера */
-  }
-
-  /* Контейнер для формы */
-  .create-event-container {
+  .profile-container {
       position: relative;
       z-index: 1;
       display: flex;
@@ -25,7 +13,7 @@
       padding: 20px;
   }
 
-  .create-event-box {
+  .profile-box {
       background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон с прозрачностью */
       padding: 2rem;
       border-radius: 15px;
@@ -38,7 +26,7 @@
       animation: fadeIn 0.8s ease-out;
   }
 
-  .create-event-box h1 {
+  .profile-box h1 {
       color: #fff; /* Белый текст */
       font-size: 2.5rem;
       margin-bottom: 2rem;
@@ -59,8 +47,7 @@
       font-weight: 500;
   }
 
-  .form-group input,
-  .form-group textarea {
+  .form-group input {
       width: 100%;
       padding: 0.8rem;
       border: none;
@@ -72,15 +59,25 @@
       transition: all 0.3s ease;
   }
 
-  .form-group textarea {
-      resize: vertical;
-      min-height: 150px;
-  }
-
-  .form-group input:focus,
-  .form-group textarea:focus {
+  .form-group input:focus {
       background: rgba(255, 255, 255, 0.2); /* Более яркий фон при фокусе */
       box-shadow: 0px 0px 10px rgba(147, 112, 219, 0.5); /* Фиолетовая тень */
+  }
+
+  .form-group input[type="file"] {
+      background: transparent;
+      padding: 0.5rem;
+  }
+
+  .img-thumbnail {
+      border: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
+      border-radius: 8px;
+      transition: all 0.3s ease;
+  }
+
+  .img-thumbnail:hover {
+      transform: scale(1.05);
+      box-shadow: 0px 0px 15px rgba(147, 112, 219, 0.5); /* Фиолетовая тень */
   }
 
   .btn-primary {
@@ -113,17 +110,16 @@
   }
 
   @media (max-width: 768px) {
-      .create-event-box {
+      .profile-box {
           width: 90%;
           max-width: none;
       }
 
-      .create-event-box h1 {
+      .profile-box h1 {
           font-size: 2rem;
       }
 
-      .form-group input,
-      .form-group textarea {
+      .form-group input {
           padding: 0.7rem;
           font-size: 0.9rem;
       }
@@ -135,19 +131,30 @@
   }
 </style>
 
-<div class="create-event-container">
-    <div class="create-event-box">
-        <h1>Создание Критического События</h1>
-        <form method="POST">
+<div class="profile-container">
+    <div class="profile-box">
+        <h1>Редактирование профиля</h1>
+        <form method="POST" enctype="multipart/form-data">
             <div class="form-group">
-                <label for="title">Название:</label>
-                <input type="text" id="title" name="title" required>
+                <label for="username">Имя пользователя</label>
+                <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}">
             </div>
             <div class="form-group">
-                <label for="description">Описание:</label>
-                <textarea id="description" name="description" required></textarea>
+                <label for="password">Новый пароль</label>
+                <input type="password" class="form-control" id="password" name="password">
             </div>
-            <button type="submit" class="btn btn-primary">Создать Событие</button>
+            <div class="form-group">
+                <label for="confirm_password">Подтвердите пароль</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+            </div>
+            <div class="form-group">
+                <label for="avatar">Аватар</label>
+                <input type="file" class="form-control-file" id="avatar" name="avatar">
+                {% if current_user.avatar %}
+                    <img src="{{ url_for('static', filename='uploads/images/' + current_user.avatar) }}" alt="Аватар" class="img-thumbnail mt-2" width="100">
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
         </form>
     </div>
 </div>
