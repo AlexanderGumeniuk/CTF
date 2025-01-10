@@ -1,9 +1,95 @@
 {% extends "base.html" %}
 {% block content %}
-    <h1>Welcome to the Flask App!</h1>
-    {% if current_user.is_authenticated %}
-        <p>Hello, {{ current_user.username }}!</p>
-    {% else %}
-        <p>Please <a href="{{ url_for('login') }}">login</a> or <a href="{{ url_for('register') }}">register</a>.</p>
-    {% endif %}
+    <style>
+        /* Основные стили для контейнера */
+        .main-container {
+            position: fixed; /* Фиксированное позиционирование */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(30, 30, 30, 0.9); /* Тёмный фон */
+            border: 1px solid rgba(255, 255, 255, 0.5); /* Белая рамка */
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); /* Белое свечение */
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+            animation: glow 3s infinite alternate; /* Медленная анимация свечения */
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            }
+            to {
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        /* Стили для текста */
+        .neon-text {
+            font-family: 'Courier New', Courier, monospace;
+            color: #FFFFFF; /* Белый текст */
+            font-size: 36px;
+            margin-bottom: 20px;
+            animation: textGlow 2s infinite alternate;
+        }
+
+        @keyframes textGlow {
+            from {
+                text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            }
+            to {
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        .subtext {
+            font-size: 18px;
+            color: #F5F5F5;
+            margin-bottom: 30px;
+        }
+
+        /* Стили для кнопок */
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .btn {
+    	    background-color: rgba(147, 112, 219, 0.1); /* Мягкий фиолетовый фон (MediumPurple) */
+    	    color: #FFFFFF; /* Белый текст */
+    	    padding: 10px 20px;
+    	    border: 1px solid rgba(147, 112, 219, 0.5); /* Мягкая фиолетовая рамка */
+    	    border-radius: 5px;
+    	    text-decoration: none;
+    	    font-size: 16px;
+    	    transition: background-color 0.3s, box-shadow 0.3s, color 0.3s; /* Добавлен transition для цвета текста */
+	}
+
+	.btn:hover {
+   	    background-color: rgba(147, 112, 219, 0.3); /* Ярче при наведении */
+    	    border-color: rgba(147, 112, 219, 0.8); /* Более яркая рамка */
+    	    box-shadow: 0 0 15px rgba(147, 112, 219, 0.6); /* Подсветка при наведении */
+    	    color: #FFFFFF; /* Текст остаётся белым */
+	}
+    </style>
+
+    <!-- Центральный контейнер -->
+    <div class="main-container">
+        <div class="content">
+            <!-- Заголовок -->
+            <h1 class="neon-text">CTF</h1>
+            <!-- Подзаголовок -->
+            <p class="subtext">Место где ваши скиллы растут.</p>
+            <!-- Кнопки -->
+            <div class="buttons">
+                <a href="{{ url_for('login') }}" class="btn">Вход</a>
+    		<a href="{{ url_for('register') }}" class="btn">Регистрация</a>
+            </div>
+        </div>
+    </div>
 {% endblock %}

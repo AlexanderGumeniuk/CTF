@@ -2,7 +2,7 @@
 
 {% block content %}
 <style>
-  /* Основные стили для body */
+       /* Основные стили для body */
   body {
       background-color: #1e1e1e;
       color: #fff;
@@ -18,10 +18,13 @@
       font-size: 2.5rem;
       margin-bottom: 2rem;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      color: #FFFFFF; /* Белый текст */
   }
-.container {
-  background-color: unset;
-}
+
+  .container {
+      background-color: unset;
+  }
+
   /* Стили для контейнера вкладок */
   .tabs {
       display: flex;
@@ -32,38 +35,51 @@
 
   /* Стили для каждой вкладки */
   .tab-link {
-      display: flex;
-      align-items: center;
-      gap: 8px;
       padding: 10px 20px;
       border-radius: 25px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
       color: #fff;
       text-decoration: none;
       font-size: 16px;
       transition: all 0.3s ease;
-      border: 2px solid transparent;
-      backdrop-filter: blur(10px);
-      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2); /* Полупрозрачная рамка */
+      display: flex;
+      align-items: center;
+      gap: 8px;
   }
 
   /* Стили для активной вкладки */
   .tab-link.active {
-      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
-      border-color: rgba(76, 175, 80, 0.5);
-      transform: scale(1.05);
-  }
-
-  /* Стили для иконок */
-  .tab-icon {
-      font-size: 18px;
+      background: rgba(147, 112, 219, 0.3); /* Фиолетовый фон */
+      border-color: rgba(147, 112, 219, 0.5); /* Фиолетовая рамка */
   }
 
   /* Эффекты при наведении */
   .tab-link:hover {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(76, 175, 80, 0.5);
-      transform: scale(1.05);
+      background: rgba(147, 112, 219, 0.2); /* Фиолетовый фон при наведении */
+      border-color: rgba(147, 112, 219, 0.5); /* Фиолетовая рамка */
+      color: #fff; /* Убрал зеленый цвет текста при наведении */
+  }
+
+  /* Иконки для вкладок */
+  .tab-icon {
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.8); /* Полупрозрачный белый */
+  }
+
+  /* Иконка для "Все задачи" */
+  .tab-icon.all::before {
+      content: "📁"; /* Иконка папки */
+  }
+
+  /* Иконка для "Решённые задачи" */
+  .tab-icon.solved::before {
+      content: "✅"; /* Иконка галочки */
+  }
+
+  /* Иконка для "Нерешённые задачи" */
+  .tab-icon.unsolved::before {
+      content: "❌"; /* Иконка крестика */
   }
 
   /* Стили для списка задач */
@@ -74,25 +90,13 @@
       padding: 20px;
   }
 
-  /* Стили для каждого флага */
+  /* Стили для каждой задачи */
   .challenge-item {
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
+      border: 1px solid rgba(255, 255, 255, 0.2); /* Полупрозрачная рамка */
       border-radius: 15px;
       padding: 20px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
       transition: all 0.3s ease;
-  }
-
-  /* Зеленая обводка для решенных задач */
-  .challenge-item.solved {
-      border-color: rgba(76, 175, 80, 0.8);
-  }
-
-  /* Красная обводка для нерешенных задач */
-  .challenge-item.unsolved {
-      border-color: black;
   }
 
   /* Стили для заголовка задачи */
@@ -107,48 +111,12 @@
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background-color: rgba(76, 175, 80, 0.8);
+      background-color: rgba(147, 112, 219, 0.3); /* Фиолетовый фон */
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
       font-size: 18px;
-  }
-  /* Иконка статуса красная */
-  .status-icon-red {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background-color: red;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 18px;
-  }
-  /* Контейнер для сложности */
-  .difficulty-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-  }
-
-  /* Кружок сложности */
-  .difficulty-circle {
-      width: 30px;
-      height: 30px;
-      position: relative;
-  }
-
-  .difficulty-circle svg circle {
-      transition: stroke 0.3s ease;
-  }
-
-  /* Текст сложности */
-  .difficulty {
-      margin: 0;
-      font-size: 14px;
-      color: #e0e0e0;
   }
 
   /* Название задачи */
@@ -167,10 +135,6 @@
   .challenge-points p {
       margin: 0;
       color: #e0e0e0;
-  }
-
-  .challenge-points .received {
-      color: rgba(76, 175, 80, 0.8);
   }
 
   .challenge-points .toggle-button {
@@ -206,13 +170,194 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       padding: 8px;
       border-radius: 4px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
+      color: #fff;
+      width: 200px;
+  }
+
+  .challenge-form button
+Run HTML
+если не надо менять логику давай мне только стили я их вставлю в <style>
+Конечно! Вот только обновленные стили, которые нужно вставить в <style>:
+
+css
+Copy
+<style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+  }
+
+  /* Стили для заголовка */
+  h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      color: #FFFFFF; /* Белый текст */
+  }
+
+  .container {
+      background-color: unset;
+  }
+
+  /* Стили для контейнера вкладок */
+  .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 30px;
+  }
+
+  /* Стили для каждой вкладки */
+  .tab-link {
+      padding: 10px 20px;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.2); /* Полупрозрачная рамка */
+      display: flex;
+      align-items: center;
+      gap: 8px;
+  }
+
+  /* Стили для активной вкладки */
+  .tab-link.active {
+      background: rgba(147, 112, 219, 0.3); /* Фиолетовый фон */
+      border-color: rgba(147, 112, 219, 0.5); /* Фиолетовая рамка */
+  }
+
+  /* Эффекты при наведении */
+  .tab-link:hover {
+      background: rgba(147, 112, 219, 0.2); /* Фиолетовый фон при наведении */
+      border-color: rgba(147, 112, 219, 0.5); /* Фиолетовая рамка */
+      color: #fff; /* Убрал зеленый цвет текста при наведении */
+  }
+
+  /* Иконки для вкладок */
+  .tab-icon {
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.8); /* Полупрозрачный белый */
+  }
+
+  /* Иконка для "Все задачи" */
+  .tab-icon.all::before {
+      content: "📁"; /* Иконка папки */
+  }
+
+  /* Иконка для "Решённые задачи" */
+  .tab-icon.solved::before {
+      content: "✔️"; /* Иконка галочки */
+  }
+
+  /* Иконка для "Нерешённые задачи" */
+  .tab-icon.unsolved::before {
+      content: "✖️"; /* Иконка крестика */
+  }
+
+  /* Стили для списка задач */
+  .challenges-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px;
+  }
+
+  /* Стили для каждой задачи */
+  .challenge-item {
+      background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
+      border: 1px solid rgba(255, 255, 255, 0.2); /* Полупрозрачная рамка */
+      border-radius: 15px;
+      padding: 20px;
+      transition: all 0.3s ease;
+  }
+
+  /* Стили для заголовка задачи */
+  .challenge-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+  }
+
+  /* Иконка статуса */
+  .status-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: rgba(147, 112, 219, 0.3); /* Фиолетовый фон */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+  }
+
+  /* Название задачи */
+  .challenge-title h3 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #fff;
+  }
+
+  /* Баллы и кнопка раскрытия */
+  .challenge-points {
+      margin-left: auto;
+      text-align: right;
+  }
+
+  .challenge-points p {
+      margin: 0;
+      color: #e0e0e0;
+  }
+
+  .challenge-points .toggle-button {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+  }
+
+  .challenge-points .toggle-button:hover {
+      transform: scale(1.2);
+  }
+
+  /* Скрытый контент */
+  .challenge-content {
+      margin-top: 15px;
+      display: none;
+  }
+
+  .challenge-info p {
+      margin: 5px 0;
+      color: #e0e0e0;
+  }
+
+  /* Форма для отправки флага */
+  .challenge-form {
+      margin-top: 15px;
+  }
+
+  .challenge-form input {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
       color: #fff;
       width: 200px;
   }
 
   .challenge-form button {
-      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      background: rgba(147, 112, 219, 0.3); /* Фиолетовый фон */
       color: white;
       border: none;
       padding: 8px 15px;
@@ -222,9 +367,25 @@
       transition: all 0.3s ease;
   }
 
+.difficulty-container {
+    display: flex;
+    align-items: center; /* Выравниваем по центру по вертикали */
+    gap: 10px; /* Расстояние между кружочком и текстом */
+}
+
+.difficulty-circle {
+    width: 30px;
+    height: 30px;
+}
+
+.difficulty {
+    margin: 0; /* Убираем отступы */
+    font-size: 14px; /* Размер текста */
+    color: #e0e0e0; /* Цвет текста */
+}
+
   .challenge-form button:hover {
-      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
-      transform: scale(1.05);
+      background: rgba(147, 112, 219, 0.5); /* Ярче при наведении */
   }
 
   /* Адаптивность */
@@ -251,16 +412,15 @@
 <!-- Вкладки для фильтрации -->
 <div class="tabs">
     <a href="{{ url_for('challenges', filter='all') }}" class="tab-link {% if filter_type == 'all' %}active{% endif %}">
-        <span class="tab-icon">📂</span> Все
+        <span class="tab-icon all"></span> Все
     </a>
     <a href="{{ url_for('challenges', filter='solved') }}" class="tab-link {% if filter_type == 'solved' %}active{% endif %}">
-        <span class="tab-icon">✅</span> Выполненные
+        <span class="tab-icon solved"></span> Решённые
     </a>
     <a href="{{ url_for('challenges', filter='unsolved') }}" class="tab-link {% if filter_type == 'unsolved' %}active{% endif %}">
-        <span class="tab-icon">❌</span> Невыполненные
+        <span class="tab-icon unsolved"></span> Нерешённые
     </a>
 </div>
-
 <!-- Список задач -->
 <div class="challenges-list">
     {% for challenge in challenges %}
@@ -269,38 +429,38 @@
                 <!-- Иконка статуса -->
                 {% if not challenge.solved_by_user(current_user) %}
                 <div class="status-icon-red">
-                  <span class="icon">&times;</span>
+                  <span class="icon">✖️</span>
                     </div>
                   {% endif %}
                     {% if challenge.solved_by_user(current_user) %}
                     <div class="status-icon">
-                        <span class="icon">✔</span>
+                        <span class="icon">✔️</span>
                         </div>
                     {% endif %}
 
                 <div>
                     <!-- Кружок сложности -->
                     <div class="difficulty-container">
-                        <div class="difficulty-circle">
-                            <svg width="30" height="30" viewBox="0 0 30 30">
-                                <circle cx="15" cy="15" r="13" fill="none" stroke="#e0e0e0" stroke-width="3" />
-                                <circle cx="15" cy="15" r="13" fill="none" stroke-width="3"
-                                        stroke-dasharray="81.681" stroke-dashoffset="81.681"
-                                        transform="rotate(-90 15 15)" />
-                            </svg>
-                        </div>
-                        <p class="difficulty">
-                            {% if challenge.points >= 0 and challenge.points < 100 %}
-                                Низкая
-                            {% elif challenge.points >= 100 and challenge.points < 500 %}
-                                Средняя
-                            {% elif challenge.points >= 500 and challenge.points < 1000 %}
-                                Сложная
-                            {% elif challenge.points >= 1000 and challenge.points <= 2000 %}
-                                Очень сложная
-                            {% endif %}
-                        </p>
-                    </div>
+    			<div class="difficulty-circle">
+       			    <svg width="20" height="20" viewBox="0 0 20 20">
+            		        <circle cx="10" cy="10" r="9" fill="none" stroke="#e0e0e0" stroke-width="3" />
+            		        <circle cx="10" cy="10" r="9" fill="none" stroke-width="3"
+                    	                stroke-dasharray="81.681" stroke-dashoffset="81.681"
+                    	                transform="rotate(-90 10 10)" />
+        		    </svg>
+    		    </div>
+    		    <p class="difficulty">
+        		{% if challenge.points >= 0 and challenge.points < 100 %}
+           		   Низкая
+       		 	{% elif challenge.points >= 100 and challenge.points < 500 %}
+            	 	   Средняя
+        		{% elif challenge.points >= 500 and challenge.points < 1000 %}
+            		   Сложная
+        		{% elif challenge.points >= 1000 and challenge.points <= 2000 %}
+            		   Очень сложная
+        		{% endif %}
+    		    </p>
+		</div>
                     <!-- Название задачи -->
                     <div class="challenge-title">
                         <h3>{{ challenge.title }}</h3>

@@ -4,7 +4,179 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flask App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Основные стили */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif; /* Стандартные шрифты */
+            background-color: #1E1E1E; /* Темный фон */
+            color: #F5F5F5; /* Светлый текст */
+            overflow-x: hidden; /* Чтобы анимация частиц не вызывала горизонтальный скролл */
+        }
+
+        /* Стили для canvas */
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Чтобы canvas был на заднем плане */
+            background: linear-gradient(to bottom, #000000, #1E1E1E); /* Градиентный фон */
+        }
+
+        /* Контейнер для контента */
+        .container {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            z-index: 1; /* Чтобы контент был поверх canvas */
+        }
+
+        /* Стили для модального окна */
+        .modal {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Полупрозрачный чёрный фон */
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #1E1E1E; /* Тёмный фон */
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid transparent; /* Прозрачная рамка по умолчанию */
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-content .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #F5F5F5; /* Светлый текст */
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-content .close:hover {
+            color: #FF4500; /* Оранжевый при наведении */
+        }
+
+        .modal-content p {
+            margin: 0;
+            font-size: 16px;
+            color: #F5F5F5; /* Светлый текст */
+        }
+
+        /* Цвета для категорий сообщений */
+        .modal-content.success {
+            border-color: #00FF00; /* Зелёный для успеха */
+        }
+
+        .modal-content.error {
+            border-color: #FF4500; /* Оранжево-красный для ошибок */
+        }
+
+        .modal-content.info {
+            border-color: #9370DB; /* Фиолетовый для информации */
+        }
+
+        /* Анимация для появления модального окна */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Стили для навигации */
+        .navbar {
+            background-color: rgba(30, 30, 30, 0.9); /* Полупрозрачный темный фон */
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid #9370DB; /* Фиолетовая линия */
+        }
+
+        .navbar a {
+            color: #F5F5F5;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #9370DB; /* Фиолетовый при наведении */
+        }
+
+        .navbar .logo {
+            font-family: 'Courier New', Courier, monospace; /* Моноширинный шрифт для лого */
+            font-size: 24px;
+            color: #9370DB; /* Фиолетовый */
+            font-weight: bold;
+        }
+
+        /* Дополнительные стили для кнопок (если нужно) */
+        .button {
+            background-color: #9370DB; /* Фиолетовый */
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            border-radius: 5px;
+        }
+
+        .button:hover {
+            background-color: #7B68EE; /* Более яркий фиолетовый */
+            box-shadow: 0 0 10px #9370DB, 0 0 20px #9370DB; /* Неоновое свечение */
+        }
+
+        /* Стили для заголовков */
+        h1, h2, h3 {
+            font-family: 'Courier New', Courier, monospace; /* Моноширинный шрифт для заголовков */
+            color: #9370DB; /* Фиолетовый */
+        }
+
+        h1 {
+            font-size: 36px;
+        }
+
+        h2 {
+            font-size: 28px;
+        }
+
+        h3 {
+            font-size: 22px;
+        }
+
+        /* Стили для ссылок */
+        a {
+            color: #00BFFF; /* Неоново-синий */
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #9370DB; /* Фиолетовый при наведении */
+        }
+    </style>
 </head>
 <body>
     <!-- Canvas для анимации частиц -->
@@ -14,23 +186,64 @@
     {% include 'includes/navbar.html' %}
 
     <div class="container">
-        <!-- Отображение flash-сообщений -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
         <!-- Основное содержимое страницы -->
         {% block content %}{% endblock %}
     </div>
 
+    <!-- Модальное окно для flash-сообщений -->
+    <div id="flashModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="flashMessage"></p>
+        </div>
+    </div>
+
     <!-- Подключение JavaScript -->
     <script src="{{ url_for('static', filename='js/particles.js') }}"></script>
+    <script>
+        // Функция для отображения flash-сообщений в модальном окне
+        function showFlashMessage(message, category) {
+            const modal = document.getElementById('flashModal');
+            const modalContent = modal.querySelector('.modal-content');
+            const flashMessage = document.getElementById('flashMessage');
 
+            // Устанавливаем текст сообщения
+            flashMessage.textContent = message;
+
+            // Меняем стили в зависимости от категории
+            modalContent.className = 'modal-content'; // Сбрасываем классы
+            if (category === 'success') {
+                modalContent.classList.add('success'); // Зелёный для успеха
+            } else if (category === 'error') {
+                modalContent.classList.add('error'); // Красный для ошибок
+            } else if (category === 'info') {
+                modalContent.classList.add('info'); // Фиолетовый для информации
+            }
+
+            // Показываем модальное окно
+            modal.style.display = 'flex';
+
+            // Закрытие модального окна при клике на крестик
+            modal.querySelector('.close').onclick = function() {
+                modal.style.display = 'none';
+            };
+
+            // Закрытие модального окна при клике вне его
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // Проверяем наличие flash-сообщений и показываем их
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    showFlashMessage("{{ message }}", "{{ category }}");
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </script>
 </body>
 </html>

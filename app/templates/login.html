@@ -5,7 +5,7 @@
 
 {% block content %}
 <style>
-  .container {
+        .container {
       background-color: unset !important;
   }
 
@@ -20,20 +20,20 @@
   }
 
   .login-box {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(15px);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      animation: fadeIn 0.8s ease-out;
-  }
+    background: rgba(30, 30, 30, 0.9);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); /* Белая подсветка */
+    backdrop-filter: blur(15px);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.5); /* Белая рамка */
+    animation: glow 3s infinite alternate; /* Анимация свечения */
+}
 
   .login-box h2 {
-      color: #fff;
+      color: #FFFFFF; /* Белый текст */
       font-size: 2.5rem;
       margin-bottom: 2rem;
       font-weight: 600;
@@ -43,35 +43,33 @@
   .input-group {
       position: relative;
       margin-bottom: 2rem;
-      transform: skewX(-15deg);
+      padding: 0 1rem; /* Отступы слева и справа */
   }
 
   .input-group input {
-      width: 100%;
-      padding: 1rem 0.5rem;
+      width: calc(100% - 2rem); /* Учитываем отступы */
+      padding: 1rem;
       border: none;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
+      background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
+      color: #FFFFFF; /* Белый текст */
       font-size: 1rem;
       outline: none;
       transition: all 0.3s ease;
-      transform: skewX(15deg);
       box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), inset 2px 2px 6px rgba(255, 255, 255, 0.1);
   }
 
   .input-group input:focus {
-      background: rgba(255, 255, 255, 0.3);
-      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), inset 2px 2px 6px rgba(255, 255, 255, 0.2);
-      transform: skewX(15deg) translateY(-3px);
+      background: rgba(255, 255, 255, 0.2); /* Ярче при фокусе */
+      box-shadow: 0 0 10px rgba(147, 112, 219, 0.5); /* Фиолетовая подсветка */
   }
 
   .input-group label {
       position: absolute;
       top: 50%;
       left: 1rem;
-      transform: translateY(-50%) skewX(15deg);
-      color: rgba(255, 255, 255, 0.7);
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.7); /* Полупрозрачный белый */
       font-size: 1rem;
       pointer-events: none;
       transition: all 0.3s ease;
@@ -82,34 +80,37 @@
   .input-group input:focus + label,
   .input-group input:not(:placeholder-shown) + label {
       top: -10px;
-      left: -0.9rem;
+      left: 0.5rem;
       font-size: 0.8rem;
-      color: #fff;
+      color: #FFFFFF; /* Белый текст */
+      background: rgba(30, 30, 30, 0.9); /* Фон для поднятого лейбла */
       padding: 0 0.5rem;
       border-radius: 5px;
       z-index: 2;
   }
 
   .login-button {
-      width: 100%;
-      padding: 1rem;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-      color: #fff;
-      font-size: 1.2rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      transform: skewX(-15deg);
-      box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), inset 2px 2px 6px rgba(255, 255, 255, 0.1);
-  }
+    width: calc(100% - 2rem); /* Учитываем отступы */
+    margin: 0 1rem; /* Отступы слева и справа */
+    padding: 1rem; /* Размер оставляем как есть */
+    border: none;
+    border-radius: 5px;
+    background-color: rgba(147, 112, 219, 0.1); /* Мягкий фиолетовый фон */
+    color: #FFFFFF; /* Белый текст */
+    font-size: 1.2rem; /* Размер текста оставляем как есть */
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s, color 0.3s; /* Плавные переходы */
+    border: 1px solid rgba(147, 112, 219, 0.5); /* Мягкая фиолетовая рамка */
+    box-shadow: 0 0 10px rgba(147, 112, 219, 0.3); /* Подсветка */
+}
 
-  .login-button:hover {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
-      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), inset 2px 2px 6px rgba(255, 255, 255, 0.2);
-      transform: skewX(-15deg) translateY(-3px);
-  }
+.login-button:hover {
+    background-color: rgba(147, 112, 219, 0.3); /* Ярче при наведении */
+    border-color: rgba(147, 112, 219, 0.8); /* Более яркая рамка */
+    box-shadow: 0 0 15px rgba(147, 112, 219, 0.6); /* Подсветка при наведении */
+    color: #FFFFFF; /* Текст остаётся белым */
+}
 
   @keyframes fadeIn {
       from {
@@ -127,31 +128,22 @@
           width: 90%;
           max-width: none;
       }
-      .input-group {
-          transform: skewX(0);
-      }
-      .input-group input {
-          transform: skewX(0);
-      }
-      .login-button {
-          transform: skewX(0);
-      }
   }
 </style>
 
 <div class="login-container">
     <div class="login-box">
-        <h2>Sign In</h2>
+        <h2>Вход</h2>
         <form method="POST" action="" class="login-form">
             <div class="input-group">
                 <input type="text" id="email" name="email" required>
-                <label for="email">Username</label>
+                <label for="email">Имя пользователя</label>
             </div>
             <div class="input-group">
                 <input type="password" id="password" name="password" required>
-                <label for="password">Password</label>
+                <label for="password">Пароль</label>
             </div>
-            <button type="submit" class="login-button"><span>Log In</span></button>
+            <button type="submit" class="login-button"><span>Вход</span></button>
         </form>
     </div>
 </div>

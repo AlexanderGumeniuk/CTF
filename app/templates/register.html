@@ -1,21 +1,156 @@
 {% extends "base.html" %}
 {% block content %}
-    <h2>Register</h2>
-    <form method="POST" action="">
-        <div>
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Отключаем прокрутку */
+            height: 100%;
+        }
+
+        .register-container {
+   	    position: relative;
+    	    z-index: 1;
+    	    display: flex;
+   	    justify-content: center;
+  	    align-items: flex-start; /* Поднимаем блок выше */
+    	    height: 100vh; /* Занимает ровно 100% высоты экрана */
+    	    margin: 0; /* Убираем лишние отступы */
+    	    padding: 2rem 0; /* Добавляем небольшой отступ сверху и снизу */
+	}
+
+        .register-box {
+            background: rgba(30, 30, 30, 0.9);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: fadeIn 0.8s ease-out;
+            margin: 0; /* Убираем лишние отступы */
+        }
+
+        .register-box h2 {
+            color: #FFFFFF;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+        }
+
+        .input-group input {
+            width: calc(100% - 2rem);
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), inset 2px 2px 6px rgba(255, 255, 255, 0.1);
+        }
+
+        .input-group input:focus {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(147, 112, 219, 0.5);
+        }
+
+        .input-group label {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1;
+            padding-left: 0.5rem;
+        }
+
+        .input-group input:focus + label,
+        .input-group input:not(:placeholder-shown) + label {
+            top: -10px;
+            left: 0.5rem;
+            font-size: 0.8rem;
+            color: #FFFFFF;
+            background: rgba(30, 30, 30, 0.9);
+            padding: 0 0.5rem;
+            border-radius: 5px;
+            z-index: 2;
+        }
+
+        .register-button {
+            width: calc(100% - 2rem);
+            margin: 0 1rem;
+            padding: 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(147, 112, 219, 0.1);
+            color: #FFFFFF;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s, color 0.3s;
+            border: 1px solid rgba(147, 112, 219, 0.5);
+            box-shadow: 0 0 10px rgba(147, 112, 219, 0.3);
+        }
+
+        .register-button:hover {
+            background-color: rgba(147, 112, 219, 0.3);
+            border-color: rgba(147, 112, 219, 0.8);
+            box-shadow: 0 0 15px rgba(147, 112, 219, 0.6);
+            color: #FFFFFF;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .register-box {
+                width: 90%;
+                max-width: none;
+            }
+        }
+    </style>
+
+    <!-- Центральный контейнер -->
+    <div class="register-container">
+        <div class="register-box">
+            <h2>Register</h2>
+            <form method="POST" action="">
+                <div class="input-group">
+                    <input type="text" id="username" name="username" required>
+                    <label for="username">Username</label>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="email" name="email" required>
+                    <label for="email">Email</label>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" required>
+                    <label for="password">Password</label>
+                </div>
+                <button type="submit" class="register-button">Register</button>
+            </form>
         </div>
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-        <div>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <div>
-            <button type="submit">Register</button>
-        </div>
-    </form>
+    </div>
 {% endblock %}

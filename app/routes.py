@@ -1387,24 +1387,17 @@ def admin_topology():
         return redirect(url_for('index'))
 
     # Проверяем и преобразуем данные
-    topology = infra.topology if infra.topology else {}
+    topology = infra.topology if infra.topology else []  # Убедимся, что topology — это список
     links = infra.links if infra.links else []
-    elements = infra.elements if infra.elements else []
-
-    # Убедимся, что topology содержит nodes
-    if "nodes" not in topology:
-        topology["nodes"] = []
 
     # Формируем данные для передачи в шаблон
     topology_data = {
-        'nodes': topology["nodes"],  # Узлы
-        'links': links,              # Связи
-        'elements': elements         # Элементы
+        "nodes": topology,  # Узлы (список)
+        "links": links      # Связи
     }
 
     # Передаем данные в шаблон как объект JSON
     return render_template('admin_topology.html', topology_data=topology_data)
-
 
 
 from flask import request, jsonify

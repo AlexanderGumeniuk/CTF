@@ -1,6 +1,141 @@
 {% extends "base.html" %}
 {% block content %}
-    <h1>Profile</h1>
-    <p>Username: {{ current_user.username }}</p>
-    <p>Email: {{ current_user.email }}</p>
+    <style>
+        /* Основные стили для контейнера */
+        .profile-container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .profile-box {
+            background: rgba(30, 30, 30, 0.9); /* Тёмный фон */
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); /* Белая подсветка */
+            backdrop-filter: blur(15px);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.5); /* Белая рамка */
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .profile-box h1 {
+            color: #FFFFFF; /* Белый текст */
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
+            border: 2px solid rgba(255, 255, 255, 0.5); /* Белая рамка */
+            margin: 0 auto 1.5rem;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-avatar .default-avatar {
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.5); /* Полупрозрачный белый */
+        }
+
+        .profile-info {
+            color: #F5F5F5; /* Светлый текст */
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-info p {
+            margin: 0.5rem 0;
+        }
+
+        .profile-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .profile-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(147, 112, 219, 0.1); /* Мягкий фиолетовый фон */
+            color: #FFFFFF; /* Белый текст */
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(147, 112, 219, 0.5); /* Мягкая фиолетовая рамка */
+            box-shadow: 0 0 10px rgba(147, 112, 219, 0.3); /* Подсветка */
+        }
+
+        .profile-button:hover {
+            background-color: rgba(147, 112, 219, 0.3); /* Ярче при наведении */
+            box-shadow: 0 0 15px rgba(147, 112, 219, 0.6); /* Подсветка при наведении */
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .profile-box {
+                width: 90%;
+                max-width: none;
+            }
+        }
+    </style>
+
+    <!-- Центральный контейнер -->
+    <div class="profile-container">
+        <div class="profile-box">
+            <h1>Личный кабинет</h1>
+
+            <!-- Аватарка (заготовка) -->
+            <div class="profile-avatar">
+                <div class="default-avatar">👤</div>
+                <!-- В будущем можно добавить загрузку аватарки -->
+            </div>
+
+            <!-- Информация о пользователе (заготовка) -->
+            <div class="profile-info">
+                <p><strong>Имя пользователя:</strong> {{ current_user.username }}</p>
+                <p><strong>Email:</strong> {{ current_user.email }}</p>
+                <!-- В будущем можно добавить больше полей, например, дату регистрации -->
+            </div>
+
+            <!-- Кнопки для действий (заготовка) -->
+            <div class="profile-actions">
+                <button class="profile-button" onclick="location.href='#'">Изменить профиль</button>
+                <button class="profile-button" onclick="location.href='#'">Выход</button>
+                <!-- В будущем можно добавить больше кнопок -->
+            </div>
+        </div>
+    </div>
 {% endblock %}
