@@ -15,15 +15,16 @@
 
   /* Контейнер для управления командами */
   .manage-teams-container {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон с прозрачностью */
       padding: 2rem;
       border-radius: 15px;
-      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 0px 30px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
       backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
       width: 95%;
       max-width: 1200px;
       margin: 2rem auto;
+      animation: fadeIn 0.8s ease-out;
   }
 
   /* Заголовок */
@@ -73,14 +74,14 @@
 
   .create-team-form input:focus {
       background: rgba(255, 255, 255, 0.3);
-      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+      box-shadow: 0px 0px 10px rgba(147, 112, 219, 0.5); /* Фиолетовая тень */
   }
 
   .create-team-form button {
       padding: 0.8rem 1.5rem;
       border: none;
       border-radius: 8px;
-      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(69, 160, 73, 0.8));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.8), rgba(123, 104, 238, 0.8)); /* Фиолетовый градиент */
       color: #fff;
       font-size: 1rem;
       font-weight: 600;
@@ -89,9 +90,9 @@
   }
 
   .create-team-form button:hover {
-      background: linear-gradient(145deg, rgba(76, 175, 80, 1), rgba(69, 160, 73, 1));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 1), rgba(123, 104, 238, 1)); /* Яркий градиент */
       transform: translateY(-2px);
-      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.4); /* Фиолетовая тень */
   }
 
   /* Список команд */
@@ -103,9 +104,15 @@
   .teams-list li {
       margin-bottom: 2rem;
       padding: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(147, 112, 219, 0.05); /* Фиолетовый фон */
+      transition: all 0.3s ease;
+  }
+
+  .teams-list li:hover {
+      transform: translateY(-5px);
+      box-shadow: 0px 10px 20px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
   }
 
   .teams-list li ul.team-users-list {
@@ -119,7 +126,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 0.75rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(147, 112, 219, 0.1); /* Фиолетовая рамка */
   }
 
   /* Кнопка удаления */
@@ -155,7 +162,19 @@
 
   select:focus {
       background: rgba(255, 255, 255, 0.3);
-      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+      box-shadow: 0px 0px 10px rgba(147, 112, 219, 0.5); /* Фиолетовая тень */
+  }
+
+  /* Анимация появления */
+  @keyframes fadeIn {
+      from {
+          opacity: 0;
+          transform: translateY(20px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
   }
 
   /* Адаптивность */
