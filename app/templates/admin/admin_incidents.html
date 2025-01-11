@@ -34,7 +34,7 @@
       display: flex;
       justify-content: center;
       margin-bottom: 2rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      border-bottom: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
   }
 
   .nav-item {
@@ -50,12 +50,12 @@
   }
 
   .nav-link:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(147, 112, 219, 0.2); /* Фиолетовый фон */
       color: #fff;
   }
 
   .nav-link.active {
-      background: rgba(76, 175, 80, 0.8);
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.8), rgba(123, 104, 238, 0.8)); /* Фиолетовый градиент */
       color: #fff;
       font-weight: bold;
   }
@@ -64,27 +64,32 @@
   .table {
       width: 100%;
       border-collapse: collapse;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон */
       border-radius: 15px;
       overflow: hidden;
-      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 0px 30px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
   }
 
   .table th,
   .table td {
       padding: 1rem;
       text-align: left;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      border-bottom: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
   }
 
   .table th {
-      background: rgba(76, 175, 80, 0.8);
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.8), rgba(123, 104, 238, 0.8)); /* Фиолетовый градиент */
       color: #fff;
       font-weight: bold;
   }
 
+  .table tbody tr {
+      transition: all 0.3s ease;
+  }
+
   .table tbody tr:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(147, 112, 219, 0.05); /* Фиолетовый фон */
+      transform: translateY(-2px);
   }
 
   /* Кнопки */
@@ -92,7 +97,7 @@
       padding: 0.5rem 1rem;
       border: none;
       border-radius: 8px;
-      background: rgba(76, 175, 80, 0.8);
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.8), rgba(123, 104, 238, 0.8)); /* Фиолетовый градиент */
       color: #fff;
       font-size: 0.9rem;
       cursor: pointer;
@@ -100,14 +105,26 @@
   }
 
   .btn:hover {
-      background: rgba(76, 175, 80, 1);
+      background: linear-gradient(145deg, rgba(147, 112, 219, 1), rgba(123, 104, 238, 1)); /* Яркий градиент */
       transform: translateY(-2px);
-      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.4); /* Фиолетовая тень */
   }
 
   .btn-sm {
       padding: 0.4rem 0.8rem;
       font-size: 0.8rem;
+  }
+
+  /* Анимация появления */
+  @keyframes fadeIn {
+      from {
+          opacity: 0;
+          transform: translateY(20px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
   }
 
   /* Адаптивность */

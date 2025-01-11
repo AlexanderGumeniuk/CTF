@@ -53,8 +53,6 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <!-- Рейтинг команд -->
 </div>
 
 <style>
@@ -62,6 +60,7 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
+        color: #fff;
     }
 
     .team-info {
@@ -71,43 +70,40 @@
     .team-info p {
         font-size: 1.2rem;
         margin: 0.5rem 0;
+        color: #fff;
     }
 
     .team-members-table,
-    .points-history-table,
-    .team-ranking-table {
+    .points-history-table {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 2rem;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон с прозрачностью */
         border-radius: 10px;
         overflow: hidden;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 0 20px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
+        border: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
     }
 
     .team-members-table th,
     .team-members-table td,
     .points-history-table th,
-    .points-history-table td,
-    .team-ranking-table th,
-    .team-ranking-table td {
+    .points-history-table td {
         padding: 1rem;
         text-align: left;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        border-bottom: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
     }
 
     .team-members-table th,
-    .points-history-table th,
-    .team-ranking-table th {
-        background-color: rgba(76, 175, 80, 0.8);
+    .points-history-table th {
+        background-color: rgba(147, 112, 219, 0.5); /* Фиолетовый фон для заголовков */
         color: #fff;
         font-weight: bold;
     }
 
     .team-members-table tr:hover,
-    .points-history-table tr:hover,
-    .team-ranking-table tr:hover {
-        background-color: rgba(255, 255, 255, 0.05);
+    .points-history-table tr:hover {
+        background-color: rgba(147, 112, 219, 0.2); /* Фиолетовый фон при наведении */
     }
 
     h1, h2 {

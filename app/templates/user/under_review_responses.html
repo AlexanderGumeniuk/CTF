@@ -1,22 +1,80 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h1>Отчёты, ожидающие проверки</h1>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Событие</th>
-            <th>Ответ</th>
-            <th>Статус</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for response in responses %}
-        <tr>
-            <td>{{ response.event.title }}</td>
-            <td>{{ response.response }}</td>
-            <td>{{ response.status }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="pending-reviews-container">
+    <h1>Отчёты, ожидающие проверки</h1>
+
+    {% if responses %}
+        <table class="reviews-table">
+            <thead>
+                <tr>
+                    <th>Событие</th>
+                    <th>Ответ</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for response in responses %}
+                <tr>
+                    <td>{{ response.event.title }}</td>
+                    <td>{{ response.response }}</td>
+                    <td>{{ response.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="no-responses-message">Нет отчётов, ожидающих проверки.</p>
+    {% endif %}
+</div>
+
+<style>
+    .pending-reviews-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #fff;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        color: #fff;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .reviews-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон с прозрачностью */
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
+        border: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
+    }
+
+    .reviews-table th,
+    .reviews-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
+    }
+
+    .reviews-table th {
+        background-color: rgba(147, 112, 219, 0.5); /* Фиолетовый фон для заголовков */
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .reviews-table tr:hover {
+        background-color: rgba(147, 112, 219, 0.2); /* Фиолетовый фон при наведении */
+    }
+
+    .no-responses-message {
+        font-size: 1.2rem;
+        color: #f5f5f5;
+        text-align: center;
+        margin-top: 2rem;
+    }
+</style>
 {% endblock %}
