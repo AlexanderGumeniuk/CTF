@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 
 {% block content %}
 <style>
@@ -36,31 +36,57 @@
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   }
 
-  /* Сетка для кнопок */
-  .admin-links {
+  /* Стили для карточек статистики */
+  .stats-container {
       display: grid;
-      grid-template-columns: repeat(2, 1fr); /* Два столбца */
-      gap: 1rem; /* Расстояние между кнопками */
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
   }
 
-  /* Стили для кнопок */
-  .admin-link {
-      display: block;
-      padding: 1rem;
-      background: linear-gradient(145deg, rgba(147, 112, 219, 0.8), rgba(123, 104, 238, 0.8)); /* Фиолетовый градиент */
-      color: #fff;
-      text-decoration: none;
-      border-radius: 8px;
+  .stat-card {
+      background: rgba(30, 30, 30, 0.8);
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
       text-align: center;
-      font-size: 1.2rem;
-      font-weight: 600;
-      transition: all 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 
-  .admin-link:hover {
-      background: linear-gradient(145deg, rgba(147, 112, 219, 1), rgba(123, 104, 238, 1)); /* Яркий фиолетовый градиент */
-      transform: translateY(-2px);
-      box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.4); /* Фиолетовая тень */
+  .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0px 8px 20px rgba(147, 112, 219, 0.5);
+  }
+
+  .stat-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #bb86fc; /* Фиолетовый цвет */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+  }
+
+  .stat-card h3 i {
+      font-size: 1.8rem;
+  }
+
+  .stat-card p {
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+      color: #ddd;
+  }
+
+  .stat-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+  }
+
+  .stat-card ul li {
+      font-size: 1rem;
+      margin: 0.5rem 0;
+      color: #bbb;
   }
 
   /* Анимация появления */
@@ -85,30 +111,58 @@
           font-size: 2rem;
       }
 
-      .admin-links {
-          grid-template-columns: 1fr; /* Один столбец на мобильных устройствах */
-      }
-
-      .admin-link {
-          padding: 0.8rem;
-          font-size: 1rem;
+      .stats-container {
+          grid-template-columns: 1fr;
       }
   }
 </style>
 
 <div class="admin-dashboard-container">
-    <h2>Администрирование</h2>
+    <h2>Статистика администрирования</h2>
 
-    <!-- Сетка из кнопок -->
-    <div class="admin-links">
-        <a href="{{ url_for('admin_flags') }}" class="admin-link">Управление флагами</a>
-        <a href="{{ url_for('create_user') }}" class="admin-link">Создать пользователя</a>
-        <a href="{{ url_for('manage_teams') }}" class="admin-link">Управление командами</a>
-        <a href="{{ url_for('manage_users') }}" class="admin-link">Управление пользователями</a>
-        <a href="{{ url_for('admin_incidents') }}" class="admin-link">Администрирование инцидентов</a>
-        <a href="{{ url_for('admin_critical_events') }}" class="admin-link">Критические события</a>
-        <a href="{{ url_for('admin_critical_event_responses') }}" class="admin-link">Отчёты по КС</a>
-        <a href="{{ url_for('admin_approved_responses') }}" class="admin-link">Принятые отчёты</a>
+    <!-- Статистика команд -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <h3><i class="fas fa-users"></i> Команды</h3>
+            <p>Всего команд: {{ team_stats|length }}</p>
+            <ul>
+                {% for team in team_stats %}
+                    <li>{{ team.name }}: {{ team.members }} участников, {{ team.points }} баллов</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Статистика флагов -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <h3><i class="fas fa-flag"></i> Флаги</h3>
+            <p>Решено: {{ solved_flags }}</p>
+            <p>Не решено: {{ unsolved_flags }}</p>
+        </div>
+    </div>
+
+    <!-- Статистика по критическим событиям -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <h3><i class="fas fa-exclamation-triangle"></i> Критические события</h3>
+            <p>Всего: {{ critical_events_stats.total }}</p>
+            <p>На проверке: {{ critical_events_stats.pending }}</p>
+            <p>Решено: {{ critical_events_stats.resolved }}</p>
+        </div>
+    </div>
+
+    <!-- Статистика по инцидентам -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <h3><i class="fas fa-fire"></i> Инциденты</h3>
+            <p>Всего: {{ incidents_stats.total }}</p>
+            <p>Открыто: {{ incidents_stats.open }}</p>
+            <p>Закрыто: {{ incidents_stats.closed }}</p>
+        </div>
     </div>
 </div>
+
+<!-- Подключение FontAwesome для иконок -->
+<script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
 {% endblock %}

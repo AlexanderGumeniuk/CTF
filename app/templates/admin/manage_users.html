@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 
 {% block content %}
 <style>
@@ -119,7 +119,9 @@
       background: rgba(255, 255, 255, 0.3);
       box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
   }
-
+  option {
+    background-color:black;
+  }
   .user-form button {
       padding: 0.8rem 1.5rem;
       margin-right: 0.5rem;
@@ -188,8 +190,11 @@
     <!-- Список пользователей -->
     <ul id="users-list" class="users-list">
         {% for user in users %}
-            <li data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}">
-
+            <li data-user-id="{{ user.id }}"
+                data-username="{{ user.username }}"
+                data-email="{{ user.email }}"
+                data-team-id="{{ user.team_id if user.team_id else '' }}"
+                data-is-admin="{{ 'true' if user.is_admin else 'false' }}">
                 <div class="user-info">
                     <span class="username">{{ user.username }} || </span>
                     <span class="email">{{ user.email }}</span>
@@ -209,7 +214,7 @@
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
 
-            <label>
+            <label style="display: inline-flex;">
                 <input type="checkbox" name="is_admin" id="is_admin"> Администратор
             </label>
 
@@ -254,11 +259,15 @@
             const userId = userLi.getAttribute('data-user-id');
             const username = userLi.getAttribute('data-username');
             const email = userLi.getAttribute('data-email');
+            const teamId = userLi.getAttribute('data-team-id');
+            const isAdmin = userLi.getAttribute('data-is-admin') === 'true';
 
             // Заполняем форму редактирования
             document.getElementById('edit_user_id').value = userId;
             document.getElementById('username').value = username;
             document.getElementById('email').value = email;
+            document.getElementById('team_id').value = teamId; // Устанавливаем команду
+            document.getElementById('is_admin').checked = isAdmin; // Устанавливаем статус администратора
 
             // Показываем форму редактирования
             document.getElementById('edit-user-form').style.display = 'block';

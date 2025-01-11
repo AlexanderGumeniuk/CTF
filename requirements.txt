@@ -5,4 +5,4 @@ psycopg2-binary==2.9.1
 Werkzeug==2.2.3  # Совместим с Flask 2.2.5
 SQLAlchemy==1.4.46  # Оставляем версию 1.4.x для совместимости
 Flask-Reuploaded==1.2.0
-
+requests

@@ -1,13 +1,14 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 
 {% block styles %}
 <style>
-  /* Добавляем скролл на body */
+  /* Переопределение стилей для body */
   body {
+      background-color: black;
       overflow-y: auto; /* Вертикальный скролл */
       overflow-x: hidden; /* Горизонтальный скролл скрыт */
       scrollbar-width: thin; /* Для Firefox */
-      scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Цвет скроллбара */
+      scrollbar-color: rgba(147, 112, 219, 0.5) transparent; /* Цвет скроллбара */
   }
 
   /* Стилизация скроллбара для WebKit (Chrome, Safari) */
@@ -20,14 +21,16 @@
   }
 
   body::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.3); /* Цвет ползунка */
+      background: rgba(147, 112, 219, 0.5); /* Цвет ползунка */
       border-radius: 4px; /* Скругление углов */
+      transition: background 0.3s ease;
   }
 
   body::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.5); /* Цвет ползунка при наведении */
+      background: rgba(147, 112, 219, 0.8); /* Цвет ползунка при наведении */
   }
 
+  /* Переопределение стилей для контейнера */
   .accepted-reports-container {
       position: relative;
       z-index: 1;
@@ -40,75 +43,96 @@
   }
 
   .accepted-reports-box {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 2rem;
+      background: rgba(30, 30, 30, 0.95); /* Тёмный фон с прозрачностью */
+      padding: 2.5rem;
       border-radius: 20px;
-      box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(20px);
+      box-shadow: 0px 0px 40px rgba(147, 112, 219, 0.6); /* Яркая фиолетовая тень */
+      backdrop-filter: blur(25px);
       width: 100%;
       max-width: 1200px;
       text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(147, 112, 219, 0.5); /* Фиолетовая рамка */
       animation: fadeIn 0.8s ease-out;
   }
 
   .accepted-reports-box h1 {
-      color: #fff;
-      font-size: 2.8rem;
+      color: #fff; /* Белый текст */
+      font-size: 3rem;
       margin-bottom: 2rem;
       font-weight: 700;
-      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 8px rgba(147, 112, 219, 0.7); /* Фиолетовая тень */
+      animation: glow 2s infinite alternate; /* Анимация свечения */
   }
 
-  table {
+  @keyframes glow {
+      from {
+          text-shadow: 0 0 10px rgba(147, 112, 219, 0.5), 0 0 20px rgba(147, 112, 219, 0.4);
+      }
+      to {
+          text-shadow: 0 0 20px rgba(147, 112, 219, 0.8), 0 0 30px rgba(147, 112, 219, 0.6);
+      }
+  }
+
+  /* Переопределение стилей для таблицы */
+  .accepted-reports-box table {
       width: 100%;
       border-collapse: collapse;
       margin: 0 auto;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(30, 30, 30, 0.9); /* Тёмный фон таблицы */
       border-radius: 15px;
       overflow: hidden;
-      box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 0px 30px rgba(147, 112, 219, 0.4); /* Фиолетовая тень */
+      border: 1px solid rgba(147, 112, 219, 0.5); /* Фиолетовая обводка */
   }
 
-  th, td {
+  .accepted-reports-box th,
+  .accepted-reports-box td {
       padding: 1.2rem;
       text-align: left;
-      color: #fff;
+      color: #fff; /* Белый текст */
   }
 
-  th {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+  .accepted-reports-box th {
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.4), rgba(147, 112, 219, 0.3)); /* Фиолетовый градиент */
       font-weight: 700;
       text-transform: uppercase;
       font-size: 1.1rem;
       letter-spacing: 1px;
   }
 
-  tr {
+  .accepted-reports-box tr {
       transition: all 0.3s ease;
   }
 
-  tr:nth-child(even) {
-      background: rgba(255, 255, 255, 0.05);
+  .accepted-reports-box tr:nth-child(even) {
+      background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон для чётных строк */
   }
 
-  tr:hover {
-      background: rgba(255, 255, 255, 0.2);
+  .accepted-reports-box tr:hover {
+      background: rgba(147, 112, 219, 0.25); /* Фиолетовый фон при наведении */
       transform: translateX(10px);
+      box-shadow: 0px 0px 20px rgba(147, 112, 219, 0.4); /* Тень при наведении */
   }
 
-  .points-awarded {
-      font-weight: 600;
-      color: #4caf50; /* Зеленый цвет для начисленных баллов */
+  .accepted-reports-box .points-awarded {
+      font-weight: 700;
+      color: #bb86fc; /* Фиолетовый цвет для начисленных баллов */
+      animation: pulse 1.5s infinite alternate; /* Анимация пульсации */
+  }
+
+  @keyframes pulse {
+      from {
+          color: #bb86fc;
+      }
+      to {
+          color: #d6a2ff; /* Более светлый фиолетовый */
+      }
   }
 
   @keyframes fadeIn {
       from {
           opacity: 0;
-          transform: translateY(30px);
+          transform: translateY(20px);
       }
       to {
           opacity: 1;
@@ -119,7 +143,6 @@
   @media (max-width: 768px) {
       .accepted-reports-box {
           width: 95%;
-          max-width: none;
           padding: 1.5rem;
       }
 
@@ -127,7 +150,8 @@
           font-size: 2.2rem;
       }
 
-      th, td {
+      .accepted-reports-box th,
+      .accepted-reports-box td {
           padding: 1rem;
           font-size: 0.9rem;
       }
@@ -142,8 +166,8 @@
         <table>
             <thead>
                 <tr>
-                    <th>Событие</th>
                     <th>Пользователь</th>
+                    <th>Событие</th>
                     <th>Ответ</th>
                     <th>Начисленные баллы</th>
                 </tr>
@@ -151,8 +175,8 @@
             <tbody>
                 {% for response in responses %}
                 <tr>
-                    <td>{{ response.event.title }}</td>
                     <td>{{ response.user.username }}</td>
+                    <td>{{ response.event.title }}</td>
                     <td>{{ response.response }}</td>
                     <td class="points-awarded">{{ response.points_awarded }}</td>
                 </tr>

@@ -1,10 +1,19 @@
-{% extends "base.html" %}
-
-{% block styles %}
-{% endblock %}
+{% extends "admin_base.html" %}
 
 {% block content %}
 <style>
+  /* Основные стили для body */
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto; /* Включаем вертикальную прокрутку */
+      height: 100vh; /* Высота body равна высоте окна браузера */
+  }
+
+  /* Контейнер для отчётов */
   .reports-container {
       position: relative;
       z-index: 1;
@@ -17,15 +26,15 @@
   }
 
   .reports-box {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон с прозрачностью */
       padding: 2rem;
       border-radius: 20px;
-      box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);
+      box-shadow: 0px 10px 30px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
       backdrop-filter: blur(20px);
       width: 100%;
       max-width: 1200px;
       text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
       animation: fadeIn 0.8s ease-out;
   }
 
@@ -35,19 +44,20 @@
       margin-bottom: 2rem;
       font-weight: 700;
       text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.8), rgba(123, 104, 238, 0.6)); /* Фиолетовый градиент */
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
   }
 
+  /* Таблица */
   table {
       width: 100%;
       border-collapse: collapse;
       margin: 0 auto;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон */
       border-radius: 15px;
       overflow: hidden;
-      box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 10px 20px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
   }
 
   th, td {
@@ -57,7 +67,7 @@
   }
 
   th {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.3), rgba(123, 104, 238, 0.2)); /* Фиолетовый градиент */
       font-weight: 700;
       text-transform: uppercase;
       font-size: 1.1rem;
@@ -69,20 +79,21 @@
   }
 
   tr:nth-child(even) {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(147, 112, 219, 0.05); /* Фиолетовый фон для четных строк */
   }
 
   tr:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(147, 112, 219, 0.2); /* Фиолетовый фон при наведении */
       transform: translateX(10px);
   }
 
+  /* Кнопки */
   .btn {
       display: inline-block;
       padding: 0.6rem 1.2rem;
       border: none;
       border-radius: 10px;
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.3), rgba(123, 104, 238, 0.2)); /* Фиолетовый градиент */
       color: #fff;
       font-size: 1rem;
       font-weight: 600;
@@ -93,11 +104,23 @@
   }
 
   .btn:hover {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.3));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.4), rgba(123, 104, 238, 0.3)); /* Ярче при наведении */
       box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.3), inset 2px 2px 6px rgba(255, 255, 255, 0.2);
       transform: translateY(-3px);
   }
 
+  /* Сообщение, если отчётов нет */
+  .no-reports-message {
+      color: #fff;
+      font-size: 1.2rem;
+      text-align: center;
+      padding: 2rem;
+      background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон */
+      border-radius: 15px;
+      margin-top: 1rem;
+  }
+
+  /* Анимация появления */
   @keyframes fadeIn {
       from {
           opacity: 0;
@@ -109,6 +132,7 @@
       }
   }
 
+  /* Адаптивность */
   @media (max-width: 768px) {
       .reports-box {
           width: 95%;
@@ -129,34 +153,45 @@
           padding: 0.5rem 1rem;
           font-size: 0.9rem;
       }
+
+      .no-reports-message {
+          font-size: 1rem;
+          padding: 1rem;
+      }
   }
 </style>
 
 <div class="reports-container">
     <div class="reports-box">
         <h1>Отчёты по КС, ожидающие проверки</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th>Событие</th>
-                    <th>Пользователь</th>
-                    <th>Ответ</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for response in responses %}
-                <tr>
-                    <td>{{ response.event.title }}</td>
-                    <td>{{ response.user.username }}</td>
-                    <td>{{ response.response }}</td>
-                    <td>
-                        <a href="{{ url_for('review_response', response_id=response.id) }}" class="btn">Проверить</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {% if responses %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Событие</th>
+                        <th>Пользователь</th>
+                        <th>Ответ</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for response in responses %}
+                    <tr>
+                        <td>{{ response.event.title }}</td>
+                        <td>{{ response.user.username }}</td>
+                        <td>{{ response.response }}</td>
+                        <td>
+                            <a href="{{ url_for('review_response', response_id=response.id) }}" class="btn">Проверить</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="no-reports-message">
+                Нет отчётов, ожидающих проверки.
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

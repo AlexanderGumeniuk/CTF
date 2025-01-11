@@ -214,7 +214,7 @@ def team_leaderboard():
     return render_template('team_leaderboard.html', leaderboard=leaderboard_data)
 
 
-@app.route('/manage_teams', methods=['GET', 'POST'])
+@app.route('/admin/manage_teams', methods=['GET', 'POST'])
 @login_required
 def manage_teams():
     if not current_user.is_admin:
@@ -265,7 +265,7 @@ def manage_teams():
     # Получаем список всех команд и пользователей
     teams = Team.query.all()
     users = User.query.all()
-    return render_template('manage_teams.html', teams=teams, users=users)
+    return render_template('admin/manage_teams.html', teams=teams, users=users)
 
 @app.route('/create_team', methods=['GET', 'POST'])
 @login_required
@@ -287,7 +287,7 @@ def create_team():
             db.session.add(team)
             db.session.commit()
             flash(f'Team "{team_name}" created successfully!', 'success')
-            return redirect(url_for('manage_teams'))
+            return redirect(url_for('admin/manage_teams'))
 
     return render_template('create_team.html')
 
@@ -303,7 +303,7 @@ def delete_team(team_id):
     db.session.delete(team)
     db.session.commit()
     flash(f'Team "{team.name}" deleted successfully!', 'success')
-    return redirect(url_for('manage_teams'))
+    return redirect(url_for('admin/manage_teams'))
 
 from flask_uploads import UploadNotAllowed
 
@@ -667,6 +667,37 @@ def edit_critical_event(event_id):
     return render_template('admin/edit_critical_event.html', critical_event=critical_event, teams=teams)
 
 
+import os
+from flask import current_app, flash, redirect, url_for
+from app.models import CriticalEvent, CriticalEventResponse
+from app import db
+
+def delete_screenshots(screenshots):
+    """
+    Удаляет файлы скриншотов с сервера.
+    """
+    if screenshots:
+        for screenshot in screenshots:
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], screenshot)
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                    print(f"Файл {screenshot} успешно удален.")
+                except Exception as e:
+                    print(f"Ошибка при удалении файла {screenshot}: {e}")
+
+
+
+
+import logging
+from flask import flash, redirect, url_for
+from app.models import CriticalEvent, CriticalEventResponse, CriticalEventStep
+from app import db
+
+# Настройка логирования
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 @app.route('/admin/delete_critical_event/<int:event_id>', methods=['POST'])
 @login_required
 def delete_critical_event(event_id):
@@ -674,12 +705,55 @@ def delete_critical_event(event_id):
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('index'))
 
-    critical_event = CriticalEvent.query.get_or_404(event_id)
-    db.session.delete(critical_event)
-    db.session.commit()
-    flash('Critical event deleted successfully!', 'success')
-    return redirect(url_for('admin_critical_events'))
+    logger.debug(f"Начало удаления КС с ID: {event_id}")
 
+    # Находим событие
+    critical_event = CriticalEvent.query.get(event_id)
+    if not critical_event:
+        logger.error(f"КС с ID {event_id} не найдено.")
+        flash('Critical event not found.', 'danger')
+        return redirect(url_for('admin_critical_events'))
+
+    logger.debug(f"Найдено КС: {critical_event}")
+
+    try:
+        # Удаляем все связанные отчеты
+        responses = CriticalEventResponse.query.filter_by(event_id=event_id).all()
+        logger.debug(f"Найдено отчетов: {len(responses)}")
+
+        for response in responses:
+            logger.debug(f"Обработка отчета с ID: {response.id}")
+
+            # Удаляем все шаги для каждого отчета
+            steps = CriticalEventStep.query.filter_by(response_id=response.id).all()
+            logger.debug(f"Найдено шагов для отчета {response.id}: {len(steps)}")
+
+            for step in steps:
+                logger.debug(f"Удаление шага с ID: {step.id}")
+                if step.screenshots:
+                    logger.debug(f"Удаление скриншотов для шага {step.id}")
+                    delete_screenshots(step.screenshots)
+                db.session.delete(step)
+
+            # Удаляем отчет
+            logger.debug(f"Удаление отчета с ID: {response.id}")
+            db.session.delete(response)
+
+        # Удаляем само событие
+        logger.debug(f"Удаление КС с ID: {critical_event.id}")
+        db.session.delete(critical_event)
+
+        # Фиксируем изменения в базе данных
+        db.session.commit()
+        logger.debug("Удаление завершено успешно.")
+        flash('Critical event and related data deleted successfully!', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Ошибка при удалении КС: {str(e)}", exc_info=True)
+        flash(f'Error deleting critical event: {str(e)}', 'danger')
+
+    return redirect(url_for('admin_critical_events'))
 @app.route('/request_hint/<int:challenge_id>', methods=['POST'])
 @login_required
 def request_hint(challenge_id):
@@ -1095,7 +1169,7 @@ def submit_critical_event(event_id):
     return redirect(url_for('user_pending_responses'))
 
 
-@app.route('/create_user', methods=['GET', 'POST'])
+@app.route('/admin/create_user', methods=['GET', 'POST'])
 @login_required
 def create_user():
     if not current_user.is_admin:
@@ -1112,7 +1186,7 @@ def create_user():
         # Проверяем, что пароли совпадают
         if password != confirm_password:
             flash('Пароли не совпадают!', 'danger')
-            return redirect(url_for('create_user'))
+            return redirect(url_for('/admin/create_user'))
 
         # Проверяем, что пользователь с таким email или username не существует
         if User.query.filter((User.email == email) | (User.username == username)).first():
@@ -1126,7 +1200,7 @@ def create_user():
             flash(f'Пользователь "{username}" успешно создан!', 'success')
             return redirect(url_for('admin'))  # Перенаправляем на страницу администрирования
 
-    return render_template('admin/create_user.html')
+    return render_template('/admin/create_user.html')
 
 
 @app.route('/admin/dashboard')
@@ -1136,9 +1210,50 @@ def admin_dashboard():
         flash('У вас нет прав доступа к этой странице.', 'danger')
         return redirect(url_for('index'))
 
-    return render_template('admin/admin_dashboard.html')
+    # Статистика команд
+    teams = Team.query.all()
+    team_stats = []
+    for team in teams:
+        team_stats.append({
+            'name': team.name,
+            'members': len(team.users),
+            'points': sum(user.total_points for user in team.users)
+        })
+
+    # Статистика флагов
+    challenges = Challenge.query.all()
+    solved_flags = UserChallenge.query.filter_by(solved=True).count()
+    unsolved_flags = UserChallenge.query.filter_by(solved=False).count()
+
+    # Статистика по критическим событиям
+    critical_events = CriticalEvent.query.all()
+    critical_events_stats = {
+        'total': len(critical_events),
+        'pending': CriticalEventResponse.query.filter_by(status='pending').count(),
+        'resolved': CriticalEventResponse.query.filter_by(status='resolved').count()
+    }
+
+    # Статистика по инцидентам
+    incidents = Incident.query.all()
+    incidents_stats = {
+        'total': len(incidents),
+        'open': Incident.query.filter_by(status='open').count(),
+        'closed': Incident.query.filter_by(status='closed').count()
+    }
+
+    return render_template('admin/admin_dashboard.html',
+                           team_stats=team_stats,
+                           solved_flags=solved_flags,
+                           unsolved_flags=unsolved_flags,
+                           critical_events_stats=critical_events_stats,
+                           incidents_stats=incidents_stats)
 
 
+
+
+# Настройка логирования
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 @app.route('/admin/manage_users', methods=['GET', 'POST'])
 @login_required
@@ -1189,9 +1304,47 @@ def manage_users():
             user_id = request.form['user_id']
             user = User.query.get(user_id)
             if user:
-                db.session.delete(user)
-                db.session.commit()
-                flash(f'Пользователь "{user.username}" успешно удален!', 'success')
+                try:
+                    # Находим администратора (например, первого администратора в системе)
+                    admin_user = User.query.filter_by(is_admin=True).first()
+
+                    if not admin_user:
+                        flash('Не найден администратор для переназначения событий.', 'danger')
+                        return redirect(url_for('manage_users'))
+
+                    # Переназначаем события (critical_event) на администратора
+                    CriticalEvent.query.filter_by(created_by=user_id).update({"created_by": admin_user.id})
+                    CriticalEvent.query.filter_by(admin_id=user_id).update({"admin_id": admin_user.id})
+
+                    # Удаляем все связанные инциденты
+                    incidents = Incident.query.filter_by(user_id=user_id).all()
+                    for incident in incidents:
+                        db.session.delete(incident)
+
+                    # Удаляем все связанные записи в points_history
+                    points_history = PointsHistory.query.filter_by(user_id=user_id).all()
+                    for history in points_history:
+                        db.session.delete(history)
+
+                    # Удаляем все связанные записи в user_challenge
+                    user_challenges = UserChallenge.query.filter_by(user_id=user_id).all()
+                    for challenge in user_challenges:
+                        db.session.delete(challenge)
+
+                    # Удаляем все связанные записи в critical_event_response
+                    user_critical_event_response = CriticalEventResponse.query.filter_by(user_id=user_id).all()
+                    for response in user_critical_event_response:
+                        db.session.delete(response)
+
+                    # Удаляем пользователя
+                    db.session.delete(user)
+
+                    # Фиксируем изменения в базе данных
+                    db.session.commit()
+                    flash(f'Пользователь "{user.username}" успешно удален! События переназначены администратору.', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f'Ошибка при удалении пользователя: {str(e)}', 'danger')
 
     # Получаем список всех пользователей и команд
     users = User.query.all()
@@ -1389,7 +1542,7 @@ def admin_flags():
 
     # Получаем все задачи (флаги)
     challenges = Challenge.query.all()
-    return render_template('admin_flags.html', challenges=challenges)
+    return render_template('admin/admin_flags.html', challenges=challenges)
 
 # Добавление нового флага
 @app.route('/admin/add_flag', methods=['POST'])
@@ -1420,6 +1573,11 @@ def add_flag():
         )
         db.session.add(challenge)
         db.session.commit()
+
+        # Отправляем сообщение в Rocket.Chat
+        message = f"🎉 Новый флаг создан!\n\n**Название:** {title}\n**Описание:** {description}\n**Категория:** {category}\n**Очки:** {points}"
+        send_rocket_chat_message(message, "#general")  # Вызов вашей функции
+
         return jsonify({"success": True, "message": "Флаг успешно добавлен."})
     except Exception as e:
         db.session.rollback()
@@ -1548,3 +1706,27 @@ def edit_profile():
         return redirect(url_for('profile'))
 
     return render_template('edit_profile.html')
+
+import requests
+def send_rocket_chat_message(message, channel):
+    # URL вашего Rocket.Chat сервера
+    url = "http://localhost:3000/api/v1/chat.postMessage"
+
+    # Токен и ID пользователя (можно получить через API или вручную)
+    headers = {
+        "X-Auth-Token": "MWuhMZbCN9XCDjy9PGX-X0AIY4gKZ7cSFVj5Cl9ofKa",
+        "X-User-Id": "wbWWwAwj8HofvrqYw"
+    }
+
+    # Данные для отправки сообщения
+    payload = {
+        "channel": channel,  # Имя канала или ID
+        "text": message      # Текст сообщения
+    }
+
+    # Отправка запроса
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        print("Сообщение успешно отправлено!")
+    else:
+        print(f"Ошибка: {response.status_code}, {response.text}")

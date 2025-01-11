@@ -1,0 +1,57 @@
+<!-- admin_base.html -->
+
+
+{% block styles %}
+<style>
+  /* Стили для навигационной панели */
+  .admin-navbar {
+      background: rgba(30, 30, 30, 0.9); /* Тёмный фон */
+      padding: 1rem;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3); /* Тень */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000; /* Высокий z-index, чтобы navbar был поверх других элементов */
+  }
+
+  .admin-navbar ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+  }
+
+  .admin-navbar ul li {
+      display: inline-block;
+  }
+
+  .admin-navbar ul li a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+  }
+
+  .admin-navbar ul li a:hover {
+      background: rgba(147, 112, 219, 0.3); /* Фиолетовый фон при наведении */
+      color: #fff;
+  }
+
+  /* Основной контент с отступом для navbar */
+  .admin-content {
+      margin-top: 80px; /* Отступ для navbar */
+      padding: 20px;
+  }
+</style>
+{% endblock %}
+  {% include 'includes/navbar_admin.html' %}
+{% block content %}
+  <script src="{{ url_for('static', filename='js/particles.js') }}"></script>
+
+{% endblock %}

@@ -8,7 +8,7 @@ import uuid
 
 class UserChallenge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     challenge_id = db.Column(db.Integer, db.ForeignKey('challenge.id'), nullable=False)
     solved = db.Column(db.Boolean, default=False)
     used_hint = db.Column(db.Boolean, default=False)  # Новое поле: использована ли подсказка
@@ -101,9 +101,9 @@ class Incident(db.Model):
     description = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected, needs_revision
     points_awarded = db.Column(db.Integer, default=0)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    admin_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id', ondelete='CASCADE'), nullable=True)
 
     # Новые поля
     start_time = db.Column(db.DateTime, nullable=False)
@@ -131,9 +131,9 @@ class Incident(db.Model):
         return f"Incident('{self.title}', Status: '{self.status}')"
 class CriticalEventResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    event_id = db.Column(db.Integer, db.ForeignKey('critical_event.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)  # Связь с командой
+    event_id = db.Column(db.Integer, db.ForeignKey('critical_event.id' , ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id', ondelete='CASCADE'), nullable=True)
     response = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default='pending')  # Статус отчета
     points_awarded = db.Column(db.Integer, default=0)
@@ -154,8 +154,8 @@ class CriticalEvent(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.now())
     admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
-    responses = db.relationship('CriticalEventResponse', backref='event', lazy=True)
-    steps = db.relationship('CriticalEventStep', backref='event', lazy=True)  # Связь с шагами
+    responses = db.relationship('CriticalEventResponse', backref='event', cascade='all, delete-orphan')
+    steps = db.relationship('CriticalEventStep', backref='response', cascade='all, delete-orphan')  # Связь с шагами
     # Добавляем связь с пользователем
     created_by_user = db.relationship('User', backref='created_events', foreign_keys=[created_by])
 
@@ -165,7 +165,8 @@ class CriticalEvent(db.Model):
 
 class CriticalEventStep(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    event_id = db.Column(db.Integer, db.ForeignKey('critical_event.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('critical_event.id', ondelete='CASCADE'), nullable=False)
+    response_id = db.Column(db.Integer, db.ForeignKey('critical_event_response.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
     step_name = db.Column(db.String(100), nullable=False)  # Название шага
@@ -219,7 +220,7 @@ from app import db
 
 class PointsHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # Уникальный идентификатор записи
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Связь с пользователем
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     points = db.Column(db.Integer, nullable=False)  # Количество начисленных баллов
     note = db.Column(db.Text, nullable=True)  # Примечание (например, за что начислены баллы)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Дата и время начисления баллов

@@ -9,15 +9,15 @@
         }
 
         .register-container {
-   	    position: relative;
-    	    z-index: 1;
-    	    display: flex;
-   	    justify-content: center;
-  	    align-items: flex-start; /* Поднимаем блок выше */
-    	    height: 100vh; /* Занимает ровно 100% высоты экрана */
-    	    margin: 0; /* Убираем лишние отступы */
-    	    padding: 2rem 0; /* Добавляем небольшой отступ сверху и снизу */
-	}
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Поднимаем блок выше */
+            height: 100vh; /* Занимает ровно 100% высоты экрана */
+            margin: 0; /* Убираем лишние отступы */
+            padding: 2rem 0; /* Добавляем небольшой отступ сверху и снизу */
+        }
 
         .register-box {
             background: rgba(30, 30, 30, 0.9);
@@ -135,11 +135,11 @@
     <!-- Центральный контейнер -->
     <div class="register-container">
         <div class="register-box">
-            <h2>Register</h2>
+            <h2>Регистрация</h2>
             <form method="POST" action="">
                 <div class="input-group">
                     <input type="text" id="username" name="username" required>
-                    <label for="username">Username</label>
+                    <label for="username">Имя пользователя</label>
                 </div>
                 <div class="input-group">
                     <input type="email" id="email" name="email" required>
@@ -147,9 +147,9 @@
                 </div>
                 <div class="input-group">
                     <input type="password" id="password" name="password" required>
-                    <label for="password">Password</label>
+                    <label for="password">Пароль</label>
                 </div>
-                <button type="submit" class="register-button">Register</button>
+                <button type="submit" class="register-button">Зарегистрироваться</button>
             </form>
         </div>
     </div>

@@ -1,0 +1,96 @@
+<nav>
+    <style>
+        /* Основные стили для навигации */
+        nav {
+            background: #1e1f26;
+            padding: 1rem;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Стили для ссылок */
+        .nav-link {
+            color: #9370db; /* Фиолетовый цвет текста */
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+            border-radius: 5px;
+            background: transparent; /* Прозрачный фон */
+        }
+
+        .nav-link:hover {
+            color: #bb86fc; /* Более яркий фиолетовый при наведении */
+        }
+
+        /* Стили для раскрывающегося списка */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #1e1f26;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            z-index: 1000;
+            min-width: 160px;
+        }
+
+        .dropdown-content a {
+            color: #9370db; /* Фиолетовый цвет текста */
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            display: block;
+            transition: color 0.3s ease;
+            background: transparent; /* Прозрачный фон */
+        }
+
+        .dropdown-content a:hover {
+            color: #bb86fc; /* Более яркий фиолетовый при наведении */
+        }
+
+        /* Показ выпадающего списка */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+    </style>
+
+    <div class="nav-container">
+        <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
+        <a href="{{ url_for('admin_flags') }}" class="nav-link">Управление флагами</a>
+
+        <!-- Раскрывающийся список для команд и пользователей -->
+        <div class="dropdown">
+            <a href="#" class="nav-link">Команды и пользователи</a>
+            <div class="dropdown-content">
+                <a href="{{ url_for('create_user') }}">Создать пользователя</a>
+                <a href="{{ url_for('manage_teams') }}">Управление командами</a>
+                <a href="{{ url_for('manage_users') }}">Управление пользователями</a>
+            </div>
+        </div>
+
+        <a href="{{ url_for('admin_incidents') }}" class="nav-link">Администрирование инцидентов</a>
+
+        <!-- Раскрывающийся список для критических событий -->
+        <div class="dropdown">
+            <a href="#" class="nav-link">Критические события</a>
+            <div class="dropdown-content">
+                <a href="{{ url_for('admin_critical_events') }}">Критические события</a>
+                <a href="{{ url_for('admin_critical_event_responses') }}">Отчёты по КС</a>
+                <a href="{{ url_for('admin_approved_responses') }}">Принятые отчёты</a>
+            </div>
+        </div>
+
+        <a href="{{ url_for('infrastructure') }}" class="nav-link">Инфраструктура</a>
+    </div>
+</nav>

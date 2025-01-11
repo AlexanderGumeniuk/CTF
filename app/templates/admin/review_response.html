@@ -1,7 +1,8 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 {% block content %}
 <!-- Подключение Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link src="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 
 <style>
   body {
@@ -13,12 +14,12 @@
       color: #ffffff;
   }
   .card {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон */
+      border: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
       border-radius: 15px;
       margin-bottom: 15px;
       backdrop-filter: blur(15px);
-      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px 0px 30px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
       animation: fadeIn 0.8s ease-out;
   }
   .card-body {
@@ -52,15 +53,15 @@
       box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
   }
   .btn-success {
-      background: linear-gradient(145deg, rgba(76, 175, 80, 0.8), rgba(76, 175, 80, 0.6));
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.8), rgba(123, 104, 238, 0.6)); /* Фиолетовый градиент */
       color: #fff;
   }
   .btn-danger {
-      background: linear-gradient(145deg, rgba(244, 67, 54, 0.8), rgba(244, 67, 54, 0.6));
+      background: linear-gradient(145deg, rgba(255, 59, 48, 0.8), rgba(255, 69, 58, 0.6)); /* Красный градиент */
       color: #fff;
   }
   .btn-warning {
-      background: linear-gradient(145deg, rgba(255, 193, 7, 0.8), rgba(255, 193, 7, 0.6));
+      background: linear-gradient(145deg, rgba(255, 149, 0, 0.8), rgba(255, 159, 10, 0.6)); /* Оранжевый градиент */
       color: #fff;
   }
   .btn:hover {
@@ -90,7 +91,7 @@
       }
   }
   .accordion-button {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон */
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -105,7 +106,7 @@
       align-items: center;
   }
   .accordion-button:not(.collapsed) {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(147, 112, 219, 0.2); /* Фиолетовый фон при открытии */
       color: #fff;
       box-shadow: none;
   }
@@ -118,7 +119,7 @@
   }
   .modal-backdrop {
     display: none !important;
-}
+  }
 </style>
 
 <h1>Проверка отчёта по событию "{{ response.event.title }}"</h1>
@@ -217,9 +218,9 @@
 </div>
 
 <!-- Подключение Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+<script src="{{ url_for('static', filename='js/jquery-3.5.1.slim.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 
 <script>
   // Обработчик для открытия модального окна с изображением
@@ -234,6 +235,5 @@
       });
   });
 </script>
-
 
 {% endblock %}

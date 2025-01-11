@@ -1,24 +1,132 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 
 {% block content %}
-    <h1>Edit Critical Event</h1>
+<style>
+  body {
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      height: 100vh;
+  }
+
+  h1 {
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      text-align: center;
+  }
+
+  form {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон с прозрачностью */
+      border-radius: 15px;
+      box-shadow: 0px 0px 30px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
+      border: 1px solid rgba(147, 112, 219, 0.3); /* Фиолетовая рамка */
+      animation: fadeIn 0.8s ease-out;
+  }
+
+  label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 500;
+  }
+
+  input[type="text"],
+  textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+      margin-bottom: 1.5rem;
+  }
+
+  input[type="text"]:focus,
+  textarea:focus {
+      background: rgba(255, 255, 255, 0.2); /* Более яркий фон при фокусе */
+      box-shadow: 0px 0px 10px rgba(147, 112, 219, 0.5); /* Фиолетовая тень */
+  }
+
+  textarea {
+      resize: vertical;
+      min-height: 150px;
+  }
+
+  button[type="submit"] {
+      display: block;
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(145deg, rgba(147, 112, 219, 0.8), rgba(123, 104, 238, 0.6)); /* Фиолетовый градиент */
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+  }
+
+  button[type="submit"]:hover {
+      background: linear-gradient(145deg, rgba(147, 112, 219, 1), rgba(123, 104, 238, 1)); /* Яркий градиент */
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.4); /* Фиолетовая тень */
+  }
+
+  @keyframes fadeIn {
+      from {
+          opacity: 0;
+          transform: translateY(20px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
+  }
+
+  @media (max-width: 768px) {
+      h1 {
+          font-size: 2rem;
+      }
+
+      form {
+          padding: 1.5rem;
+      }
+
+      input[type="text"],
+      textarea {
+          padding: 0.7rem;
+          font-size: 0.9rem;
+      }
+
+      button[type="submit"] {
+          padding: 0.7rem;
+          font-size: 0.9rem;
+      }
+  }
+</style>
+
+<div class="edit-event-container">
+    <h1>Редактировать критическое событие</h1>
     <form method="POST">
-        <label for="title">Title:</label>
+        <label for="title">Название:</label>
         <input type="text" id="title" name="title" value="{{ critical_event.title }}" required>
 
-        <label for="description">Description:</label>
+        <label for="description">Описание:</label>
         <textarea id="description" name="description" required>{{ critical_event.description }}</textarea>
 
-        <label for="team_id">Assign to Team (optional):</label>
-        <select id="team_id" name="team_id">
-            <option value="">Select Team</option>
-            {% for team in teams %}
-                <option value="{{ team.id }}" {% if team.id == critical_event.team_id %}selected{% endif %}>
-                    {{ team.name }}
-                </option>
-            {% endfor %}
-        </select>
-
-        <button type="submit">Update Event</button>
+        <button type="submit">Обновить событие</button>
     </form>
+</div>
 {% endblock %}
