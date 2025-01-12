@@ -3,114 +3,126 @@
 {% block content %}
 <div class="incident-form-container">
     <h1>Создание отчета об инциденте</h1>
-    <form method="POST" action="{{ url_for('create_incident') }}" onsubmit="handleFormSubmission(event)" enctype="multipart/form-data">
-        <!-- Название инцидента -->
-        <div class="form-group">
-            <label for="title">Название инцидента:</label>
-            <input type="text" id="title" name="title" class="form-control" placeholder="Введите название" required>
-        </div>
+    <p>Соревнование: <strong>{{ competition.title }}</strong></p>
 
-        <!-- Описание инцидента -->
-        <div class="form-group">
-            <label for="description">Описание инцидента:</label>
-            <textarea id="description" name="description" class="form-control" placeholder="Опишите инцидент" required></textarea>
+    <!-- Проверка участия пользователя в соревновании -->
+    {% if not current_user.team or current_user.team.competition_id != competition.id %}
+        <div class="alert alert-danger">
+            Вы не участвуете в этом соревновании. Невозможно создать инцидент.
         </div>
+    {% else %}
+        <form method="POST" action="{{ url_for('create_incident', competition_id=competition.id) }}" onsubmit="handleFormSubmission(event)" enctype="multipart/form-data">
+            <!-- Скрытое поле для competition_id -->
+            <input type="hidden" name="competition_id" value="{{ competition.id }}">
 
-        <!-- Время начала -->
-        <div class="form-group">
-            <label for="start_time">Время начала:</label>
-            <input type="datetime-local" id="start_time" name="start_time" class="form-control" required>
-        </div>
+            <!-- Название инцидента -->
+            <div class="form-group">
+                <label for="title">Название инцидента:</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="Введите название" required>
+            </div>
 
-        <!-- Время окончания -->
-        <div class="form-group">
-            <label for="end_time">Время окончания:</label>
-            <input type="datetime-local" id="end_time" name="end_time" class="form-control" required>
-        </div>
+            <!-- Описание инцидента -->
+            <div class="form-group">
+                <label for="description">Описание инцидента:</label>
+                <textarea id="description" name="description" class="form-control" placeholder="Опишите инцидент" required></textarea>
+            </div>
 
-        <!-- IP-адрес источника -->
-        <div class="form-group">
-            <label for="source_ip">IP-адрес источника:</label>
-            <input type="text" id="source_ip" name="source_ip" class="form-control" placeholder="Введите IP-адрес">
-        </div>
+            <!-- Время начала -->
+            <div class="form-group">
+                <label for="start_time">Время начала:</label>
+                <input type="datetime-local" id="start_time" name="start_time" class="form-control" required>
+            </div>
 
-        <!-- Порт источника -->
-        <div class="form-group">
-            <label for="source_port">Порт источника:</label>
-            <input type="number" id="source_port" name="source_port" class="form-control" placeholder="Введите порт">
-        </div>
+            <!-- Время окончания -->
+            <div class="form-group">
+                <label for="end_time">Время окончания:</label>
+                <input type="datetime-local" id="end_time" name="end_time" class="form-control" required>
+            </div>
 
-        <!-- IP-адрес назначения -->
-        <div class="form-group">
-            <label for="destination_ip">IP-адрес назначения:</label>
-            <input type="text" id="destination_ip" name="destination_ip" class="form-control" placeholder="Введите IP-адрес">
-        </div>
+            <!-- IP-адрес источника -->
+            <div class="form-group">
+                <label for="source_ip">IP-адрес источника:</label>
+                <input type="text" id="source_ip" name="source_ip" class="form-control" placeholder="Введите IP-адрес">
+            </div>
 
-        <!-- Порт назначения -->
-        <div class="form-group">
-            <label for="destination_port">Порт назначения:</label>
-            <input type="number" id="destination_port" name="destination_port" class="form-control" placeholder="Введите порт">
-        </div>
+            <!-- Порт источника -->
+            <div class="form-group">
+                <label for="source_port">Порт источника:</label>
+                <input type="number" id="source_port" name="source_port" class="form-control" placeholder="Введите порт">
+            </div>
 
-        <!-- Тип события -->
-        <div class="form-group">
-            <label for="event_type">Тип события:</label>
-            <input type="text" id="event_type" name="event_type" class="form-control" placeholder="Введите тип события">
-        </div>
+            <!-- IP-адрес назначения -->
+            <div class="form-group">
+                <label for="destination_ip">IP-адрес назначения:</label>
+                <input type="text" id="destination_ip" name="destination_ip" class="form-control" placeholder="Введите IP-адрес">
+            </div>
 
-        <!-- Связанные FQDN -->
-        <div class="form-group">
-            <label for="related_fqdn">Связанные FQDN:</label>
-            <input type="text" id="related_fqdn" name="related_fqdn" class="form-control" placeholder="Введите FQDN">
-        </div>
+            <!-- Порт назначения -->
+            <div class="form-group">
+                <label for="destination_port">Порт назначения:</label>
+                <input type="number" id="destination_port" name="destination_port" class="form-control" placeholder="Введите порт">
+            </div>
 
-        <!-- Связанные DNS-имена -->
-        <div class="form-group">
-            <label for="related_dns">Связанные DNS-имена:</label>
-            <input type="text" id="related_dns" name="related_dns" class="form-control" placeholder="Введите DNS-имена">
-        </div>
+            <!-- Тип события -->
+            <div class="form-group">
+                <label for="event_type">Тип события:</label>
+                <input type="text" id="event_type" name="event_type" class="form-control" placeholder="Введите тип события">
+            </div>
 
-        <!-- Индикаторы компрометации (IOC) -->
-        <div class="form-group">
-            <label for="ioc">Индикаторы компрометации (IOC):</label>
-            <input type="text" id="ioc" name="ioc" class="form-control" placeholder="Введите IOC">
-        </div>
+            <!-- Связанные FQDN -->
+            <div class="form-group">
+                <label for="related_fqdn">Связанные FQDN:</label>
+                <input type="text" id="related_fqdn" name="related_fqdn" class="form-control" placeholder="Введите FQDN">
+            </div>
 
-        <!-- Хэш-значение -->
-        <div class="form-group">
-            <label for="hash_value">Хэш-значение:</label>
-            <input type="text" id="hash_value" name="hash_value" class="form-control" placeholder="Введите хэш">
-        </div>
+            <!-- Связанные DNS-имена -->
+            <div class="form-group">
+                <label for="related_dns">Связанные DNS-имена:</label>
+                <input type="text" id="related_dns" name="related_dns" class="form-control" placeholder="Введите DNS-имена">
+            </div>
 
-        <!-- ID события по матрице MITRE -->
-        <div class="form-group">
-            <label for="mitre_id">ID события по матрице MITRE:</label>
-            <input type="text" id="mitre_id" name="mitre_id" class="form-control" placeholder="Введите MITRE ID">
-        </div>
+            <!-- Индикаторы компрометации (IOC) -->
+            <div class="form-group">
+                <label for="ioc">Индикаторы компрометации (IOC):</label>
+                <input type="text" id="ioc" name="ioc" class="form-control" placeholder="Введите IOC">
+            </div>
 
-        <!-- ID события в SIEM -->
-        <div class="form-group">
-            <label for="siem_id">ID события в SIEM:</label>
-            <input type="text" id="siem_id" name="siem_id" class="form-control" placeholder="Введите SIEM ID">
-        </div>
+            <!-- Хэш-значение -->
+            <div class="form-group">
+                <label for="hash_value">Хэш-значение:</label>
+                <input type="text" id="hash_value" name="hash_value" class="form-control" placeholder="Введите хэш">
+            </div>
 
-        <!-- Ссылка на событие в SIEM -->
-        <div class="form-group">
-            <label for="siem_link">Ссылка на событие в SIEM:</label>
-            <input type="text" id="siem_link" name="siem_link" class="form-control" placeholder="Введите ссылку">
-        </div>
+            <!-- ID события по матрице MITRE -->
+            <div class="form-group">
+                <label for="mitre_id">ID события по матрице MITRE:</label>
+                <input type="text" id="mitre_id" name="mitre_id" class="form-control" placeholder="Введите MITRE ID">
+            </div>
 
-        <!-- Скриншоты -->
-        <div class="form-group">
-            <label for="screenshots">Скриншоты:</label>
-            <input type="file" id="screenshots" name="screenshots" class="form-control" multiple required>
-        </div>
+            <!-- ID события в SIEM -->
+            <div class="form-group">
+                <label for="siem_id">ID события в SIEM:</label>
+                <input type="text" id="siem_id" name="siem_id" class="form-control" placeholder="Введите SIEM ID">
+            </div>
 
-        <!-- Кнопка отправки формы -->
-        <div class="form-group">
-            <button type="submit" class="btn btn-primary">Создать отчет</button>
-        </div>
-    </form>
+            <!-- Ссылка на событие в SIEM -->
+            <div class="form-group">
+                <label for="siem_link">Ссылка на событие в SIEM:</label>
+                <input type="text" id="siem_link" name="siem_link" class="form-control" placeholder="Введите ссылку">
+            </div>
+
+            <!-- Скриншоты -->
+            <div class="form-group">
+                <label for="screenshots">Скриншоты:</label>
+                <input type="file" id="screenshots" name="screenshots" class="form-control" multiple required>
+            </div>
+
+            <!-- Кнопка отправки формы -->
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Создать отчет</button>
+            </div>
+        </form>
+    {% endif %}
 </div>
 
 <script>

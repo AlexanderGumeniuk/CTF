@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Список соревнований</h1>
+<ul>
+    {% for competition in competitions %}
+    <li>
+        <a href="{{ url_for('view_competition', competition_id=competition.id) }}">
+            {{ competition.title }} ({{ competition.status }})
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+<a href="{{ url_for('create_competition') }}" class="btn btn-primary">Создать новое соревнование</a>
+{% endblock %}

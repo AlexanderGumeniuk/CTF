@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Редактирование соревнования</h1>
+<form method="POST">
+    <label for="title">Название:</label>
+    <input type="text" id="title" name="title" value="{{ competition.title }}" required>
+
+    <label for="description">Описание:</label>
+    <textarea id="description" name="description">{{ competition.description }}</textarea>
+
+    <label for="start_date">Дата начала:</label>
+    <input type="datetime-local" id="start_date" name="start_date" value="{{ competition.start_date.strftime('%Y-%m-%dT%H:%M') }}" required>
+
+    <label for="end_date">Дата окончания:</label>
+    <input type="datetime-local" id="end_date" name="end_date" value="{{ competition.end_date.strftime('%Y-%m-%dT%H:%M') }}" required>
+
+    <button type="submit">Сохранить</button>
+</form>
+{% endblock %}

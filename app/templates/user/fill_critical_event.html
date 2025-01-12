@@ -57,8 +57,9 @@
 </style>
 
 <h1>Заполнение отчета для события: {{ event.title }}</h1>
+<h2>Соревнование: {{ competition.title }}</h2>
 
-<form method="POST" id="report-form" enctype="multipart/form-data">
+<form method="POST" id="report-form" enctype="multipart/form-data" action="{{ url_for('fill_critical_event', competition_id=competition.id, event_id=event.id) }}">
     <div>
         <label for="response">Отчет:</label>
         <textarea id="response" name="response" required>{{ response.response if response else '' }}</textarea>

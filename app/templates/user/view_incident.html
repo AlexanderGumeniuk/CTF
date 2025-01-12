@@ -39,9 +39,15 @@
   }
 </style>
 
+
+
+
+
 <div class="incident-details">
     <!-- Кнопка "Назад" -->
-    <a href="{{ url_for('my_incidents') }}" class="back-button">← Назад к списку инцидентов</a>
+    <a href="{{ url_for('user_competition_incidents', competition_id=competition.id) }}" class="btn btn-secondary">
+        Назад к списку инцидентов
+    </a>
 
     <h1>{{ incident.title }}</h1>
     <p><strong>Описание:</strong> {{ incident.description }}</p>

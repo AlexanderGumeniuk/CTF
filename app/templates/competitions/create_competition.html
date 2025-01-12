@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Создание соревнования</h1>
+<form method="POST">
+    <label for="title">Название:</label>
+    <input type="text" id="title" name="title" required>
+
+    <label for="description">Описание:</label>
+    <textarea id="description" name="description"></textarea>
+
+    <label for="start_date">Дата начала:</label>
+    <input type="datetime-local" id="start_date" name="start_date" required>
+
+    <label for="end_date">Дата окончания:</label>
+    <input type="datetime-local" id="end_date" name="end_date" required>
+
+    <button type="submit">Создать</button>
+</form>
+{% endblock %}

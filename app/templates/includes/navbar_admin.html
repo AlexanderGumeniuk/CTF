@@ -67,7 +67,6 @@
 
     <div class="nav-container">
         <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
-        <a href="{{ url_for('admin_flags') }}" class="nav-link">Управление флагами</a>
 
         <!-- Раскрывающийся список для команд и пользователей -->
         <div class="dropdown">
@@ -79,17 +78,6 @@
             </div>
         </div>
 
-        <a href="{{ url_for('admin_incidents') }}" class="nav-link">Администрирование инцидентов</a>
-
-        <!-- Раскрывающийся список для критических событий -->
-        <div class="dropdown">
-            <a href="#" class="nav-link">Критические события</a>
-            <div class="dropdown-content">
-                <a href="{{ url_for('admin_critical_events') }}">Критические события</a>
-                <a href="{{ url_for('admin_critical_event_responses') }}">Отчёты по КС</a>
-                <a href="{{ url_for('admin_approved_responses') }}">Принятые отчёты</a>
-            </div>
-        </div>
 
         <a href="{{ url_for('infrastructure') }}" class="nav-link">Инфраструктура</a>
     </div>

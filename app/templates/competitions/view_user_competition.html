@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ competition.title }}</h2>
+    <p>{{ competition.description }}</p>
+    <p><strong>Дата начала:</strong> {{ competition.start_date.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>Дата окончания:</strong> {{ competition.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>Статус:</strong> {{ competition.status }}</p>
+
+    <!-- Ссылка на страницу решения флагов -->
+    <a href="{{ url_for('competition_challenges', competition_id=competition.id) }}" class="btn btn-primary mb-3">
+        Решить задачи
+    </a>
+
+    <!-- Список инцидентов -->
+    <h3>Инциденты</h3>
+<a href="{{ url_for('create_incident', competition_id=competition.id) }}">Создать инцидент</a>
+<a href="{{ url_for('user_competition_incidents', competition_id=competition.id) }}">Список инцидентов</a>
+
+        Решить задачи
+    </a>
+    {% if incidents %}
+    <div class="list-group">
+        {% for incident in incidents %}
+        <div class="list-group-item">
+            <h5 class="mb-1">{{ incident.title }}</h5>
+            <p class="mb-1">{{ incident.description }}</p>
+            <small>Статус: {{ incident.status }}</small><br>
+            <small>Дата создания: {{ incident.start_time.strftime('%Y-%m-%d %H:%M') }}</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>Нет зарегистрированных инцидентов.</p>
+    {% endif %}
+
+    <!-- Список критических событий -->
+    <h3>Критические события</h3>
+    <a href="{{ url_for('list_critical_events', competition_id=competition.id) }}">Список КС</a>
+
+    {% if critical_events %}
+    <div class="list-group">
+        {% for event in critical_events %}
+        <div class="list-group-item">
+            <h5 class="mb-1">{{ event.title }}</h5>
+            <p class="mb-1">{{ event.description }}</p>
+            <small>Дата создания: {{ event.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>Нет критических событий.</p>
+    {% endif %}
+</div>
+{% endblock %}

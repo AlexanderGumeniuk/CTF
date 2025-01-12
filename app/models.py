@@ -19,6 +19,7 @@ class UserChallenge(db.Model):
         return f"UserChallenge(User {self.user_id}, Challenge {self.challenge_id}, Solved {self.solved})"
 
 class Challenge(db.Model):
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
@@ -27,6 +28,7 @@ class Challenge(db.Model):
     category = db.Column(db.String(50), nullable=False)
     hint = db.Column(db.Text, nullable=True)  # Новое поле: подсказка
     hint_penalty = db.Column(db.Integer, default=10)  # Штраф за использование подсказки (например, 10% от points)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=True)
 
     user_challenges = db.relationship('UserChallenge', backref='challenge', cascade='all, delete-orphan')
     def solved_by_user(self, user):
@@ -91,6 +93,7 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     users = db.relationship('User', back_populates='team', lazy=True)  # Связь с пользователями
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=True)
 
     def __repr__(self):
         return f"Team('{self.name}')"
@@ -104,7 +107,7 @@ class Incident(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     admin_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=True)
     team_id = db.Column(db.Integer, db.ForeignKey('team.id', ondelete='CASCADE'), nullable=True)
-
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=True)
     # Новые поля
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
@@ -137,7 +140,7 @@ class CriticalEventResponse(db.Model):
     response = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default='pending')  # Статус отчета
     points_awarded = db.Column(db.Integer, default=0)
-
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=True)
     # Связь с командой
     team = db.relationship('Team', foreign_keys=[team_id])
     user = db.relationship('User', backref='critical_event_responses', foreign_keys=[user_id])
@@ -158,7 +161,7 @@ class CriticalEvent(db.Model):
     steps = db.relationship('CriticalEventStep', backref='response', cascade='all, delete-orphan')  # Связь с шагами
     # Добавляем связь с пользователем
     created_by_user = db.relationship('User', backref='created_events', foreign_keys=[created_by])
-
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=True)
     def __repr__(self):
         return f"CriticalEvent('{self.title}', Created by {self.created_by})"
 
@@ -230,3 +233,24 @@ class PointsHistory(db.Model):
 
     def __repr__(self):
         return f"PointsHistory(User {self.user_id}, Points {self.points}, Note: {self.note})"
+
+
+from datetime import datetime
+from app import db
+
+class Competition(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)  # Название соревнования
+    description = db.Column(db.Text, nullable=True)    # Описание соревнования
+    start_date = db.Column(db.DateTime, nullable=False)  # Дата начала
+    end_date = db.Column(db.DateTime, nullable=False)    # Дата окончания
+    status = db.Column(db.String(20), default='planned')  # Статус: planned, active, finished
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Дата создания
+
+    # Связи с другими моделями
+    challenges = db.relationship('Challenge', backref='competition', lazy=True)  # Список флагов (задач)
+    incidents = db.relationship('Incident', backref='competition', lazy=True)    # Список инцидентов
+    critical_events = db.relationship('CriticalEvent', backref='competition', lazy=True)  # Список КС
+
+    def __repr__(self):
+        return f"Competition('{self.title}', Status: '{self.status}')"

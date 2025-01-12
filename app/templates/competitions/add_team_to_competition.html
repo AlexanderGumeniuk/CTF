@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Добавить команду в соревнование: {{ competition.title }}</h2>
+    <form method="POST" action="{{ url_for('add_team_to_competition', competition_id=competition.id) }}">
+        <div class="form-group">
+            <label for="team_id">Выберите команду:</label>
+            <select class="form-control" id="team_id" name="team_id" required>
+                <option value="">-- Выберите команду --</option>
+                {% for team in teams %}
+                <option value="{{ team.id }}">{{ team.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Добавить команду</button>
+        <a href="{{ url_for('view_competition', competition_id=competition.id) }}" class="btn btn-secondary">Назад</a>
+    </form>
+</div>
+{% endblock %}

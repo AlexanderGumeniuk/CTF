@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Соревнования</h2>
+
+    <!-- Активные соревнования -->
+    <h3>Активные</h3>
+    {% if active_competitions %}
+    <div class="list-group">
+        {% for competition in active_competitions %}
+        <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="list-group-item list-group-item-action">
+    <h5 class="mb-1">{{ competition.title }}</h5>
+    <p class="mb-1">{{ competition.description }}</p>
+    <small>Дата начала: {{ competition.start_date.strftime('%Y-%m-%d %H:%M') }}</small><br>
+    <small>Дата окончания: {{ competition.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
+</a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>Нет активных соревнований.</p>
+    {% endif %}
+
+    <!-- Запланированные соревнования -->
+    <h3>Запланированные</h3>
+    {% if planned_competitions %}
+    <div class="list-group">
+        {% for competition in planned_competitions %}
+        <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="list-group-item list-group-item-action">
+    <h5 class="mb-1">{{ competition.title }}</h5>
+    <p class="mb-1">{{ competition.description }}</p>
+    <small>Дата начала: {{ competition.start_date.strftime('%Y-%m-%d %H:%M') }}</small><br>
+    <small>Дата окончания: {{ competition.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
+</a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>Нет запланированных соревнований.</p>
+    {% endif %}
+
+    <!-- Завершенные соревнования -->
+    <h3>Завершенные</h3>
+    {% if finished_competitions %}
+    <div class="list-group">
+        {% for competition in finished_competitions %}
+        <a href="{{ url_for('view_competition', competition_id=competition.id) }}" class="list-group-item list-group-item-action">
+            <h5 class="mb-1">{{ competition.title }}</h5>
+            <p class="mb-1">{{ competition.description }}</p>
+            <small>Дата начала: {{ competition.start_date.strftime('%Y-%m-%d %H:%M') }}</small><br>
+            <small>Дата окончания: {{ competition.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>Нет завершенных соревнований.</p>
+    {% endif %}
+</div>
+{% endblock %}

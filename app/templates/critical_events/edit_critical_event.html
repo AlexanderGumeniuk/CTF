@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Редактирование критического события: {{ critical_event.title }}</h1>
+
+    <form method="POST">
+        <div class="mb-3">
+            <label for="title" class="form-label">Название</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ critical_event.title }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Описание</label>
+            <textarea class="form-control" id="description" name="description" rows="5" required>{{ critical_event.description }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        <a href="{{ url_for('view_critical_event', competition_id=competition.id, critical_event_id=critical_event.id) }}"
+           class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+{% endblock %}

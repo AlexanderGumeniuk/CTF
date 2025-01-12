@@ -1,0 +1,74 @@
+!-- Используем базовый шаблон администратора -->
+
+{% block content %}
+<div class="container">
+    <h1>Инциденты соревнования: {{ competition.title }}</h1>
+
+    <!-- Фильтр по статусу -->
+    <div class="mb-3">
+        <a href="{{ url_for('admin_competition_incidents', competition_id=competition.id, status='all') }}"
+           class="btn btn-secondary {% if status == 'all' %}active{% endif %}">
+            Все
+        </a>
+        <a href="{{ url_for('admin_competition_incidents', competition_id=competition.id, status='pending') }}"
+           class="btn btn-warning {% if status == 'pending' %}active{% endif %}">
+            Ожидают проверки
+        </a>
+        <a href="{{ url_for('admin_competition_incidents', competition_id=competition.id, status='approved') }}"
+           class="btn btn-success {% if status == 'approved' %}active{% endif %}">
+            Одобрены
+        </a>
+        <a href="{{ url_for('admin_competition_incidents', competition_id=competition.id, status='rejected') }}"
+           class="btn btn-danger {% if status == 'rejected' %}active{% endif %}">
+            Отклонены
+        </a>
+    </div>
+
+    <!-- Таблица с инцидентами -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Команда</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for incident in incidents %}
+            <tr>
+                <td>{{ incident.id }}</td>
+                <td>{{ incident.title }}</td>
+                <td>
+                    {% if incident.team %}
+                        {{ incident.team.name }}
+                    {% else %}
+                        Нет команды
+                    {% endif %}
+                </td>
+                <td>
+                    {% if incident.status == 'pending' %}
+                        <span class="badge bg-warning">Ожидает проверки</span>
+                    {% elif incident.status == 'approved' %}
+                        <span class="badge bg-success">Одобрен</span>
+                    {% elif incident.status == 'rejected' %}
+                        <span class="badge bg-danger">Отклонен</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('review_incident', competition_id=competition.id, incident_id=incident.id) }}"
+                       class="btn btn-primary btn-sm">
+                        Проверить
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">Инцидентов не найдено.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

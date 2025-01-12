@@ -12,6 +12,9 @@ from sqlalchemy.orm.attributes import flag_modified
 from flask import request, flash, redirect, url_for, render_template
 from flask import send_from_directory
 import logging
+
+from . import competitions
+
 # Настройка логирования
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -26,30 +29,6 @@ def generate_unique_filename(filename):
 @app.route('/')
 def index():
     return render_template('index.html')
-
-
-@app.route('/challenges')
-@login_required
-def challenges():
-    # Получаем параметр фильтрации из запроса
-    filter_type = request.args.get('filter', 'all')  # По умолчанию показываем все задачи
-
-    # Получаем все задачи
-    all_challenges = Challenge.query.all()
-
-    # Фильтруем задачи
-    if filter_type == 'solved':
-        # Задачи, которые пользователь уже решил
-        challenges = [challenge for challenge in all_challenges if challenge.solved_by_user(current_user)]
-    elif filter_type == 'unsolved':
-        # Задачи, которые пользователь еще не решил
-        challenges = [challenge for challenge in all_challenges if not challenge.solved_by_user(current_user)]
-    else:
-        # Все задачи
-        challenges = all_challenges
-
-    return render_template('challenges.html', challenges=challenges, filter_type=filter_type)
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -183,7 +162,8 @@ def submit_flag(challenge_id):
     else:
         flash('Incorrect flag. Try again!', 'danger')
 
-    return redirect(url_for('challenges'))
+    # Перенаправляем на страницу задач текущего соревнования
+    return redirect(url_for('competition_challenges', competition_id=challenge.competition_id))
 
 
 @app.route('/leaderboard')
@@ -213,7 +193,12 @@ def team_leaderboard():
 
     return render_template('team_leaderboard.html', leaderboard=leaderboard_data)
 
-
+@app.route('/request_hint/<int:challenge_id>', methods=['POST'])
+@login_required
+def request_hint(challenge_id):
+    # Заглушка: просто сообщаем, что подсказка запрошена
+    flash('Запрос на подсказку отправлен. В будущем подсказка будет отправлена через Rocket.Chat.', 'info')
+    return redirect(url_for('challenges'))
 @app.route('/admin/manage_teams', methods=['GET', 'POST'])
 @login_required
 def manage_teams():
@@ -312,284 +297,9 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 
-@app.route('/create_incident', methods=['GET', 'POST'])
-@login_required
-def create_incident():
-    if request.method == 'POST':
-        title = request.form['title']
-        description = request.form['description']
-        start_time = datetime.strptime(request.form['start_time'], '%Y-%m-%dT%H:%M')
-        end_time = datetime.strptime(request.form['end_time'], '%Y-%m-%dT%H:%M')
-        source_ip = request.form['source_ip']
-        source_port = int(request.form['source_port']) if request.form['source_port'] else None
-        destination_ip = request.form['destination_ip']
-        destination_port = int(request.form['destination_port']) if request.form['destination_port'] else None
-        event_type = request.form['event_type']
-        related_fqdn = request.form['related_fqdn']
-        related_dns = request.form['related_dns']
-        ioc = request.form['ioc']
-        hash_value = request.form['hash_value']
-        mitre_id = request.form['mitre_id']
-        siem_id = request.form['siem_id']
-        siem_link = request.form['siem_link']
-
-        team_id = current_user.team_id if current_user.team else None
-
-        # Обработка загрузки скриншотов
-        screenshot_paths = []
-        if 'screenshots' in request.files:
-            files = request.files.getlist('screenshots')
-            for file in files:
-                if file.filename != '' and allowed_file(file.filename):
-                    # Генерируем уникальное имя файла
-                    unique_filename = generate_unique_filename(file.filename)
-                    # Сохраняем файл
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                    file.save(file_path)
-                    screenshot_paths.append(unique_filename)  # Сохраняем уникальное имя
-                else:
-                    flash(f'Недопустимый формат файла: {file.filename}', 'danger')
-                    return redirect(url_for('create_incident'))
-
-        # Создаем инцидент
-        incident = Incident(
-            title=title,
-            description=description,
-            user_id=current_user.id,
-            team_id=team_id,
-            start_time=start_time,
-            end_time=end_time,
-            source_ip=source_ip,
-            source_port=source_port,
-            destination_ip=destination_ip,
-            destination_port=destination_port,
-            event_type=event_type,
-            related_fqdn=related_fqdn,
-            related_dns=related_dns,
-            ioc=ioc,
-            hash_value=hash_value,
-            mitre_id=mitre_id,
-            siem_id=siem_id,
-            siem_link=siem_link,
-            screenshots=screenshot_paths  # Сохраняем уникальные имена файлов
-        )
-        db.session.add(incident)
-        db.session.commit()
-
-        flash('Инцидент успешно создан!', 'success')
-        return redirect(url_for('my_incidents'))
-
-    return render_template('create_incident.html')
-
-
-@app.route('/my_incidents')
-@login_required
-def my_incidents():
-    page = request.args.get('page', 1, type=int)
-    per_page = 10
-    status = request.args.get('status', 'all')
-
-    # Базовый запрос
-    if current_user.team:
-        query = Incident.query.filter_by(team_id=current_user.team_id)
-    else:
-        query = Incident.query.filter_by(user_id=current_user.id)
-
-    # Фильтрация по статусу
-    if status != 'all':
-        query = query.filter_by(status=status)
-
-    # Пагинация
-    incidents = query.order_by(Incident.start_time.desc()).paginate(page=page, per_page=per_page)
-
-    return render_template('my_incidents.html', incidents=incidents, status=status)
-
-
-@app.route('/admin/incidents')
-@login_required
-def admin_incidents():
-    if not current_user.is_admin:
-        flash('У вас нет прав доступа к этой странице.', 'danger')
-        return redirect(url_for('index'))
-
-    # Получаем статус из query-параметра (по умолчанию 'pending')
-    status = request.args.get('status', 'pending')
-
-    # Фильтруем инциденты по статусу
-    if status == 'all':
-        incidents = Incident.query.all()
-    else:
-        incidents = Incident.query.filter_by(status=status).all()
-
-    return render_template('admin/admin_incidents.html', incidents=incidents, status=status)
-
-
-
-@app.route('/admin/review_incident/<int:incident_id>', methods=['GET', 'POST'])
-@login_required
-def review_incident(incident_id):
-    if not current_user.is_admin:
-        flash('У вас нет прав доступа к этой странице.', 'danger')
-        return redirect(url_for('index'))
-
-    # Получаем инцидент по ID
-    incident = Incident.query.get_or_404(incident_id)
-    logger.debug(f"Проверка инцидента: {incident.id}")
-
-    if request.method == 'POST':
-        # Проверяем, что инцидент находится в статусе "pending" (ожидает проверки)
-        if incident.status != 'pending':
-            flash('Этот инцидент уже был проверен и не может быть изменен.', 'warning')
-            return redirect(url_for('admin_incidents'))
-
-        action = request.form['action']
-        points = int(request.form.get('points', 0))
-
-        if action == 'approve':
-            # Одобрение инцидента
-            incident.status = 'approved'
-            incident.points_awarded = points
-
-            # Начисляем баллы пользователю
-            user = User.query.get(incident.user_id)
-            user.total_points += points
-
-            # Добавляем запись в историю начисления баллов
-            points_history = PointsHistory(
-                user_id=incident.user_id,
-                points=points,
-                note=f"За инцидент: {incident.title}"
-            )
-            db.session.add(points_history)
-
-            flash('Инцидент одобрен! Баллы начислены.', 'success')
-
-        elif action == 'reject':
-            # Отклонение инцидента
-            incident.status = 'rejected'
-            flash('Инцидент отклонен!', 'danger')
-
-        elif action == 'needs_revision':
-            # Отправка на доработку
-            incident.status = 'needs_revision'
-
-            # Удаляем все скриншоты
-            if incident.screenshots:
-                for screenshot in incident.screenshots:
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], screenshot)
-                    if os.path.exists(file_path):
-                        try:
-                            os.remove(file_path)
-                            logger.info(f"Удален файл: {file_path}")
-                        except Exception as e:
-                            logger.error(f"Ошибка при удалении файла {file_path}: {e}")
-                    else:
-                        logger.error(f"Файл не найден: {file_path}")
-
-                # Очищаем список скриншотов в базе данных
-                incident.screenshots = []  # Обнуляем список скриншотов
-                logger.info("Все скриншоты удалены из базы данных.")
-
-            flash('Инцидент отправлен на доработку! Скриншоты удалены.', 'warning')
-
-        # Сохраняем изменения в базе данных
-        incident.admin_id = current_user.id
-        db.session.commit()
-
-        return redirect(url_for('admin_incidents'))
-
-    # Передаем инцидент и скриншоты в шаблон
-    return render_template('admin/review_incident.html', incident=incident)
-@app.route('/edit_incident/<int:incident_id>', methods=['GET', 'POST'])
-@login_required
-def edit_incident(incident_id):
-    # Получаем инцидент из базы данных
-    incident = Incident.query.get_or_404(incident_id)
-    logger.debug(f"Редактирование инцидента: {incident.id}")
-
-    if request.method == 'POST':
-        try:
-            # Логируем данные формы и файлы
-            logger.debug(f"Данные формы: {request.form}")
-            logger.debug(f"Файлы: {request.files}")
-
-            # Обновление данных инцидента
-            incident.title = request.form['title']
-            incident.description = request.form['description']
-            incident.start_time = datetime.strptime(request.form['start_time'], '%Y-%m-%dT%H:%M')
-            incident.end_time = datetime.strptime(request.form['end_time'], '%Y-%m-%dT%H:%M')
-            incident.source_ip = request.form['source_ip']
-            incident.source_port = int(request.form['source_port'])
-            incident.destination_ip = request.form['destination_ip']
-            incident.destination_port = int(request.form['destination_port'])
-            incident.event_type = request.form['event_type']
-            incident.related_fqdn = request.form['related_fqdn']
-            incident.related_dns = request.form['related_dns']
-            incident.ioc = request.form['ioc']
-            incident.hash_value = request.form['hash_value']
-            incident.mitre_id = request.form['mitre_id']
-            incident.siem_id = request.form['siem_id']
-            incident.siem_link = request.form['siem_link']
-            incident.status = 'pending'  # Меняем статус на "pending" для повторной проверки
-            incident = db.session.merge(incident)
-            # Обработка загрузки новых скриншотов
-            if 'screenshots' in request.files:
-                files = request.files.getlist('screenshots')
-                logger.debug(f"Получено файлов для загрузки: {len(files)}")
-
-                for file in files:
-                    if file.filename != '' and allowed_file(file.filename):
-                        unique_filename = generate_unique_filename(file.filename)
-                        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                        logger.debug(f"Путь для сохранения файла: {file_path}")
-
-                        try:
-                            file.save(file_path)
-
-                            # Инициализируем список скриншотов, если он пустой
-                            if incident.screenshots is None:
-                                incident.screenshots = []
-
-                            # Добавляем имя файла в список скриншотов
-                            incident.screenshots.append(unique_filename)
-                            logger.info(f"Добавлен новый скриншот: {unique_filename}")
-                        except Exception as e:
-                            logger.error(f"Ошибка при сохранении файла {unique_filename}: {e}")
-                    else:
-                        logger.error(f"Файл не прошел проверку: {file.filename}")
-
-            # Логируем скриншоты перед сохранением
-            logger.info(f"Скриншоты перед сохранением: {incident.screenshots}")
-
-            # Привязываем объект к текущей сессии
-            incident = db.session.merge(incident)
-
-            # Сохраняем изменения в базе данных
-            try:
-                flag_modified(incident, 'screenshots')
-                db.session.commit()
-                logger.info(f"Скриншоты после сохранения: {incident.screenshots}")
-            except Exception as e:
-                db.session.rollback()
-                logger.error(f"Ошибка при сохранении инцидента: {e}")
-                flash('Произошла ошибка при сохранении инцидента.', 'danger')
-            # Уведомляем пользователя об успешном обновлении
-            flash('Инцидент обновлен и отправлен на проверку!', 'success')
-            return redirect(url_for('my_incidents'))
-
-        except Exception as e:
-            # Логируем ошибку и уведомляем пользователя
-            logger.error(f"Ошибка при редактировании инцидента: {e}")
-            flash('Произошла ошибка при редактировании инцидента.', 'danger')
-            return redirect(url_for('my_incidents'))
-
-    # Отображаем форму редактирования
-    return render_template('edit_incident.html', incident=incident)
-
-
 @app.route('/admin/create_critical_event', methods=['GET', 'POST'])
 @login_required
-def create_critical_event():
+def create_critical_event1():
     if not current_user.is_admin:
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('index'))
@@ -613,7 +323,7 @@ def create_critical_event():
 
 @app.route('/admin/critical_event_responses')
 @login_required
-def admin_critical_event_responses():
+def admin_critical_event_responses1():
     if not current_user.is_admin:
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('index'))
@@ -624,7 +334,7 @@ def admin_critical_event_responses():
 
 @app.route('/admin/approved_responses')
 @login_required
-def admin_approved_responses():
+def admin_approved_responses1():
     if not current_user.is_admin:
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('index'))
@@ -635,7 +345,7 @@ def admin_approved_responses():
 
 @app.route('/admin/critical_events')
 @login_required
-def admin_critical_events():
+def admin_critical_events1():
     if not current_user.is_admin:
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('index'))
@@ -647,7 +357,7 @@ def admin_critical_events():
 
 @app.route('/admin/edit_critical_event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
-def edit_critical_event(event_id):
+def edit_critical_event1(event_id):
     if not current_user.is_admin:
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('index'))
@@ -688,85 +398,15 @@ def delete_screenshots(screenshots):
 
 
 
-
-import logging
-from flask import flash, redirect, url_for
-from app.models import CriticalEvent, CriticalEventResponse, CriticalEventStep
-from app import db
-
 # Настройка логирования
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-@app.route('/admin/delete_critical_event/<int:event_id>', methods=['POST'])
-@login_required
-def delete_critical_event(event_id):
-    if not current_user.is_admin:
-        flash('You do not have permission to access this page.', 'danger')
-        return redirect(url_for('index'))
 
-    logger.debug(f"Начало удаления КС с ID: {event_id}")
-
-    # Находим событие
-    critical_event = CriticalEvent.query.get(event_id)
-    if not critical_event:
-        logger.error(f"КС с ID {event_id} не найдено.")
-        flash('Critical event not found.', 'danger')
-        return redirect(url_for('admin_critical_events'))
-
-    logger.debug(f"Найдено КС: {critical_event}")
-
-    try:
-        # Удаляем все связанные отчеты
-        responses = CriticalEventResponse.query.filter_by(event_id=event_id).all()
-        logger.debug(f"Найдено отчетов: {len(responses)}")
-
-        for response in responses:
-            logger.debug(f"Обработка отчета с ID: {response.id}")
-
-            # Удаляем все шаги для каждого отчета
-            steps = CriticalEventStep.query.filter_by(response_id=response.id).all()
-            logger.debug(f"Найдено шагов для отчета {response.id}: {len(steps)}")
-
-            for step in steps:
-                logger.debug(f"Удаление шага с ID: {step.id}")
-                if step.screenshots:
-                    logger.debug(f"Удаление скриншотов для шага {step.id}")
-                    delete_screenshots(step.screenshots)
-                db.session.delete(step)
-
-            # Удаляем отчет
-            logger.debug(f"Удаление отчета с ID: {response.id}")
-            db.session.delete(response)
-
-        # Удаляем само событие
-        logger.debug(f"Удаление КС с ID: {critical_event.id}")
-        db.session.delete(critical_event)
-
-        # Фиксируем изменения в базе данных
-        db.session.commit()
-        logger.debug("Удаление завершено успешно.")
-        flash('Critical event and related data deleted successfully!', 'success')
-
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Ошибка при удалении КС: {str(e)}", exc_info=True)
-        flash(f'Error deleting critical event: {str(e)}', 'danger')
-
-    return redirect(url_for('admin_critical_events'))
-@app.route('/request_hint/<int:challenge_id>', methods=['POST'])
-@login_required
-def request_hint(challenge_id):
-    # Заглушка: просто сообщаем, что подсказка запрошена
-    flash('Запрос на подсказку отправлен. В будущем подсказка будет отправлена через Rocket.Chat.', 'info')
-    return redirect(url_for('challenges'))
-
-from datetime import datetime
-from app.models import PointsHistory  # Импортируем модель PointsHistory
 
 @app.route('/admin/review_response/<int:response_id>', methods=['GET', 'POST'])
 @login_required
-def review_response(response_id):
+def review_response1(response_id):
     if not current_user.is_admin:
         flash('У вас нет прав доступа к этой странице.', 'danger')
         return redirect(url_for('index'))
@@ -827,12 +467,9 @@ def review_response(response_id):
 
     return render_template('admin/review_response.html', response=response, steps=steps)
 
-
-
-
 @app.route('/user/accepted_responses')
 @login_required
-def user_accepted_responses():
+def user_accepted_responses1():
     if not current_user.team:
         flash('Вы не состоите в команде.', 'warning')
         return redirect(url_for('index'))
@@ -846,7 +483,7 @@ def user_accepted_responses():
 
 @app.route('/user/pending_responses')
 @login_required
-def user_pending_responses():
+def user_pending_responses1():
     if not current_user.team:
         flash('Вы не состоите в команде.', 'warning')
         return redirect(url_for('index'))
@@ -870,7 +507,7 @@ def user_pending_responses():
 
 @app.route('/user/under_review_responses')
 @login_required
-def user_under_review_responses():
+def user_under_review_responses1():
     if not current_user.team:
         flash('Вы не состоите в команде.', 'warning')
         return redirect(url_for('index'))
@@ -882,228 +519,6 @@ def user_under_review_responses():
     ).all()
     return render_template('user/under_review_responses.html', responses=responses)
 
-@app.route('/fill_critical_event/<int:event_id>', methods=['GET', 'POST'])
-@login_required
-def fill_critical_event(event_id):
-    event = CriticalEvent.query.get_or_404(event_id)
-    response = CriticalEventResponse.query.filter_by(event_id=event.id, team_id=current_user.team_id).first()
-
-    if request.method == 'POST':
-        try:
-            # Логирование данных формы
-            logger.debug(f"Данные формы: {request.form}")
-            logger.debug(f"Файлы: {request.files}")
-
-            # Проверка обязательных полей
-            step_names = request.form.getlist('step_name[]')
-            start_times = request.form.getlist('start_time[]')
-            source_ips = request.form.getlist('source_ip[]')
-            destination_ips = request.form.getlist('destination_ip[]')
-            event_types = request.form.getlist('event_type[]')
-
-            for i, step_name in enumerate(step_names):
-                if not step_name or not start_times[i] or not source_ips[i] or not destination_ips[i] or not event_types[i]:
-                    flash('Все обязательные поля шага должны быть заполнены.', 'danger')
-                    return redirect(url_for('fill_critical_event', event_id=event_id))
-
-            # Обработка загрузки файлов для каждого шага
-            screenshot_paths = {}
-            for key, files in request.files.lists():
-                if key.startswith('screenshots_step_'):
-                    step_id = key.replace('screenshots_step_', '').replace('[]', '')
-                    screenshot_paths[step_id] = []
-                    for file in files:
-                        if file.filename != '' and allowed_file(file.filename):
-                            unique_filename = generate_unique_filename(file.filename)
-                            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                            file.save(file_path)
-                            screenshot_paths[step_id].append(unique_filename)
-                            logger.debug(f"Файл {file.filename} сохранен как {unique_filename} для шага {step_id}")
-
-            # Обновляем или создаем отчет
-            if response:
-                response.response = request.form['response']
-                response.status = 'pending'  # Обновляем статус на "pending"
-            else:
-                response = CriticalEventResponse(
-                    event_id=event.id,
-                    user_id=current_user.id,
-                    team_id=current_user.team_id,
-                    response=request.form['response'],
-                    status='pending'  # Устанавливаем статус "pending"
-                )
-                db.session.add(response)
-
-            # Обработка шагов
-            step_ids = request.form.getlist('step_id[]')
-            descriptions = request.form.getlist('description[]')
-            end_times = request.form.getlist('end_time[]')
-            source_ports = request.form.getlist('source_port[]')
-            destination_ports = request.form.getlist('destination_port[]')
-            related_fqdns = request.form.getlist('related_fqdn[]')
-            related_dns = request.form.getlist('related_dns[]')
-            iocs = request.form.getlist('ioc[]')
-            hash_values = request.form.getlist('hash_value[]')
-            mitre_ids = request.form.getlist('mitre_id[]')
-            siem_ids = request.form.getlist('siem_id[]')
-            siem_links = request.form.getlist('siem_link[]')
-            responsibles = request.form.getlist('responsible[]')
-            deadlines = request.form.getlist('deadline[]')
-            statuses = request.form.getlist('status[]')
-            comments = request.form.getlist('comments[]')
-
-            for i, step_id in enumerate(step_ids):
-                if step_id:  # Обновление существующего шага
-                    step = CriticalEventStep.query.get(step_id)
-                    if step:
-                        step.step_name = step_names[i]
-                        step.description = descriptions[i]
-                        step.start_time = datetime.strptime(start_times[i], '%Y-%m-%dT%H:%M')
-                        step.end_time = datetime.strptime(end_times[i], '%Y-%m-%dT%H:%M') if end_times[i] else None
-                        step.source_ip = source_ips[i]
-                        step.source_port = int(source_ports[i]) if source_ports[i] else None
-                        step.destination_ip = destination_ips[i]
-                        step.destination_port = int(destination_ports[i]) if destination_ports[i] else None
-                        step.event_type = event_types[i]
-                        step.related_fqdn = related_fqdns[i]
-                        step.related_dns = related_dns[i]
-                        step.ioc = iocs[i]
-                        step.hash_value = hash_values[i]
-                        step.mitre_id = mitre_ids[i]
-                        step.siem_id = siem_ids[i]
-                        step.siem_link = siem_links[i]
-                        step.screenshots = screenshot_paths.get(step_id, [])
-                        step.responsible = responsibles[i]
-                        step.deadline = datetime.strptime(deadlines[i], '%Y-%m-%dT%H:%M') if deadlines[i] else None
-                        step.status = statuses[i]
-                        step.comments = comments[i]
-                else:  # Создание нового шага
-                    step = CriticalEventStep(
-                        event_id=event.id,
-                        user_id=current_user.id,
-                        team_id=current_user.team_id,
-                        step_name=step_names[i],
-                        description=descriptions[i],
-                        start_time=datetime.strptime(start_times[i], '%Y-%m-%dT%H:%M'),
-                        end_time=datetime.strptime(end_times[i], '%Y-%m-%dT%H:%M') if end_times[i] else None,
-                        source_ip=source_ips[i],
-                        source_port=int(source_ports[i]) if source_ports[i] else None,
-                        destination_ip=destination_ips[i],
-                        destination_port=int(destination_ports[i]) if destination_ports[i] else None,
-                        event_type=event_types[i],
-                        related_fqdn=related_fqdns[i],
-                        related_dns=related_dns[i],
-                        ioc=iocs[i],
-                        hash_value=hash_values[i],
-                        mitre_id=mitre_ids[i],
-                        siem_id=siem_ids[i],
-                        siem_link=siem_links[i],
-                        screenshots=screenshot_paths.get(f"new_{i}", []),
-                        responsible=responsibles[i],
-                        deadline=datetime.strptime(deadlines[i], '%Y-%m-%dT%H:%M') if deadlines[i] else None,
-                        status=statuses[i],
-                        comments=comments[i]
-                    )
-                    db.session.add(step)
-
-            # Удаление шагов, отмеченных для удаления
-            removed_steps = request.form.getlist('removed_steps[]')
-            for step_id in removed_steps:
-                step = CriticalEventStep.query.get(step_id)
-                if step:
-                    db.session.delete(step)
-
-            db.session.commit()
-            flash('Отчет и шаги успешно сохранены и отправлены на проверку!', 'success')
-            return redirect(url_for('user_pending_responses'))
-
-        except IntegrityError as e:
-            db.session.rollback()
-            flash('Ошибка: Некоторые обязательные поля не заполнены.', 'danger')
-            logger.error(f"Ошибка IntegrityError: {e}")
-        except Exception as e:
-            db.session.rollback()
-            flash('Произошла ошибка при сохранении отчета.', 'danger')
-            logger.error(f"Ошибка при сохранении в базу данных: {e}")
-
-    steps = CriticalEventStep.query.filter_by(event_id=event.id, team_id=current_user.team_id).all()
-    return render_template('user/fill_critical_event.html', event=event, response=response, steps=steps)
-
-from flask import request, flash, redirect, url_for
-
-@app.route('/add_steps/<int:event_id>', methods=['POST'])
-@login_required
-def add_steps(event_id):
-    if not current_user.team:
-        flash('Вы не состоите в команде.', 'warning')
-        return redirect(url_for('index'))
-
-    # Обработка загрузки скриншотов
-    screenshot_paths = []
-    if 'screenshots' in request.files:
-        files = request.files.getlist('screenshots')
-        for file in files:
-            if file.filename != '' and allowed_file(file.filename):
-                # Генерируем уникальное имя файла
-                unique_filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                file.save(file_path)
-                screenshot_paths.append(unique_filename)  # Сохраняем имя файла
-
-    # Получаем данные из формы
-    step_name = request.form.get('step_name')
-    description = request.form.get('description')
-    start_time = datetime.strptime(request.form.get('start_time'), '%Y-%m-%dT%H:%M')
-    end_time = datetime.strptime(request.form.get('end_time'), '%Y-%m-%dT%H:%M')
-    source_ip = request.form.get('source_ip')
-    source_port = int(request.form.get('source_port')) if request.form.get('source_port') else None
-    destination_ip = request.form.get('destination_ip')
-    destination_port = int(request.form.get('destination_port')) if request.form.get('destination_port') else None
-    event_type = request.form.get('event_type')
-    related_fqdn = request.form.get('related_fqdn')
-    related_dns = request.form.get('related_dns')
-    ioc = request.form.get('ioc')
-    hash_value = request.form.get('hash_value')
-    mitre_id = request.form.get('mitre_id')
-    siem_id = request.form.get('siem_id')
-    siem_link = request.form.get('siem_link')
-    responsible = request.form.get('responsible')
-    deadline = datetime.strptime(request.form.get('deadline'), '%Y-%m-%dT%H:%M') if request.form.get('deadline') else None
-    status = request.form.get('status')
-    comments = request.form.get('comments')
-
-    # Создаем новый шаг
-    step = CriticalEventStep(
-        event_id=event_id,
-        user_id=current_user.id,
-        team_id=current_user.team_id,
-        step_name=step_name,
-        description=description,
-        start_time=start_time,
-        end_time=end_time,
-        source_ip=source_ip,
-        source_port=source_port,
-        destination_ip=destination_ip,
-        destination_port=destination_port,
-        event_type=event_type,
-        related_fqdn=related_fqdn,
-        related_dns=related_dns,
-        ioc=ioc,
-        hash_value=hash_value,
-        mitre_id=mitre_id,
-        siem_id=siem_id,
-        siem_link=siem_link,
-        screenshots=screenshot_paths,
-        responsible=responsible,
-        deadline=deadline,
-        status=status,
-        comments=comments
-    )
-    db.session.add(step)
-    db.session.commit()
-
-    flash('Шаг успешно добавлен!', 'success')
-    return redirect(url_for('fill_critical_event', event_id=event_id))
 
 @app.route('/view_event/<int:event_id>')
 @login_required
@@ -1111,46 +526,6 @@ def view_event(event_id):
     event = CriticalEvent.query.get_or_404(event_id)
     return render_template('view_event.html', event=event)
 
-@app.route('/fill_steps/<int:event_id>', methods=['GET', 'POST'])
-@login_required
-def fill_steps(event_id):
-    event = CriticalEvent.query.get_or_404(event_id)
-
-    if request.method == 'POST':
-        # Обрабатываем данные из формы
-        step_names = request.form.getlist('step_name[]')
-        descriptions = request.form.getlist('description[]')
-        responsibles = request.form.getlist('responsible[]')
-        deadlines = request.form.getlist('deadline[]')
-        resources = request.form.getlist('resources[]')
-        risks = request.form.getlist('risks[]')
-        actions = request.form.getlist('actions[]')
-        results = request.form.getlist('results[]')
-        statuses = request.form.getlist('status[]')
-        comments = request.form.getlist('comments[]')
-
-        # Сохраняем каждый шаг в базе данных
-        for i in range(len(step_names)):
-            step = CriticalEventStep(
-                event_id=event.id,
-                step_name=step_names[i],
-                description=descriptions[i],
-                responsible=responsibles[i],
-                deadline=datetime.strptime(deadlines[i], '%Y-%m-%dT%H:%M') if deadlines[i] else None,
-                resources=resources[i],
-                risks=risks[i],
-                actions=actions[i],
-                results=results[i],
-                status=statuses[i],
-                comments=comments[i]
-            )
-            db.session.add(step)
-
-        db.session.commit()
-        flash('Шаги успешно сохранены!', 'success')
-        return redirect(url_for('user_pending_responses'))
-
-    return render_template('fill_steps.html', event=event)
 
 @app.route('/submit_critical_event/<int:event_id>', methods=['POST'])
 @login_required
@@ -1353,7 +728,7 @@ def manage_users():
 
 @app.route('/view_incident/<int:incident_id>')
 @login_required
-def view_incident(incident_id):
+def view_incident1(incident_id):
     # Получаем инцидент по ID
     incident = Incident.query.get_or_404(incident_id)
 
@@ -1530,111 +905,6 @@ def save_topology():
         print(f"Ошибка при сохранении топологии: {str(e)}")
         return jsonify({"success": False, "message": f"Ошибка при сохранении топологии: {str(e)}"})
 
-from flask import request, jsonify, render_template
-
-# Страница управления флагами
-@app.route('/admin/flags', methods=['GET'])
-@login_required
-def admin_flags():
-    if not current_user.is_admin:
-        flash('У вас нет прав доступа к этой странице.', 'danger')
-        return redirect(url_for('index'))
-
-    # Получаем все задачи (флаги)
-    challenges = Challenge.query.all()
-    return render_template('admin/admin_flags.html', challenges=challenges)
-
-# Добавление нового флага
-@app.route('/admin/add_flag', methods=['POST'])
-@login_required
-def add_flag():
-    if not current_user.is_admin:
-        return jsonify({"success": False, "message": "У вас нет прав доступа к этой странице."})
-
-    # Получаем данные из запроса
-    data = request.get_json()
-    title = data.get("title")
-    description = data.get("description")
-    flag = data.get("flag")
-    points = data.get("points")
-    category = data.get("category")
-
-    if not all([title, description, flag, points, category]):
-        return jsonify({"success": False, "message": "Все поля обязательны для заполнения."})
-
-    try:
-        # Создаем новую задачу
-        challenge = Challenge(
-            title=title,
-            description=description,
-            flag=flag,
-            points=points,
-            category=category
-        )
-        db.session.add(challenge)
-        db.session.commit()
-
-        # Отправляем сообщение в Rocket.Chat
-        message = f"🎉 Новый флаг создан!\n\n**Название:** {title}\n**Описание:** {description}\n**Категория:** {category}\n**Очки:** {points}"
-        send_rocket_chat_message(message, "#general")  # Вызов вашей функции
-
-        return jsonify({"success": True, "message": "Флаг успешно добавлен."})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"success": False, "message": f"Ошибка при добавлении флага: {str(e)}"})
-
-# Редактирование флага
-@app.route('/admin/edit_flag/<int:challenge_id>', methods=['POST'])
-@login_required
-def edit_flag(challenge_id):
-    if not current_user.is_admin:
-        return jsonify({"success": False, "message": "У вас нет прав доступа к этой странице."})
-
-    # Получаем данные из запроса
-    data = request.get_json()
-    title = data.get("title")
-    description = data.get("description")
-    flag = data.get("flag")
-    points = data.get("points")
-    category = data.get("category")
-
-    if not all([title, description, flag, points, category]):
-        return jsonify({"success": False, "message": "Все поля обязательны для заполнения."})
-
-    # Находим задачу по ID
-    challenge = Challenge.query.get_or_404(challenge_id)
-
-    try:
-        # Обновляем данные задачи
-        challenge.title = title
-        challenge.description = description
-        challenge.flag = flag
-        challenge.points = points
-        challenge.category = category
-        db.session.commit()
-        return jsonify({"success": True, "message": "Флаг успешно обновлен."})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"success": False, "message": f"Ошибка при обновлении флага: {str(e)}"})
-
-@app.route('/admin/delete_flag/<int:challenge_id>', methods=['POST'])
-@login_required
-def delete_flag(challenge_id):
-    if not current_user.is_admin:
-        return jsonify({"success": False, "message": "У вас нет прав доступа к этой странице."})
-
-    # Находим задачу по ID
-    challenge = Challenge.query.get_or_404(challenge_id)
-
-    try:
-        # Удаляем задачу (каскадное удаление удалит связанные записи)
-        db.session.delete(challenge)
-        db.session.commit()
-        return jsonify({"success": True, "message": "Флаг и все связанные данные успешно удалены."})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"success": False, "message": f"Ошибка при удалении флага: {str(e)}"})
-
 @app.route('/upload_avatar', methods=['POST'])
 @login_required
 def upload_avatar():
@@ -1706,27 +976,3 @@ def edit_profile():
         return redirect(url_for('profile'))
 
     return render_template('edit_profile.html')
-
-import requests
-def send_rocket_chat_message(message, channel):
-    # URL вашего Rocket.Chat сервера
-    url = "http://localhost:3000/api/v1/chat.postMessage"
-
-    # Токен и ID пользователя (можно получить через API или вручную)
-    headers = {
-        "X-Auth-Token": "MWuhMZbCN9XCDjy9PGX-X0AIY4gKZ7cSFVj5Cl9ofKa",
-        "X-User-Id": "wbWWwAwj8HofvrqYw"
-    }
-
-    # Данные для отправки сообщения
-    payload = {
-        "channel": channel,  # Имя канала или ID
-        "text": message      # Текст сообщения
-    }
-
-    # Отправка запроса
-    response = requests.post(url, headers=headers, json=payload)
-    if response.status_code == 200:
-        print("Сообщение успешно отправлено!")
-    else:
-        print(f"Ошибка: {response.status_code}, {response.text}")
