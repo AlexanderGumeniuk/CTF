@@ -1,0 +1,24 @@
+{% extends "admin_base_competition.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Критическое событие: {{ critical_event.title }}</h1>
+
+    <!-- Карточка с описанием события -->
+    <div class="event-card">
+        <div class="event-card-body">
+            <h5 class="event-card-title">{{ critical_event.title }}</h5>
+            <p class="event-card-text">{{ critical_event.description }}</p>
+        </div>
+    </div>
+
+    <!-- Кнопка для отправки отчета (для пользователя) -->
+
+    <!-- Кнопка для возврата к списку КС -->
+    <div class="mt-3">
+        <a href="{{ url_for('admin_competition_critical_events', competition_id=competition.id) }}" class="btn btn-secondary">
+            Назад к списку КС
+        </a>
+    </div>
+</div>
+{% endblock %}

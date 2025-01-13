@@ -1,0 +1,106 @@
+<!-- templates/includes/_navbar.html -->
+<nav>
+    <style>
+        /* Основные стили для навигации */
+        nav {
+            background: #1e1f26;
+            padding: 1rem;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Стили для ссылок */
+        .nav-link {
+            color: #9370db; /* Фиолетовый цвет текста */
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+            border-radius: 5px;
+            background: transparent; /* Прозрачный фон */
+        }
+
+        .nav-link:hover {
+            color: #bb86fc; /* Более яркий фиолетовый при наведении */
+        }
+
+        /* Стили для активной ссылки */
+        .nav-link.active {
+            color: #bb86fc;
+            background: rgba(147, 112, 219, 0.1); /* Легкий фиолетовый фон */
+        }
+
+        /* Стили для выпадающего списка */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #1e1f26;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            z-index: 1000;
+            min-width: 160px;
+        }
+
+        .dropdown-content a {
+            color: #9370db; /* Фиолетовый цвет текста */
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            display: block;
+            transition: color 0.3s ease;
+            background: transparent; /* Прозрачный фон */
+        }
+
+        .dropdown-content a:hover {
+            color: #bb86fc; /* Более яркий фиолетовый при наведении */
+        }
+
+        /* Показ выпадающего списка */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+    </style>
+
+    <div class="nav-container">
+        <!-- Ссылка на флаги -->
+        <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
+        <a href="{{ url_for('competition_challenges', competition_id=competition.id) }}"
+           class="nav-link {% if request.endpoint == 'competition_challenges' %}active{% endif %}">
+            Флаги
+        </a>
+
+        <!-- Выпадающий список для инцидентов -->
+        <div class="dropdown">
+            <a href="#" class="nav-link {% if request.endpoint in ['create_incident', 'user_competition_incidents'] %}active{% endif %}">
+                Инциденты
+            </a>
+            <div class="dropdown-content">
+                <a href="{{ url_for('create_incident', competition_id=competition.id) }}"
+                   class="{% if request.endpoint == 'create_incident' %}active{% endif %}">
+                    Создать инцидент
+                </a>
+                <a href="{{ url_for('user_competition_incidents', competition_id=competition.id) }}"
+                   class="{% if request.endpoint == 'user_competition_incidents' %}active{% endif %}">
+                    Мои инциденты
+                </a>
+            </div>
+        </div>
+
+        <!-- Ссылка на критические события -->
+        <a href="{{ url_for('list_critical_events', competition_id=competition.id) }}"
+           class="nav-link {% if request.endpoint == 'list_critical_events' %}active{% endif %}">
+            Критические события
+        </a>
+    </div>
+</nav>

@@ -6,6 +6,7 @@ from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalE
 from functools import wraps
 from flask import redirect, url_for, flash
 from flask_login import current_user
+from sqlalchemy.orm.attributes import flag_modified
 import os
 from flask import current_app, flash, redirect, url_for
 from app.models import CriticalEvent, CriticalEventResponse
@@ -14,6 +15,7 @@ from flask_uploads import UploadNotAllowed
 import uuid
 import logging
 from sqlalchemy.exc import IntegrityError
+import base64
 # Настройка логирования
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -35,11 +37,8 @@ def delete_screenshots(screenshots):
                 except Exception as e:
                     print(f"Ошибка при удалении файла {screenshot}: {e}")
 def generate_unique_filename(filename):
-    """
-    Генерирует уникальное имя файла, сохраняя его расширение.
-    """
-    ext = os.path.splitext(filename)[1]  # Получаем расширение файла
-    unique_name = f"{uuid.uuid4().hex}{ext}"  # Генерируем уникальное имя
+    ext = filename.rsplit('.', 1)[1].lower()  # Получаем расширение файла
+    unique_name = f"{uuid.uuid4().hex}.{ext}"  # Генерируем уникальное имя
     return unique_name
 def admin_required(f):
     @wraps(f)
@@ -84,7 +83,7 @@ def create_competition():
 @login_required
 def list_competitions():
     competitions = Competition.query.all()
-    return render_template('competitions/list_competitions.html', competitions=competitions)
+    return render_template('competitions/admin/list_competitions.html', competitions=competitions)
 # Маршрут для редактирования соревнования
 @app.route('/admin/competitions/edit/<int:competition_id>', methods=['GET', 'POST'])
 @login_required
@@ -118,6 +117,7 @@ def delete_competition(competition_id):
     db.session.commit()
     flash('Соревнование успешно удалено!', 'success')
     return redirect(url_for('list_competitions'))
+
 @app.route('/admin/competitions/view/<int:competition_id>')
 @login_required
 @admin_required
@@ -141,7 +141,7 @@ def view_competition(competition_id):
     teams = Team.query.filter_by(competition_id=competition_id).count()
 
     return render_template(
-        'competitions/view_competition.html',
+        'competitions/admin/view_competition.html',
         competition=competition,
         total_flags=total_flags,
         total_incidents=total_incidents,
@@ -261,7 +261,7 @@ def view_flags_in_competition(competition_id):
     flags = Challenge.query.filter_by(competition_id=competition_id).all()
 
     return render_template(
-        'admin/flags_in_competition.html',
+        'competitions/admin/flags_in_competition.html',
         competition=competition,
         flags=flags  # Передаем флаги в шаблон
     )
@@ -272,7 +272,7 @@ def view_flags_in_competition(competition_id):
 def add_team_to_competition(competition_id):
     # Получаем соревнование по ID
     competition = Competition.query.get_or_404(competition_id)
-
+    con_team = Team.query.filter_by(competition_id=competition_id).all()
     if request.method == 'POST':
         # Получаем ID команды из формы
         team_id = request.form.get('team_id')
@@ -298,10 +298,27 @@ def add_team_to_competition(competition_id):
 
     # Получаем список всех команд, которые еще не участвуют в этом соревновании
     teams = Team.query.filter((Team.competition_id != competition_id) | (Team.competition_id.is_(None))).all()
+    logger.error(f"Ошибка IntegrityError: {con_team}")
+    return render_template('competitions/admin/add_team_to_competition.html', competition=competition, teams=teams,con_team=con_team)
 
-    return render_template('competitions/add_team_to_competition.html', competition=competition, teams=teams)
+@app.route('/admin/competitions/<int:competition_id>/remove_team/<int:team_id>', methods=['POST'])
+@login_required
+@admin_required
+def remove_team_from_competition(competition_id, team_id):
+    competition = Competition.query.get_or_404(competition_id)
+    team = Team.query.get_or_404(team_id)
 
+    # Проверяем, что команда участвует в этом соревновании
+    if team.competition_id != competition_id:
+        flash('Команда не участвует в этом соревновании.', 'warning')
+        return redirect(url_for('add_team_to_competition', competition_id=competition_id))
 
+    # Удаляем команду из соревнования (сбрасываем competition_id)
+    team.competition_id = None
+    db.session.commit()
+
+    flash(f'Команда "{team.name}" успешно удалена из соревнования!', 'success')
+    return redirect(url_for('add_team_to_competition', competition_id=competition_id))
 @app.route('/competitions')
 @login_required
 def user_competitions():
@@ -321,7 +338,7 @@ def user_competitions():
     ).all()
 
     return render_template(
-        'competitions/user_competitions.html',
+        'competitions/user/user_competitions.html',
         active_competitions=active_competitions,
         finished_competitions=finished_competitions,
         planned_competitions=planned_competitions
@@ -351,9 +368,10 @@ def view_user_competition(competition_id):
         critical_events=critical_events
     )
 
-@app.route('/competitions/<int:competition_id>/challenges')
+@app.route('/competitions/<int:competition_id>/challenges', defaults={'filter': 'all'})
+@app.route('/competitions/<int:competition_id>/challenges/<filter>')
 @login_required
-def competition_challenges(competition_id):
+def competition_challenges(competition_id, filter):
     # Получаем соревнование по ID
     competition = Competition.query.get_or_404(competition_id)
 
@@ -362,20 +380,32 @@ def competition_challenges(competition_id):
         flash('Вы не участвуете в этом соревновании.', 'danger')
         return redirect(url_for('user_competitions'))
 
-    # Получаем задачи (флаги) для этого соревнования
+    # Получаем все задачи для этого соревнования
     challenges = Challenge.query.filter_by(competition_id=competition_id).all()
 
-    # Получаем прогресс пользователя по флагам
-    solved_challenges = UserChallenge.query.filter_by(
-        user_id=current_user.id,
-        solved=True
-    ).join(Challenge).filter(Challenge.competition_id == competition_id).all()
+    # Получаем ID решенных задач текущего пользователя
+    solved_challenge_ids = [
+        uc.challenge_id for uc in UserChallenge.query.filter_by(
+            user_id=current_user.id,
+            solved=True
+        ).all()
+    ]
+
+    # Фильтруем задачи в зависимости от параметра filter
+    if filter == 'solved':
+        challenges = [challenge for challenge in challenges if challenge.id in solved_challenge_ids]
+    elif filter == 'unsolved':
+        challenges = [challenge for challenge in challenges if challenge.id not in solved_challenge_ids]
+
+    # Получаем список решенных задач для отображения статуса
+    solved_challenges = [challenge for challenge in challenges if challenge.id in solved_challenge_ids]
 
     return render_template(
-        'competitions/competition_challenges.html',
+        'competitions/user/competition_challenges.html',
         competition=competition,
         challenges=challenges,
-        solved_challenges=solved_challenges
+        solved_challenges=solved_challenges,
+        filter_type=filter  # Передаем текущий фильтр в шаблон
     )
 
 ###########################################################Incident####################################################################
@@ -452,7 +482,7 @@ def create_incident(competition_id):
         flash('Инцидент успешно создан и отправлен на проверку!', 'success')
         return redirect(url_for('view_user_competition', competition_id=competition_id))
 
-    return render_template('create_incident.html', competition=competition)
+    return render_template('competitions/user/create_incident.html', competition=competition)
 
 @app.route('/competitions/<int:competition_id>/incidents')
 @login_required
@@ -464,9 +494,20 @@ def view_competition_incidents(competition_id):
         flash('Вы не участвуете в этом соревновании.', 'danger')
         return redirect(url_for('user_competitions'))
 
-    # Получаем инциденты, созданные пользователем или его командой
-    incidents = Incident.query.filter_by(competition_id=competition_id, team_id=current_user.team_id).all()
-    return render_template('competition_incidents.html', competition=competition, incidents=incidents)
+    # Получаем параметр status из запроса
+    status = request.args.get('status', 'all')  # По умолчанию 'all'
+
+    # Базовый запрос для инцидентов
+    incidents_query = Incident.query.filter_by(competition_id=competition_id, team_id=current_user.team_id)
+
+    # Фильтрация по статусу
+    if status != 'all':
+        incidents_query = incidents_query.filter_by(status=status)
+
+    # Получаем отфильтрованные инциденты
+    incidents = incidents_query.all()
+
+    return render_template('competition_incidents.html', competition=competition, incidents=incidents, status=status)
 
 @app.route('/admin/competitions/<int:competition_id>/review_incident/<int:incident_id>', methods=['GET', 'POST'])
 @login_required
@@ -564,7 +605,7 @@ def admin_competition_incidents(competition_id):
         incidents = Incident.query.filter_by(competition_id=competition_id, status=status).all()
 
     return render_template(
-        'admin/competition_incidents.html',
+        'competitions/admin/competition_incidents.html',
         competition=competition,
         incidents=incidents,
         status=status
@@ -599,7 +640,7 @@ def user_competition_incidents(competition_id):
         ).all()
 
     return render_template(
-        'user/competition_incidents.html',
+        'competitions/user/competition_incidents.html',
         competition=competition,
         incidents=incidents,
         status=status
@@ -612,6 +653,7 @@ def edit_incident(competition_id, incident_id):
     # Получаем соревнование и инцидент
     competition = Competition.query.get_or_404(competition_id)
     incident = Incident.query.get_or_404(incident_id)
+    incident = db.session.merge(incident)
 
     # Проверяем, что инцидент принадлежит команде пользователя
     if not current_user.team or incident.team_id != current_user.team_id:
@@ -642,6 +684,7 @@ def edit_incident(competition_id, incident_id):
         incident.siem_id = request.form['siem_id']
         incident.siem_link = request.form['siem_link']
         incident.status = 'pending'
+# Обработка загрузки новых скриншотов
         if 'screenshots' in request.files:
             files = request.files.getlist('screenshots')
             logger.debug(f"Получено файлов для загрузки: {len(files)}")
@@ -667,27 +710,49 @@ def edit_incident(competition_id, incident_id):
                 else:
                     logger.error(f"Файл не прошел проверку: {file.filename}")
 
+        # Логируем скриншоты перед сохранением
+        #logger.info(f"Скриншоты перед сохранением: {incident.screenshots}")
 
-        db.session.commit()
-        flash('Инцидент успешно обновлен!', 'success')
-        return redirect(url_for('view_incident', competition_id=competition_id, incident_id=incident_id))
+        # Привязываем объект к текущей сессии
+        incident = db.session.merge(incident)
 
-    return render_template('user/edit_incident.html', competition=competition, incident=incident)
+        # Сохраняем изменения в базе данных
+        try:
+            flag_modified(incident, 'screenshots')
+            db.session.commit()
+            logger.info(f"Скриншоты после сохранения: {incident.screenshots}")
+            return render_template('competitions/user/view_incident.html', competition=competition, incident=incident)
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Ошибка при сохранении инцидента: {e}")
+            flash('Произошла ошибка при сохранении инцидента.', 'danger')
+        # Уведомляем пользователя об успешном обновлении
+        flash('Инцидент обновлен и отправлен на проверку!', 'success')
+
+
+
+# Отображаем форму редактирования
+    return render_template('competitions/user/edit_incident.html', competition=competition, incident=incident)
 
 
 @app.route('/competitions/<int:competition_id>/incidents/<int:incident_id>')
 @login_required
 def view_incident(competition_id, incident_id):
-    # Получаем соревнование и инцидент
     competition = Competition.query.get_or_404(competition_id)
     incident = Incident.query.get_or_404(incident_id)
 
-    # Проверяем, что инцидент принадлежит команде пользователя
+    # Проверяем, что инцидент принадлежит текущему пользователю или его команде
     if not current_user.team or incident.team_id != current_user.team_id:
         flash('У вас нет доступа к этому инциденту.', 'danger')
-        return redirect(url_for('user_competition_incidents', competition_id=competition_id))
+        return redirect(url_for('user_competitions'))
 
-    return render_template('user/view_incident.html', competition=competition, incident=incident)
+    # Если статус "needs_revision", перенаправляем на редактирование
+    if incident.status == 'needs_revision':
+        return redirect(url_for('edit_incident', competition_id=competition_id, incident_id=incident_id))
+
+
+    # Иначе показываем страницу просмотра
+    return render_template('competitions/user/view_incident.html', competition=competition, incident=incident)
 
 ###################################CriticalEvent###############################################################################
 @app.route('/admin/competitions/<int:competition_id>/critical_events')
@@ -701,17 +766,36 @@ def admin_competition_critical_events(competition_id):
     critical_events = CriticalEvent.query.filter_by(competition_id=competition_id).all()
 
     return render_template(
-        'admin/critical_events/list_critical_events.html',
+        'competitions/admin/list_critical_events.html',
         competition=competition,
         critical_events=critical_events
     )
-# Маршрут для просмотра списка КС в соревновании
 @app.route('/competitions/<int:competition_id>/critical_events')
 @login_required
 def list_critical_events(competition_id):
+    # Получаем соревнование
     competition = Competition.query.get_or_404(competition_id)
+
+    # Получаем все критические события для этого соревнования
     critical_events = CriticalEvent.query.filter_by(competition_id=competition_id).all()
-    return render_template('critical_events/list_critical_events.html', competition=competition, critical_events=critical_events)
+
+    # Получаем текущую команду пользователя
+    user_team = current_user.team
+
+    # Если пользователь состоит в команде, получаем отчеты его команды
+    team_reports = []
+    if user_team:
+        team_reports = CriticalEventResponse.query.filter_by(
+            team_id=user_team.id,
+            competition_id=competition_id
+        ).all()
+
+    return render_template(
+        'competitions/user/list_critical_events.html',
+        competition=competition,
+        critical_events=critical_events,
+        team_reports=team_reports  # Передаем отчеты команды в шаблон
+    )
 
 # Маршрут для создания нового КС (только для администратора)
 @app.route('/admin/competitions/<int:competition_id>/critical_events/create', methods=['GET', 'POST'])
@@ -733,17 +817,17 @@ def create_critical_event(competition_id):
         db.session.add(critical_event)
         db.session.commit()
         flash('Критическое событие успешно создано!', 'success')
-        return redirect(url_for('list_critical_events', competition_id=competition_id))
+        return redirect(url_for('admin_competition_critical_events', competition_id=competition_id))
 
-    return render_template('critical_events/create_critical_event.html', competition=competition)
+    return render_template('competitions/admin/create_critical_event.html', competition=competition)
 
 # Маршрут для просмотра деталей КС
-@app.route('/competitions/<int:competition_id>/critical_events/<int:critical_event_id>')
+@app.route('/admin/competitions/<int:competition_id>/critical_events/<int:critical_event_id>')
 @login_required
 def view_critical_event(competition_id, critical_event_id):
     competition = Competition.query.get_or_404(competition_id)
     critical_event = CriticalEvent.query.get_or_404(critical_event_id)
-    return render_template('critical_events/view_critical_event.html', competition=competition, critical_event=critical_event)
+    return render_template('competitions/admin/view_critical_event.html', competition=competition, critical_event=critical_event)
 
 # Маршрут для редактирования КС (только для администратора)
 @app.route('/admin/competitions/<int:competition_id>/critical_events/<int:critical_event_id>/edit', methods=['GET', 'POST'])
@@ -760,7 +844,7 @@ def edit_critical_event(competition_id, critical_event_id):
         flash('Критическое событие успешно обновлено!', 'success')
         return redirect(url_for('view_critical_event', competition_id=competition_id, critical_event_id=critical_event_id))
 
-    return render_template('critical_events/edit_critical_event.html', competition=competition, critical_event=critical_event)
+    return render_template('competitions/admin/edit_critical_event.html', competition=competition, critical_event=critical_event)
 
 # Маршрут для удаления КС (только для администратора)
 @app.route('/admin/competitions/<int:competition_id>/critical_events/<int:critical_event_id>/delete', methods=['POST'])
@@ -773,7 +857,7 @@ def delete_critical_event(competition_id, critical_event_id):
     db.session.delete(critical_event)
     db.session.commit()
     flash('Критическое событие успешно удалено!', 'success')
-    return redirect(url_for('list_critical_events', competition_id=competition_id))
+    return redirect(url_for('admin_competition_critical_events', competition_id=competition_id))
 
 @app.route('/competitions/<int:competition_id>/fill_critical_event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
@@ -790,6 +874,28 @@ def fill_critical_event(competition_id, event_id):
         flash('Это критическое событие не принадлежит данному соревнованию.', 'danger')
         return redirect(url_for('view_user_competition', competition_id=competition_id))
 
+    # Проверяем, есть ли уже отчет со статусом "на проверке" (pending)
+    existing_pending_report = CriticalEventResponse.query.filter_by(
+        event_id=event.id,
+        team_id=current_user.team_id,
+        status='pending'
+    ).first()
+
+    if existing_pending_report:
+        flash('У вас уже есть отчет, ожидающий проверки. Вы не можете отправить новый отчет, пока текущий не будет проверен.', 'warning')
+        return redirect(url_for('view_user_competition', competition_id=competition_id))
+
+    # Проверяем, есть ли уже отчет со статусом "принят" (approved)
+    existing_approved_report = CriticalEventResponse.query.filter_by(
+        event_id=event.id,
+        team_id=current_user.team_id,
+        status='approved'
+    ).first()
+
+    if existing_approved_report:
+        flash('Отчет по этому критическому событию уже принят. Вы не можете отправить новый отчет.', 'warning')
+        return redirect(url_for('view_user_competition', competition_id=competition_id))
+
     response = CriticalEventResponse.query.filter_by(
         event_id=event.id,
         team_id=current_user.team_id
@@ -801,7 +907,7 @@ def fill_critical_event(competition_id, event_id):
             if response:
                 response.response = request.form['response']
                 response.status = 'pending'
-                rescompetition_id=competition_id
+                response.competition_id = competition_id
             else:
                 response = CriticalEventResponse(
                     event_id=event.id,
@@ -809,13 +915,14 @@ def fill_critical_event(competition_id, event_id):
                     team_id=current_user.team_id,
                     response=request.form['response'],
                     status='pending',
+                    competition_id=competition_id
                 )
                 db.session.add(response)
                 db.session.flush()  # Сохраняем отчет, чтобы получить его ID
 
             # Обработка шагов
             step_ids = request.form.getlist('step_id[]')
-            step_names = request.form.getlist('step_name[]')  # Добавлено: получаем step_names
+            step_names = request.form.getlist('step_name[]')
             descriptions = request.form.getlist('description[]')
             start_times = request.form.getlist('start_time[]')
             end_times = request.form.getlist('end_time[]')
@@ -945,7 +1052,7 @@ def admin_critical_event_reports(competition_id):
     ).all()
 
     return render_template(
-        'admin/critical_event_responses.html',
+        'competitions/admin/critical_event_responses.html',
         competition=competition,
         reports=reports
     )
@@ -998,7 +1105,7 @@ def review_critical_event_report(competition_id, report_id):
         return redirect(url_for('admin_critical_event_reports', competition_id=competition_id))
 
     return render_template(
-        'admin/review_response.html',
+        'competitions/admin/review_response.html',
         competition_id=competition_id,
         response=report,  # Переименовано в response
         steps=steps

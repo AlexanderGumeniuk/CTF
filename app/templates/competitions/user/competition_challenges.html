@@ -1,0 +1,142 @@
+{% extends "base_competition.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- Кнопка "Назад" -->
+    <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="back-button">
+        ← Назад к соревнованию
+    </a>
+
+    <h2>Задачи соревнования: {{ competition.title }}</h2>
+
+
+    <!-- Вкладки для фильтрации -->
+    <div class="tabs">
+        <a href="{{ url_for('competition_challenges', competition_id=competition.id, filter='all') }}"
+           class="tab-link {% if filter_type == 'all' %}active{% endif %}">
+            <span class="tab-icon all"></span> Все
+        </a>
+        <a href="{{ url_for('competition_challenges', competition_id=competition.id, filter='solved') }}"
+           class="tab-link {% if filter_type == 'solved' %}active{% endif %}">
+            <span class="tab-icon solved"></span> Решённые
+        </a>
+        <a href="{{ url_for('competition_challenges', competition_id=competition.id, filter='unsolved') }}"
+           class="tab-link {% if filter_type == 'unsolved' %}active{% endif %}">
+            <span class="tab-icon unsolved"></span> Нерешённые
+        </a>
+    </div>
+
+    <!-- Список задач -->
+    <div class="challenges-list">
+        {% for challenge in challenges %}
+            <div class="challenge-item {% if challenge in solved_challenges %}solved{% endif %}">
+                <div class="challenge-header">
+                    <!-- Иконка статуса -->
+                    {% if challenge in solved_challenges %}
+                        <div class="status-icon">
+                            <span class="icon">✔️</span>
+                        </div>
+                    {% else %}
+                        <div class="status-icon-red">
+                            <span class="icon">✖️</span>
+                        </div>
+                    {% endif %}
+
+                    <div>
+                        <!-- Кружок сложности -->
+                        <div class="difficulty-container">
+                            <div class="difficulty-circle">
+                                <svg width="20" height="20" viewBox="0 0 20 20">
+                                    <circle cx="10" cy="10" r="9" fill="none" stroke="#e0e0e0" stroke-width="3" />
+                                    <circle cx="10" cy="10" r="9" fill="none" stroke-width="3"
+                                            stroke-dasharray="81.681" stroke-dashoffset="81.681"
+                                            transform="rotate(-90 10 10)" />
+                                </svg>
+                            </div>
+                            <p class="difficulty">
+                                {% if challenge.points >= 0 and challenge.points < 100 %}
+                                    Низкая
+                                {% elif challenge.points >= 100 and challenge.points < 500 %}
+                                    Средняя
+                                {% elif challenge.points >= 500 and challenge.points < 1000 %}
+                                    Сложная
+                                {% elif challenge.points >= 1000 and challenge.points <= 2000 %}
+                                    Очень сложная
+                                {% endif %}
+                            </p>
+                        </div>
+                        <!-- Название задачи -->
+                        <div class="challenge-title">
+                            <h3>{{ challenge.title }}</h3>
+                        </div>
+                    </div>
+                    <!-- Баллы и кнопка раскрытия -->
+                    <div class="challenge-points">
+                        <p>{{ challenge.points }} баллов</p>
+                        <button class="toggle-button" onclick="toggleDescription(this)">▼</button>
+                    </div>
+                </div>
+                <!-- Скрытый контент -->
+                <div class="challenge-content">
+                    <div class="challenge-info">
+                        <p><strong>Описание:</strong> {{ challenge.description }}</p>
+                        <p><strong>Категория:</strong> {{ challenge.category }}</p>
+                        {% if challenge.hint %}
+                            <p><strong>Подсказка:</strong> {{ challenge.hint }}</p>
+                        {% endif %}
+                    </div>
+                    <!-- Форма для отправки флага (только для нерешенных задач) -->
+                    {% if challenge not in solved_challenges %}
+                        <div class="challenge-form">
+                            <form method="POST" action="{{ url_for('submit_flag', challenge_id=challenge.id) }}">
+                                <input type="text" name="flag" placeholder="Введите флаг" required>
+                                <button type="submit">Отправить</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    // Функция для переключения видимости описания
+
+    function toggleDescription(button) {
+        const content = button.closest('.challenge-item').querySelector('.challenge-content');
+        if (content.style.display === 'block') {
+          content.style.display = 'none';
+          button.textContent = '▼';
+        } else {
+          content.style.display = 'block';
+          button.textContent = '▲';
+        }
+    }
+    // Устанавливаем прогресс круга и цвет в зависимости от сложности
+    document.querySelectorAll('.difficulty-circle svg circle:nth-child(2)').forEach(circle => {
+        const challengeItem = circle.closest('.challenge-item');
+        const points = parseInt(challengeItem.querySelector('.challenge-points p').textContent);
+        let progress, color;
+
+        if (points >= 0 && points < 100) {
+            progress = 25;
+            color = '#00bcd4'; // Голубой
+        } else if (points >= 100 && points < 500) {
+            progress = 50;
+            color = '#ff9800'; // Оранжевый
+        } else if (points >= 500 && points < 1000) {
+            progress = 75;
+            color = '#f44336'; // Красный
+        } else if (points >= 1000 && points <= 2000) {
+            progress = 100;
+            color = '#9c27b0'; // Фиолетовый
+        }
+
+        const circumference = 2 * Math.PI * 13;
+        const offset = circumference - (circumference * progress) / 100;
+        circle.style.strokeDashoffset = offset;
+        circle.style.stroke = color;
+    });
+</script>
+{% endblock %}

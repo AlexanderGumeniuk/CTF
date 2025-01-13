@@ -134,3 +134,66 @@ nav a:hover {
 
 .dropdown-content a {
     color: #fff; /* Белый текст в выпадающем
+
+    .modal {
+                display: none; /* Скрыто по умолчанию */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7); /* Полупрозрачный чёрный фон */
+                z-index: 1000;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .modal-content {
+                background-color: #1E1E1E; /* Тёмный фон */
+                padding: 20px;
+                border-radius: 10px;
+                border: 2px solid transparent; /* Прозрачная рамка по умолчанию */
+                max-width: 400px;
+                width: 100%;
+                text-align: center;
+                position: relative;
+                animation: fadeIn 0.3s ease-in-out;
+            }
+
+            .modal-content .close {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                color: #F5F5F5; /* Светлый текст */
+                font-size: 24px;
+                cursor: pointer;
+            }
+
+            .modal-content .close:hover {
+                color: #FF4500; /* Оранжевый при наведении */
+            }
+
+            .modal-content p {
+                margin: 0;
+                font-size: 16px;
+                color: #F5F5F5; /* Светлый текст */
+            }
+
+            /* Цвета для категорий сообщений */
+            .modal-content.success {
+                border-color: #00FF00; /* Зелёный для успеха */
+            }
+
+            .modal-content.error {
+                border-color: #FF4500; /* Оранжево-красный для ошибок */
+            }
+
+            .modal-content.info {
+                border-color: #9370DB; /* Фиолетовый для информации */
+            }
+
+            /* Анимация для появления модального окна */
+            @keyframes fadeIn {
+                from { opacity: 0; transform: scale(0.9); }
+                to { opacity: 1; transform: scale(1); }
+            }

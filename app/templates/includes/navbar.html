@@ -84,13 +84,12 @@
         {% if current_user.is_authenticated %}
         {% if not current_user.is_admin %}
         <ul class="navbar-nav">
-    <li class="nav-item">
         <a class="nav-link" href="{{ url_for('user_competitions') }}">Соревнования</a>
-    </li>
+
 </ul>
 
             {% endif %}
-          
+
 
 
             <!-- Ссылка на администрирование (только для админа) -->

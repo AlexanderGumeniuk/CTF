@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<<style media="screen">
+  /* Стили для списка соревнований */
+.competition-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+}
+
+.competition-item {
+    background: rgba(147, 112, 219, 0.1);
+    border: 1px solid rgba(147, 112, 219, 0.3);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.competition-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.3);
+}
+
+.competition-link {
+    display: block;
+    padding: 15px;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+}
+
+.competition-status {
+    float: right;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.no-competitions {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Кнопка "Создать новое соревнование" */
+.btn-primary {
+    display: inline-block;
+    padding: 10px 20px;
+    background: rgba(147, 112, 219, 0.3);
+    color: white;
+    border-radius: 25px;
+    text-decoration: none;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(147, 112, 219, 0.5);
+}
+
+.btn-primary:hover {
+    background: rgba(147, 112, 219, 0.5);
+    transform: translateY(-2px);
+}
+h1
+{
+  color:white;
+}
+</style>
+<div class="container">
+    <h1>Список соревнований</h1>
+
+    <!-- Список соревнований -->
+    <ul class="competition-list">
+        {% for competition in competitions %}
+        <li class="competition-item">
+            <a href="{{ url_for('view_competition', competition_id=competition.id) }}" class="competition-link">
+                {{ competition.title }} <span class="competition-status">{{ competition.status }}</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="no-competitions">Нет доступных соревнований.</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Кнопка создания нового соревнования -->
+    <a href="{{ url_for('create_competition') }}" class="btn btn-primary">Создать новое соревнование</a>
+</div>
+{% endblock %}

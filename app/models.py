@@ -5,6 +5,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 import os
 import uuid
+team_competition = db.Table(
+    'team_competition',
+    db.Column('team_id', db.Integer, db.ForeignKey('team.id'), primary_key=True),
+    db.Column('competition_id', db.Integer, db.ForeignKey('competition.id'), primary_key=True)
+)
 
 class UserChallenge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -94,6 +99,12 @@ class Team(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     users = db.relationship('User', back_populates='team', lazy=True)  # Связь с пользователями
     competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=True)
+
+    competitions = db.relationship(
+        'Competition',
+        secondary=team_competition,
+        back_populates='teams'
+    )
 
     def __repr__(self):
         return f"Team('{self.name}')"
@@ -246,6 +257,11 @@ class Competition(db.Model):
     end_date = db.Column(db.DateTime, nullable=False)    # Дата окончания
     status = db.Column(db.String(20), default='planned')  # Статус: planned, active, finished
     created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Дата создания
+    teams = db.relationship(
+        'Team',
+        secondary=team_competition,
+        back_populates='competitions'
+    )
 
     # Связи с другими моделями
     challenges = db.relationship('Challenge', backref='competition', lazy=True)  # Список флагов (задач)
@@ -254,3 +270,4 @@ class Competition(db.Model):
 
     def __repr__(self):
         return f"Competition('{self.title}', Status: '{self.status}')"
+# Ассоциативная таблица для связи Team и Competition

@@ -1,116 +1,75 @@
-{% extends "base.html" %}
+{% extends "base_competition.html" %}
 {% block content %}
 
 <div class="container">
     <h1>Инциденты в соревновании: {{ competition.title }}</h1>
 
     <!-- Фильтр по статусу -->
-    <div class="mb-3">
+    <div class="tabs mb-3">
         <a href="{{ url_for('user_competition_incidents', competition_id=competition.id, status='all') }}"
-           class="btn btn-secondary {% if status == 'all' %}active{% endif %}">
-            Все
+           class="tab-link {% if status == 'all' %}active{% endif %}">
+            <span class="tab-icon all"></span> Все
         </a>
         <a href="{{ url_for('user_competition_incidents', competition_id=competition.id, status='pending') }}"
-           class="btn btn-warning {% if status == 'pending' %}active{% endif %}">
-            Ожидают проверки
+           class="tab-link {% if status == 'pending' %}active{% endif %}">
+            <span class="tab-icon pending"></span> Ожидают проверки
         </a>
         <a href="{{ url_for('user_competition_incidents', competition_id=competition.id, status='approved') }}"
-           class="btn btn-success {% if status == 'approved' %}active{% endif %}">
-            Одобрены
+           class="tab-link {% if status == 'approved' %}active{% endif %}">
+            <span class="tab-icon solved"></span> Одобрены
         </a>
         <a href="{{ url_for('user_competition_incidents', competition_id=competition.id, status='rejected') }}"
-           class="btn btn-danger {% if status == 'rejected' %}active{% endif %}">
-            Отклонены
+           class="tab-link {% if status == 'rejected' %}active{% endif %}">
+            <span class="tab-icon unsolved"></span> Отклонены
         </a>
         <a href="{{ url_for('user_competition_incidents', competition_id=competition.id, status='needs_revision') }}"
-           class="btn btn-info {% if status == 'needs_revision' %}active{% endif %}">
-            На доработку
+           class="tab-link {% if status == 'needs_revision' %}active{% endif %}">
+            <span class="tab-icon needs_revision"></span> На доработку
         </a>
     </div>
 
     <!-- Таблица с инцидентами -->
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Название</th>
-                <th>Статус</th>
-                <th>Дата создания</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for incident in incidents %}
-            <tr>
-                <td>{{ incident.id }}</td>
-                <td>{{ incident.title }}</td>
-                <td>
+    <div class="list-group">
+        {% for incident in incidents %}
+        <div class="list-group-item">
+            <div class="challenge-header">
+                <div class="status-icon">
                     {% if incident.status == 'pending' %}
-                        <span class="badge bg-warning">Ожидает проверки</span>
+                        ⏳
                     {% elif incident.status == 'approved' %}
-                        <span class="badge bg-success">Одобрен</span>
+                        ✔️
                     {% elif incident.status == 'rejected' %}
-                        <span class="badge bg-danger">Отклонен</span>
+                        ❌
                     {% elif incident.status == 'needs_revision' %}
-                        <span class="badge bg-info">На доработку</span>
+                        🔄
                     {% endif %}
-                </td>
-                <td>{{ incident.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
-                <td>
+                </div>
+                <div class="challenge-title">
+                    <h3>{{ incident.title }}</h3>
+                    <small>ID: {{ incident.id }}</small>
+                </div>
+                <div class="challenge-points">
+                    <p>{{ incident.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
                     <a href="{{ url_for('view_incident', competition_id=competition.id, incident_id=incident.id) }}"
                        class="btn btn-primary btn-sm">
                         Подробнее
                     </a>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="5" class="text-center">Инцидентов не найдено.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="list-group-item">
+            <p class="text-center">Инцидентов не найдено.</p>
+        </div>
+        {% endfor %}
+    </div>
 
     <!-- Кнопка для создания нового инцидента -->
     <div class="mt-3">
-        <a href="{{ url_for('create_incident', competition_id=competition.id) }}" class="btn btn-success">
+        <a href="{{ url_for('create_incident', competition_id=competition.id) }}" class="back-button">
             Создать новый инцидент
         </a>
     </div>
 </div>
-
-{% for incident in incidents %}
-<tr>
-    <td>{{ incident.id }}</td>
-    <td>{{ incident.title }}</td>
-    <td>
-        {% if incident.status == 'pending' %}
-            <span class="badge bg-warning">Ожидает проверки</span>
-        {% elif incident.status == 'approved' %}
-            <span class="badge bg-success">Одобрен</span>
-        {% elif incident.status == 'rejected' %}
-            <span class="badge bg-danger">Отклонен</span>
-        {% elif incident.status == 'needs_revision' %}
-            <span class="badge bg-info">На доработку</span>
-        {% endif %}
-    </td>
-    <td>{{ incident.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
-    <td>
-        <!-- Кнопка "Просмотр" -->
-        <a href="{{ url_for('view_incident', competition_id=competition.id, incident_id=incident.id) }}"
-           class="btn btn-primary btn-sm">
-            Просмотр
-        </a>
-
-        <!-- Кнопка "Редактировать" (только для статуса "На доработку") -->
-        {% if incident.status == 'needs_revision' %}
-        <a href="{{ url_for('edit_incident', competition_id=competition.id, incident_id=incident.id) }}"
-           class="btn btn-warning btn-sm">
-            Редактировать
-        </a>
-        {% endif %}
-    </td>
-</tr>
-{% endfor %}
 
 {% endblock %}

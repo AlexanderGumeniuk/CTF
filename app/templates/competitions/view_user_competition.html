@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_competition.html" %}
 
 {% block content %}
 <div class="container">
@@ -8,49 +8,75 @@
     <p><strong>Дата окончания:</strong> {{ competition.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
     <p><strong>Статус:</strong> {{ competition.status }}</p>
 
-    <!-- Ссылка на страницу решения флагов -->
-    <a href="{{ url_for('competition_challenges', competition_id=competition.id) }}" class="btn btn-primary mb-3">
-        Решить задачи
-    </a>
+    <!-- Информация о команде -->
+    <h3>Информация о команде</h3>
+    <div class="list-group">
+        <div class="list-group-item">
+            <h5>Название команды: {{ current_user.team.name if current_user.team else "Вы не в команде" }}</h5>
+            <p><strong>Участники:</strong></p>
+            <ul>
+                {% if current_user.team %}
+                    {% for member in current_user.team.members %}
+                        <li>{{ member.username }}</li>
+                    {% endfor %}
+                {% else %}
+                    <li>Вы не состоите в команде.</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
 
-    <!-- Список инцидентов -->
+    <!-- Информация о пользователе -->
+    <h3>Информация о пользователе</h3>
+    <div class="list-group">
+        <div class="list-group-item">
+            <h5>Имя пользователя: {{ current_user.username }}</h5>
+            <p><strong>Роль:</strong> {{ "Администратор" if current_user.is_admin else "Участник" }}</p>
+            <p><strong>Очки:</strong> {{ current_user.total_points }}</p>
+        </div>
+    </div>
+
+    <!-- Информация о флагах -->
+    <h3>Флаги</h3>
+    <div class="list-group">
+        <div class="list-group-item">
+            <h5>Решенные флаги</h5>
+            <p><strong>Количество решенных флагов:</strong> {{ solved_flags_count }}</p>
+            <p><strong>Последний решенный флаг:</strong> {{ last_solved_flag.title if last_solved_flag else "Нет данных" }}</p>
+        </div>
+    </div>
+
+    <!-- Информация об инцидентах -->
     <h3>Инциденты</h3>
-<a href="{{ url_for('create_incident', competition_id=competition.id) }}">Создать инцидент</a>
-<a href="{{ url_for('user_competition_incidents', competition_id=competition.id) }}">Список инцидентов</a>
-
-        Решить задачи
-    </a>
-    {% if incidents %}
     <div class="list-group">
-        {% for incident in incidents %}
-        <div class="list-group-item">
-            <h5 class="mb-1">{{ incident.title }}</h5>
-            <p class="mb-1">{{ incident.description }}</p>
-            <small>Статус: {{ incident.status }}</small><br>
-            <small>Дата создания: {{ incident.start_time.strftime('%Y-%m-%d %H:%M') }}</small>
-        </div>
-        {% endfor %}
+        {% if incidents %}
+            {% for incident in incidents %}
+            <div class="list-group-item">
+                <h5>{{ incident.title }}</h5>
+                <p>{{ incident.description }}</p>
+                <small><strong>Статус:</strong> {{ incident.status }}</small><br>
+                <small><strong>Дата создания:</strong> {{ incident.start_time.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: rgba(255, 255, 255, 0.7);">Нет зарегистрированных инцидентов.</p>
+        {% endif %}
     </div>
-    {% else %}
-    <p>Нет зарегистрированных инцидентов.</p>
-    {% endif %}
 
-    <!-- Список критических событий -->
+    <!-- Информация о критических событиях -->
     <h3>Критические события</h3>
-    <a href="{{ url_for('list_critical_events', competition_id=competition.id) }}">Список КС</a>
-
-    {% if critical_events %}
     <div class="list-group">
-        {% for event in critical_events %}
-        <div class="list-group-item">
-            <h5 class="mb-1">{{ event.title }}</h5>
-            <p class="mb-1">{{ event.description }}</p>
-            <small>Дата создания: {{ event.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-        </div>
-        {% endfor %}
+        {% if critical_events %}
+            {% for event in critical_events %}
+            <div class="list-group-item">
+                <h5>{{ event.title }}</h5>
+                <p>{{ event.description }}</p>
+                <small><strong>Дата создания:</strong> {{ event.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: rgba(255, 255, 255, 0.7);">Нет критических событий.</p>
+        {% endif %}
     </div>
-    {% else %}
-    <p>Нет критических событий.</p>
-    {% endif %}
 </div>
 {% endblock %}

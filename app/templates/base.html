@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask App</title>
+    <title>Киберполигон</title>
+    <style>
     <style>
         /* Основные стили */
         body {
@@ -100,83 +101,11 @@
         }
 
         /* Стили для навигации */
-        .navbar {
-            background-color: rgba(30, 30, 30, 0.9); /* Полупрозрачный темный фон */
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 2px solid #9370DB; /* Фиолетовая линия */
-        }
-
-        .navbar a {
-            color: #F5F5F5;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 16px;
-            transition: color 0.3s;
-        }
-
-        .navbar a:hover {
-            color: #9370DB; /* Фиолетовый при наведении */
-        }
-
-        .navbar .logo {
-            font-family: 'Courier New', Courier, monospace; /* Моноширинный шрифт для лого */
-            font-size: 24px;
-            color: #9370DB; /* Фиолетовый */
-            font-weight: bold;
-        }
-
-        /* Дополнительные стили для кнопок (если нужно) */
-        .button {
-            background-color: #9370DB; /* Фиолетовый */
-            color: #000;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s, box-shadow 0.3s;
-            border-radius: 5px;
-        }
-
-        .button:hover {
-            background-color: #7B68EE; /* Более яркий фиолетовый */
-            box-shadow: 0 0 10px #9370DB, 0 0 20px #9370DB; /* Неоновое свечение */
-        }
-
-        /* Стили для заголовков */
-        h1, h2, h3 {
-            font-family: 'Courier New', Courier, monospace; /* Моноширинный шрифт для заголовков */
-            color: #9370DB; /* Фиолетовый */
-        }
-
-        h1 {
-            font-size: 36px;
-        }
-
-        h2 {
-            font-size: 28px;
-        }
-
-        h3 {
-            font-size: 22px;
-        }
-
-        /* Стили для ссылок */
-        a {
-            color: #00BFFF; /* Неоново-синий */
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        a:hover {
-            color: #9370DB; /* Фиолетовый при наведении */
-        }
+        
     </style>
+
+    </style>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <!-- Canvas для анимации частиц -->

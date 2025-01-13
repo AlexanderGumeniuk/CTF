@@ -77,7 +77,10 @@
                 <a href="{{ url_for('manage_users') }}">Управление пользователями</a>
             </div>
         </div>
+        {% if current_user.is_admin %}
+            <a href="{{ url_for('list_competitions') }}" class="nav-link">Администрирование Соревнований</a>
 
+        {% endif %}
 
         <a href="{{ url_for('infrastructure') }}" class="nav-link">Инфраструктура</a>
     </div>

@@ -1,0 +1,71 @@
+{% extends "admin_base_competition.html" %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('view_competition', competition_id=competition.id) }}" class="btn btn-secondary">← Назад к соревнованию</a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить команду</title>
+    <link src="{{ url_for('static', filename='css/select2.min.css') }}" rel="stylesheet">
+    <style>
+        /* Ваши стили */
+    </style>
+
+    <div class="container">
+        <h2>Добавить команду в соревнование: {{ competition.title }}</h2>
+        <form method="POST" action="{{ url_for('add_team_to_competition', competition_id=competition.id) }}">
+            <div class="form-group">
+                <label for="team_id">Выберите команду:</label>
+                {% if teams %}
+                    <select class="form-control select2" id="team_id" name="team_id" required>
+                        <option value=""> </option>
+                        {% for team in teams %}
+                        <option value="{{ team.id }}">{{ team.name }}</option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <p class="no-teams">Нет доступных команд для добавления.</p>
+                {% endif %}
+            </div>
+            {% if teams %}
+                <button type="submit" class="btn btn-primary">Добавить команду</button>
+            {% endif %}
+
+            <div class="container">
+        </form>
+    </div>
+
+<script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/select2.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('#team_id').select2({
+                placeholder: "Выберите команду",
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap4',
+                language: "ru"
+            });
+        });
+    </script>
+
+    <!-- Список команд, которые уже участвуют в соревновании -->
+    <div class="added-teams mt-4">
+        <h3>Команды, участвующие в соревновании:</h3>
+        {% if con_team %}
+            <ul class="list-group">
+                {% for team in con_team %}
+                    <li class="list-group-item">
+                        {{ team.name }}
+                        <form method="POST" action="{{ url_for('remove_team_from_competition', competition_id=competition.id, team_id=team.id) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm float-right">Удалить</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Нет команд, участвующих в соревновании.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

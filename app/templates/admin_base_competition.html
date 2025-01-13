@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Киберполигон</title>
+    <style>
+    #canvas {
+               position: fixed;
+               top: 0;
+               left: 0;
+               width: 100%;
+               height: 100%;
+               z-index: -1; /* Чтобы canvas был на заднем плане */
+               background: linear-gradient(to bottom, #000000, #1E1E1E); /* Градиентный фон */
+           }
+           .container {
+                   position: relative;
+                   max-width: 1200px;
+                   margin: 0 auto;
+                   padding: 20px;
+                   z-index: 1; /* Чтобы контент был поверх canvas */
+               }
+
+    </style>
+</head>
+<body>
+    <!-- Canvas для анимации частиц -->
+    <canvas id="canvas"></canvas>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_competition_styles.css') }}">
+    <!-- Вставка навигации -->
+    {% include 'includes/navbar_admin.html' %}
+
+    <div class="container">
+        <!-- Основное содержимое страницы -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Модальное окно для flash-сообщений -->
+    <div id="flashModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="flashMessage"></p>
+        </div>
+    </div>
+
+    <!-- Подключение JavaScript -->
+    <script src="{{ url_for('static', filename='js/particles.js') }}"></script>
+    <script>
+        // Функция для отображения flash-сообщений в модальном окне
+        function showFlashMessage(message, category) {
+            const modal = document.getElementById('flashModal');
+            const modalContent = modal.querySelector('.modal-content');
+            const flashMessage = document.getElementById('flashMessage');
+
+            // Устанавливаем текст сообщения
+            flashMessage.textContent = message;
+
+            // Меняем стили в зависимости от категории
+            modalContent.className = 'modal-content'; // Сбрасываем классы
+            if (category === 'success') {
+                modalContent.classList.add('success'); // Зелёный для успеха
+            } else if (category === 'error') {
+                modalContent.classList.add('error'); // Красный для ошибок
+            } else if (category === 'info') {
+                modalContent.classList.add('info'); // Фиолетовый для информации
+            }
+
+            // Показываем модальное окно
+            modal.style.display = 'flex';
+
+            // Закрытие модального окна при клике на крестик
+            modal.querySelector('.close').onclick = function() {
+                modal.style.display = 'none';
+            };
+
+            // Закрытие модального окна при клике вне его
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // Проверяем наличие flash-сообщений и показываем их
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    showFlashMessage("{{ message }}", "{{ category }}");
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </script>
+</body>
+</html>

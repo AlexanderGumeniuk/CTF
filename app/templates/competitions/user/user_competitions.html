@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Соревнования</h2>
+    <style>
+      /* Основные стили */
+      body {
+          background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+          color: #fff;
+          font-family: 'Arial', sans-serif;
+          margin: 0;
+          padding: 0;
+      }
+
+      .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem;
+      }
+
+      h2 {
+          font-size: 2.5rem;
+          font-weight: 600;
+          text-align: center;
+          margin-bottom: 2rem;
+          background: linear-gradient(145deg, #9370db, #b266ff);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+      }
+
+      h3 {
+          font-size: 2rem;
+          font-weight: 500;
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+          color: rgba(255, 255, 255, 0.9);
+          padding-bottom: 0.5rem;
+          border-bottom: 2px solid rgba(147, 112, 219, 0.3);
+      }
+
+      .list-group {
+          display: grid;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+          padding: 1.5rem;
+          border: 2px solid rgba(147, 112, 219, 0.3); /* Обводка для разделения */
+          border-radius: 15px;
+          background: rgba(147, 112, 219, 0.05);
+      }
+
+      .list-group-item {
+          background: rgba(147, 112, 219, 0.1);
+          border: 1px solid rgba(147, 112, 219, 0.3);
+          border-radius: 15px;
+          padding: 1.5rem;
+          backdrop-filter: blur(10px);
+          box-shadow: 0px 0px 20px rgba(147, 112, 219, 0.2);
+          transition: all 0.3s ease;
+      }
+
+      .list-group-item:hover {
+          transform: translateY(-5px);
+          box-shadow: 0px 0px 30px rgba(147, 112, 219, 0.4);
+      }
+
+      .list-group-item h5 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          color: rgba(255, 255, 255, 0.9);
+      }
+
+      .list-group-item p {
+          font-size: 1rem;
+          color: rgba(255, 255, 255, 0.8);
+          margin-bottom: 0.5rem;
+      }
+
+      .list-group-item small {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.7);
+      }
+
+      .list-group-item .dates {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+      }
+
+      .list-group-item .status {
+          font-size: 0.9rem;
+          font-weight: 500;
+          padding: 0.5rem 1rem;
+          border-radius: 20px;
+          display: inline-block;
+          margin-bottom: 1rem;
+      }
+
+      .list-group-item .status.active {
+          background: rgba(76, 175, 80, 0.2);
+          color: #4caf50;
+      }
+
+      .list-group-item .status.planned {
+          background: rgba(255, 193, 7, 0.2);
+          color: #ffc107;
+      }
+
+      .list-group-item .status.finished {
+          background: rgba(158, 158, 158, 0.2);
+          color: #9e9e9e;
+      }
+
+      .list-group-item .join-button {
+          display: inline-block;
+          padding: 0.75rem 1.5rem;
+          font-size: 1rem;
+          font-weight: 500;
+          color: #fff;
+          background: linear-gradient(145deg, #9370db, #b266ff);
+          border: none;
+          border-radius: 25px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-decoration: none;
+      }
+
+      .list-group-item .join-button:hover {
+          background: linear-gradient(145deg, #b266ff, #9370db);
+          transform: translateY(-2px);
+          box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.4);
+      }
+
+      .list-group-item .join-button:disabled {
+          background: rgba(158, 158, 158, 0.2);
+          color: #9e9e9e;
+          cursor: not-allowed;
+      }
+
+      @keyframes fadeIn {
+          from {
+              opacity: 0;
+              transform: translateY(20px);
+          }
+          to {
+              opacity: 1;
+              transform: translateY(0);
+          }
+      }
+
+      @media (max-width: 768px) {
+          .container {
+              padding: 1rem;
+          }
+
+          h2 {
+              font-size: 2rem;
+          }
+
+          h3 {
+              font-size: 1.5rem;
+          }
+
+          .list-group-item h5 {
+              font-size: 1.2rem;
+          }
+
+          .list-group-item p {
+              font-size: 0.9rem;
+          }
+
+          .list-group-item small {
+              font-size: 0.8rem;
+          }
+
+          .list-group-item .join-button {
+              padding: 0.5rem 1rem;
+              font-size: 0.9rem;
+          }
+      }
+    </style>
+    <!-- Активные соревнования -->
+    <h3>Активные</h3>
+    {% if active_competitions %}
+    <div class="list-group">
+        {% for competition in active_competitions %}
+        <div class="list-group-item">
+            <h5>{{ competition.title }}</h5>
+            <p>{{ competition.description }}</p>
+            <div class="dates">
+                <small>Дата начала: {{ competition.start_date.strftime('%Y-%m-%d %H:%M') }}</small><br>
+                <small>Дата окончания: {{ competition.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            <div class="status active">Активное</div>
+            <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="join-button">Войти в соревнование</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: rgba(255, 255, 255, 0.7);">Нет активных соревнований.</p>
+    {% endif %}
+
+    <!-- Запланированные соревнования -->
+    <h3>Запланированные</h3>
+    {% if planned_competitions %}
+    <div class="list-group">
+        {% for competition in planned_competitions %}
+        <div class="list-group-item">
+            <h5>{{ competition.title }}</h5>
+            <p>{{ competition.description }}</p>
+            <div class="dates">
+                <small>Дата начала: {{ competition.start_date.strftime('%Y-%m-%d %H:%M') }}</small><br>
+                <small>Дата окончания: {{ competition.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            <div class="status planned">Запланированное</div>
+            <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="join-button">Войти в соревнование</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: rgba(255, 255, 255, 0.7);">Нет запланированных соревнований.</p>
+    {% endif %}
+
+    <!-- Завершенные соревнования -->
+    <h3>Завершенные</h3>
+    {% if finished_competitions %}
+    <div class="list-group">
+        {% for competition in finished_competitions %}
+        <div class="list-group-item">
+            <h5>{{ competition.title }}</h5>
+            <p>{{ competition.description }}</p>
+            <div class="dates">
+                <small>Дата начала: {{ competition.start_date.strftime('%Y-%m-%d %H:%M') }}</small><br>
+                <small>Дата окончания: {{ competition.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            <div class="status finished">Завершенное</div>
+            <button class="join-button" disabled>Войти в соревнование</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: rgba(255, 255, 255, 0.7);">Нет завершенных соревнований.</p>
+    {% endif %}
+</div>
+{% endblock %}

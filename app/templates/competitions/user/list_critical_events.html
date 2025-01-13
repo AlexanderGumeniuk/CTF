@@ -1,0 +1,157 @@
+{% extends "base_competition.html" %}
+
+{% block content %}
+<style media="screen">
+  option {
+    background-color: black;
+  }
+
+  /* Стили для кнопок фильтрации */
+  .filter-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+
+  .filter-buttons .btn {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .filter-buttons .btn.active {
+    background: rgba(147, 112, 219, 0.5);
+    border-color: rgba(147, 112, 219, 0.7);
+  }
+
+  .filter-buttons .btn:hover {
+    background: rgba(147, 112, 219, 0.5);
+    border-color: rgba(147, 112, 219, 0.7);
+    opacity: 0.9;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+
+</style>
+
+<div class="container">
+  <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="back-button">
+      ← Назад к соревнованию
+  </a>
+    <h2>Критические события в соревновании "{{ competition.title }}"</h2>
+
+    <!-- Фильтрация по статусам отчетов -->
+    <div class="filter-buttons">
+        <button class="btn btn-all active" data-status="all">Все 📁</button>
+        <button class="btn btn-pending" data-status="pending">В ожидании ⏳</button>
+        <button class="btn btn-approved" data-status="approved">Одобрено ✔️</button>
+        <button class="btn btn-rejected" data-status="rejected">Отклонено ❌</button>
+        <button class="btn btn-needs-revision" data-status="needs_revision">На доработке 🔄</button>
+    </div>
+
+    <!-- Список критических событий -->
+    <h3>Критические события</h3>
+    <table class="event-table">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Дата создания</th>
+                <th>Баллы</th>
+                <th>Статус отчета</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in critical_events %}
+            {% set report = event.responses|selectattr("team_id", "equalto", current_user.team.id)|first if current_user.team else None %}
+            <tr class="event-row {% if report and report.status == 'approved' %}approved-row{% endif %}" data-report-status="{{ report.status if report else 'none' }}">
+                <td>{{ event.title }}</td>
+                <td class="event-description">{{ event.description }}</td>
+                <td>{{ event.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ event.points }}</td>
+                <td>
+                    {% if report %}
+                    <span class="status-badge {{ report.status }}">{{ report.status }}</span>
+                    {% else %}
+                    <span class="status-badge none">Нет отчета</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not report or report.status in ['none', 'rejected', 'needs_revision'] %}
+                    <a href="{{ url_for('fill_critical_event', competition_id=competition.id, event_id=event.id) }}" class="btn btn-fill">
+                        Заполнить отчет
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="no-events">Критических событий пока нет.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Отчеты команды пользователя -->
+    <h3>Отчеты вашей команды</h3>
+    {% if team_reports %}
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Событие</th>
+                <th>Статус</th>
+                <th>Баллы</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in team_reports %}
+            <tr>
+                <td>{{ report.event.title }}</td>
+                <td><span class="status-badge {{ report.status }}">{{ report.status }}</span></td>
+                <td>{{ report.points_awarded if report.points_awarded else 'Нет' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="no-reports">Ваша команда еще не отправляла отчеты.</p>
+    {% endif %}
+</div>
+
+<!-- JavaScript для фильтрации -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterButtons = document.querySelectorAll('.filter-buttons .btn');
+        const eventRows = document.querySelectorAll('.event-row');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                // Убираем активный класс у всех кнопок
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                // Добавляем активный класс текущей кнопке
+                this.classList.add('active');
+
+                const selectedStatus = this.getAttribute('data-status');
+
+                eventRows.forEach(row => {
+                    const reportStatus = row.getAttribute('data-report-status');
+                    if (selectedStatus === 'all' || reportStatus === selectedStatus) {
+                        row.style.display = 'table-row';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
