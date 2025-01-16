@@ -224,7 +224,8 @@ class Infrastructure(db.Model):
     elements = db.Column(JSON, nullable=True)  # Прямоугольники и надписи
     organization_description = db.Column(db.Text, nullable=False)
     files = db.Column(JSON, nullable=True)
-
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=True)
+    competition = db.relationship('Competition', backref='infrastructures')
     def __repr__(self):
         return f"Infrastructure('{self.title}')"
 
@@ -257,6 +258,7 @@ class Competition(db.Model):
     end_date = db.Column(db.DateTime, nullable=False)    # Дата окончания
     status = db.Column(db.String(20), default='planned')  # Статус: planned, active, finished
     created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Дата создания
+    
     teams = db.relationship(
         'Team',
         secondary=team_competition,

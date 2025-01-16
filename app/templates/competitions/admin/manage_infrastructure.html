@@ -1,0 +1,230 @@
+{% extends "admin_base_competition.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Управление инфраструктурой для соревнования: {{ competition.title }}</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        <!-- Название -->
+        <div class="form-group">
+            <label for="title">Название инфраструктуры</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ infrastructure.title if infrastructure else '' }}" required>
+        </div>
+
+        <!-- Описание -->
+        <div class="form-group">
+            <label for="description">Описание</label>
+            <textarea class="form-control" id="description" name="description" rows="3" required>{{ infrastructure.description if infrastructure else '' }}</textarea>
+        </div>
+
+        <!-- Топология (узлы) -->
+        <div class="form-group">
+            <h3>Топология (узлы)</h3>
+            <div id="nodes-list">
+                <!-- Сюда будут добавляться узлы -->
+            </div>
+            <div class="form-row">
+                <div class="col">
+                    <input type="text" class="form-control" id="node-id" placeholder="ID узла">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" id="node-type" placeholder="Тип узла">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" id="node-label" placeholder="Название узла">
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-primary" onclick="addNode()">Добавить узел</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Связи (edges) -->
+        <div class="form-group">
+            <h3>Связи</h3>
+            <div id="edges-list">
+                <!-- Сюда будут добавляться связи -->
+            </div>
+            <div class="form-row">
+                <div class="col">
+                    <input type="text" class="form-control" id="edge-source" placeholder="Источник (ID)">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" id="edge-target" placeholder="Цель (ID)">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" id="edge-label" placeholder="Метка">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" id="edge-color" placeholder="Цвет">
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-primary" onclick="addEdge()">Добавить связь</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Описание организации -->
+        <div class="form-group">
+            <label for="organization_description">Описание организации</label>
+            <textarea class="form-control" id="organization_description" name="organization_description" rows="3" required>{{ infrastructure.organization_description if infrastructure else '' }}</textarea>
+        </div>
+
+        <!-- Скрытые поля для JSON -->
+        <input type="hidden" id="topology" name="topology" value="{{ topology | tojson if topology else '[]' }}">
+        <input type="hidden" id="links" name="links" value="{{ links | tojson if links else '[]' }}">
+
+        <!-- Кнопка отправки -->
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+
+    <!-- Кнопка "Назад" -->
+    <div class="mt-3">
+        <a href="{{ url_for('view_competition', competition_id=competition.id) }}" class="btn btn-secondary">
+            Назад к соревнованию
+        </a>
+    </div>
+</div>
+
+<!-- Контейнер для схемы -->
+<div id="scheme" style="height: 500px; width: 100%; background-color: white;"></div>
+
+<!-- Подключаем библиотеку vis.js -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+
+<script>
+  // Данные для схемы из базы данных
+  let topology = {{ topology | tojson | safe if topology else '[]' }};
+  let links = {{ links | tojson | safe if links else '[]' }};
+
+  // Функция для добавления узла
+  function addNode() {
+    const nodeId = document.getElementById('node-id').value;
+    const nodeType = document.getElementById('node-type').value;
+    const nodeLabel = document.getElementById('node-label').value;
+
+    if (nodeId && nodeType && nodeLabel) {
+      const newNode = { id: nodeId, label: nodeLabel, group: nodeType };
+      topology.push(newNode);
+      updateLists();
+      updateDiagram();
+      document.getElementById('node-id').value = '';
+      document.getElementById('node-type').value = '';
+      document.getElementById('node-label').value = '';
+    } else {
+      alert('Заполните все поля для узла!');
+    }
+  }
+
+  // Функция для удаления узла
+  function deleteNode(nodeId) {
+    topology = topology.filter(node => node.id !== nodeId);
+    // Удаляем все связи, связанные с этим узлом
+    links = links.filter(edge => edge.from !== nodeId && edge.to !== nodeId);
+    updateLists();
+    updateDiagram();
+  }
+
+  // Функция для добавления связи
+  function addEdge() {
+    const source = document.getElementById('edge-source').value;
+    const target = document.getElementById('edge-target').value;
+    const label = document.getElementById('edge-label').value;
+    const color = document.getElementById('edge-color').value;
+
+    if (source && target) {
+      const newEdge = { from: source, to: target, label: label || '', color: color || 'black' };
+      links.push(newEdge);
+      updateLists();
+      updateDiagram();
+      document.getElementById('edge-source').value = '';
+      document.getElementById('edge-target').value = '';
+      document.getElementById('edge-label').value = '';
+      document.getElementById('edge-color').value = '';
+    } else {
+      alert('Заполните поля "Источник" и "Цель"!');
+    }
+  }
+
+  // Функция для удаления связи
+  function deleteEdge(index) {
+    links.splice(index, 1);
+    updateLists();
+    updateDiagram();
+  }
+
+  // Функция для обновления списков узлов и связей
+  function updateLists() {
+    const nodesList = document.getElementById('nodes-list');
+    const edgesList = document.getElementById('edges-list');
+
+    // Очищаем списки
+    nodesList.innerHTML = '<h4>Добавленные узлы:</h4>';
+    edgesList.innerHTML = '<h4>Добавленные связи:</h4>';
+
+    // Отображаем узлы с кнопкой удаления
+    topology.forEach(node => {
+      nodesList.innerHTML += `
+        <div>
+          ID: ${node.id}, Тип: ${node.group}, Название: ${node.label}
+          <button type="button" class="btn btn-danger btn-sm" onclick="deleteNode('${node.id}')">Удалить</button>
+        </div>`;
+    });
+
+    // Отображаем связи с кнопкой удаления
+    links.forEach((edge, index) => {
+      edgesList.innerHTML += `
+        <div>
+          Источник: ${edge.from}, Цель: ${edge.to}, Метка: ${edge.label}, Цвет: ${edge.color}
+          <button type="button" class="btn btn-danger btn-sm" onclick="deleteEdge(${index})">Удалить</button>
+        </div>`;
+    });
+
+    // Обновляем скрытые поля
+    document.getElementById('topology').value = JSON.stringify(topology);
+    document.getElementById('links').value = JSON.stringify(links);
+  }
+
+  // Функция для обновления схемы
+  function updateDiagram() {
+    const nodes = new vis.DataSet(topology);
+    const edges = new vis.DataSet(links);
+
+    const container = document.getElementById('scheme');
+    const data = {
+      nodes: nodes,
+      edges: edges,
+    };
+    const options = {
+      nodes: {
+        shape: 'dot',
+        size: 20,
+        font: {
+          size: 15,
+          color: '#000000',
+        },
+        borderWidth: 2,
+      },
+      edges: {
+        width: 2,
+        arrows: {
+          to: { enabled: true, scaleFactor: 1, type: 'arrow' },
+        },
+      },
+    };
+
+    // Очищаем контейнер схемы
+    container.innerHTML = '';
+
+    // Строим схему
+    new vis.Network(container, data, options);
+  }
+
+  // Инициализация при загрузке страницы
+  document.addEventListener('DOMContentLoaded', () => {
+    updateLists();
+    updateDiagram();
+  });
+</script>
+{% endblock %}

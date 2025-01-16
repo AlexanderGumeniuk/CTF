@@ -107,6 +107,7 @@ def submit_flag(challenge_id):
             # Отмечаем задачу как решённую для текущего пользователя
             user_challenge = UserChallenge(
                 user_id=current_user.id,
+                team_id=current_user.team.id,
                 challenge_id=challenge_id,
                 solved=True
             )
@@ -142,17 +143,6 @@ def submit_flag(challenge_id):
                                 solved=True
                             )
                             db.session.add(member_challenge)
-
-                            # Начисляем баллы члену команды
-                            member.total_points += challenge.points
-
-                            # Добавляем запись в историю начисления баллов для члена команды
-                            member_points_history = PointsHistory(
-                                user_id=member.id,
-                                points=challenge.points,
-                                note=f"За решение задачи: {challenge.title} (командное начисление)"
-                            )
-                            db.session.add(member_points_history)
 
                 db.session.commit()
 

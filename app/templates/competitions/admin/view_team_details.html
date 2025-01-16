@@ -1,0 +1,124 @@
+{% extends "admin_base_competition.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- Кнопка "Назад к статистике команд" -->
+    <a href="{{ url_for('admin_competition_team_stats', competition_id=competition.id) }}" class="btn btn-secondary">← Назад к статистике команд</a>
+
+    <!-- Заголовок страницы -->
+    <h1>Детали команды: {{ team.name }}</h1>
+
+    <!-- Общая информация о команде -->
+    <div class="team-info mb-4">
+        <h3>Общая информация</h3>
+        <ul>
+            <li><strong>Название команды:</strong> {{ team.name }}</li>
+            <li><strong>Количество участников:</strong> {{ members|length }}</li>
+            <li><strong>Общие баллы:</strong> {{ team.total_points }}</li>
+        </ul>
+    </div>
+
+    <!-- Участники команды -->
+    <div class="team-members mb-4">
+        <h3>Участники</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Имя пользователя</th>
+                    <th>Баллы</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                <tr>
+                    <td>{{ member.username }}</td>
+                    <td>{{ member.total_points }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Решенные задачи -->
+    <div class="solved-challenges mb-4">
+        <h3>Решенные задачи</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Задача</th>
+                    <th>Баллы</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for challenge in solved_challenges %}
+                <tr>
+                    <td>{{ challenge.challenge.title }}</td>
+                    <td>{{ challenge.challenge.points }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2" class="text-center">Нет решенных задач.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Инциденты -->
+    <div class="incidents mb-4">
+        <h3>Инциденты</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for incident in incidents %}
+                <tr>
+                    <td>{{ incident.title }}</td>
+                    <td>{{ incident.status }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2" class="text-center">Нет инцидентов.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Отчеты по критическим событиям -->
+    <div class="critical-events mb-4">
+        <h3>Отчеты по критическим событиям</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Событие</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for response in critical_event_responses %}
+                <tr>
+                    <td>{{ response.event.title }}</td>
+                    <td>{{ response.status }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2" class="text-center">Нет отчетов.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Кнопка для возврата к списку соревнований -->
+    <div class="mt-3">
+        <a href="{{ url_for('list_competitions') }}" class="btn btn-secondary">
+            Назад к списку соревнований
+        </a>
+    </div>
+</div>
+{% endblock %}

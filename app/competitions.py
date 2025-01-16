@@ -8,6 +8,7 @@ from flask import redirect, url_for, flash
 from flask_login import current_user
 from sqlalchemy.orm.attributes import flag_modified
 import os
+import json
 from flask import current_app, flash, redirect, url_for
 from app.models import CriticalEvent, CriticalEventResponse
 from app import db
@@ -16,6 +17,29 @@ import uuid
 import logging
 from sqlalchemy.exc import IntegrityError
 import base64
+from functools import wraps
+from flask import flash, redirect, url_for
+from flask_login import current_user
+from app.models import Competition
+
+def update_competition_status(competition):
+    """
+    Автоматически обновляет статус соревнования на основе текущей даты.
+    """
+    now = datetime.utcnow()
+
+    if competition.start_date > now:
+        # Соревнование еще не началось
+        competition.status = 'planned'
+    elif competition.end_date < now:
+        # Соревнование завершено
+        competition.status = 'finished'
+    else:
+        # Соревнование активно
+        competition.status = 'active'
+
+    # Сохраняем изменения в базе данных
+    db.session.commit()
 # Настройка логирования
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -40,6 +64,7 @@ def generate_unique_filename(filename):
     ext = filename.rsplit('.', 1)[1].lower()  # Получаем расширение файла
     unique_name = f"{uuid.uuid4().hex}.{ext}"  # Генерируем уникальное имя
     return unique_name
+
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -50,6 +75,22 @@ def admin_required(f):
     return decorated_function
 
 
+
+def active_competition_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        competition_id = kwargs.get('competition_id')
+        competition = Competition.query.get_or_404(competition_id)
+
+        if competition.status != 'active':
+            if competition.status == 'planned':
+                flash('Соревнование еще не началось.', 'warning')
+            elif competition.status == 'finished':
+                flash('Соревнование уже завершено.', 'warning')
+            return redirect(url_for('user_competitions', competition_id=competition_id))
+
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Маршрут для создания соревнования
 @app.route('/admin/competitions/create', methods=['GET', 'POST'])
@@ -124,7 +165,7 @@ def delete_competition(competition_id):
 def view_competition(competition_id):
     # Получаем соревнование по ID
     competition = Competition.query.get_or_404(competition_id)
-
+    update_competition_status(competition)
     # Статистика по флагам
     total_flags = Challenge.query.filter_by(competition_id=competition_id).count()
 
@@ -346,10 +387,11 @@ def user_competitions():
 
 @app.route('/competitions/<int:competition_id>')
 @login_required
+@active_competition_required
 def view_user_competition(competition_id):
     # Получаем соревнование по ID
     competition = Competition.query.get_or_404(competition_id)
-
+    update_competition_status(competition)
     # Проверяем, что пользователь участвует в этом соревновании
     if not current_user.team or current_user.team.competition_id != competition_id:
         flash('Вы не участвуете в этом соревновании.', 'danger')
@@ -371,6 +413,7 @@ def view_user_competition(competition_id):
 @app.route('/competitions/<int:competition_id>/challenges', defaults={'filter': 'all'})
 @app.route('/competitions/<int:competition_id>/challenges/<filter>')
 @login_required
+@active_competition_required
 def competition_challenges(competition_id, filter):
     # Получаем соревнование по ID
     competition = Competition.query.get_or_404(competition_id)
@@ -408,9 +451,95 @@ def competition_challenges(competition_id, filter):
         filter_type=filter  # Передаем текущий фильтр в шаблон
     )
 
+
+@app.route('/admin/competitions/<int:competition_id>/team_stats')
+@login_required
+@admin_required
+def admin_competition_team_stats(competition_id):
+    # Получаем соревнование по ID
+    competition = Competition.query.get_or_404(competition_id)
+
+    # Получаем все команды, участвующие в соревновании
+    teams = Team.query.filter_by(competition_id=competition_id).all()
+
+    # Собираем статистику по каждой команде
+    team_stats = []
+    for team in teams:
+        # Получаем всех участников команды
+        members = User.query.filter_by(team_id=team.id).all()
+
+        # Считаем общее количество баллов команды
+        total_points = sum(member.total_points for member in members)
+
+        # Считаем количество решенных задач
+        solved_challenges = UserChallenge.query.filter(
+            UserChallenge.team_id == team.id,
+            UserChallenge.solved == True
+        ).count()
+
+        # Считаем количество инцидентов
+        incidents = Incident.query.filter_by(team_id=team.id).count()
+
+        # Считаем количество критических событий
+        critical_events = CriticalEventResponse.query.filter_by(team_id=team.id).count()
+
+        # Добавляем статистику команды в список
+        team_stats.append({
+            'team': team,
+            'members': members,
+            'total_points': total_points,
+            'solved_challenges': solved_challenges,
+            'incidents': incidents,
+            'critical_events': critical_events
+        })
+
+    return render_template(
+        'competitions/admin/team_stats.html',
+        competition=competition,
+        team_stats=team_stats
+    )
+
+@app.route('/admin/competitions/<int:competition_id>/teams/<int:team_id>')
+@login_required
+@admin_required
+def view_team_details(competition_id, team_id):
+    # Получаем соревнование и команду
+    competition = Competition.query.get_or_404(competition_id)
+    team = Team.query.get_or_404(team_id)
+
+    # Проверяем, что команда участвует в этом соревновании
+    if team.competition_id != competition_id:
+        flash('Эта команда не участвует в данном соревновании.', 'danger')
+        return redirect(url_for('admin_competition_team_stats', competition_id=competition_id))
+
+    # Получаем всех участников команды
+    members = User.query.filter_by(team_id=team.id).all()
+
+    # Получаем решенные задачи командой
+    solved_challenges = UserChallenge.query.filter(
+        UserChallenge.team_id == team.id,
+        UserChallenge.solved == True
+    ).all()
+
+    # Получаем инциденты команды
+    incidents = Incident.query.filter_by(team_id=team.id).all()
+
+    # Получаем отчеты по критическим событиям
+    critical_event_responses = CriticalEventResponse.query.filter_by(team_id=team.id).all()
+
+    return render_template(
+        'competitions/admin/view_team_details.html',
+        competition=competition,
+        team=team,
+        members=members,
+        solved_challenges=solved_challenges,
+        incidents=incidents,
+        critical_event_responses=critical_event_responses
+    )
 ###########################################################Incident####################################################################
 @app.route('/competitions/<int:competition_id>/create_incident', methods=['GET', 'POST'])
 @login_required
+@active_competition_required
 def create_incident(competition_id):
     competition = Competition.query.get_or_404(competition_id)
 
@@ -614,6 +743,7 @@ def admin_competition_incidents(competition_id):
 
 @app.route('/competitions/<int:competition_id>/incidents')
 @login_required
+@active_competition_required
 def user_competition_incidents(competition_id):
     # Получаем соревнование по ID
     competition = Competition.query.get_or_404(competition_id)
@@ -649,6 +779,7 @@ def user_competition_incidents(competition_id):
 
 @app.route('/competitions/<int:competition_id>/incidents/<int:incident_id>/edit', methods=['GET', 'POST'])
 @login_required
+@active_competition_required
 def edit_incident(competition_id, incident_id):
     # Получаем соревнование и инцидент
     competition = Competition.query.get_or_404(competition_id)
@@ -737,6 +868,7 @@ def edit_incident(competition_id, incident_id):
 
 @app.route('/competitions/<int:competition_id>/incidents/<int:incident_id>')
 @login_required
+@active_competition_required
 def view_incident(competition_id, incident_id):
     competition = Competition.query.get_or_404(competition_id)
     incident = Incident.query.get_or_404(incident_id)
@@ -1109,4 +1241,50 @@ def review_critical_event_report(competition_id, report_id):
         competition_id=competition_id,
         response=report,  # Переименовано в response
         steps=steps
+    )
+######################################infrastructure##############################################
+@app.route('/admin/competitions/<int:competition_id>/infrastructure', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def manage_infrastructure(competition_id):
+    # Получаем соревнование
+    competition = Competition.query.get_or_404(competition_id)
+
+    # Получаем инфраструктуру для этого соревнования (если она существует)
+    infrastructure = Infrastructure.query.filter_by(competition_id=competition_id).first()
+
+    # Если инфраструктуры нет, создаем новую
+    if not infrastructure:
+        infrastructure = Infrastructure(competition=competition)
+
+    if request.method == 'POST':
+        # Обновляем данные инфраструктуры
+        infrastructure.title = request.form.get('title', infrastructure.title)
+        infrastructure.description = request.form.get('description', infrastructure.description)
+        infrastructure.organization_description = request.form.get('organization_description', infrastructure.organization_description)
+
+        # Обрабатываем JSON-данные
+        try:
+            infrastructure.topology = json.loads(request.form.get('topology', '[]'))
+            infrastructure.links = json.loads(request.form.get('links', '[]'))
+            infrastructure.elements = json.loads(request.form.get('elements', '[]'))
+            infrastructure.files = json.loads(request.form.get('files', '[]'))
+        except json.JSONDecodeError:
+            flash('Ошибка в формате JSON. Проверьте введенные данные.', 'danger')
+            return redirect(url_for('manage_infrastructure', competition_id=competition_id))
+
+        # Сохраняем изменения
+        db.session.add(infrastructure)
+        db.session.commit()
+
+        flash('Инфраструктура успешно сохранена!', 'success')
+        return redirect(url_for('manage_infrastructure', competition_id=competition_id))
+
+    # Если метод GET, передаем данные в шаблон
+    return render_template(
+        'competitions/admin/manage_infrastructure.html',
+        competition=competition,
+        infrastructure=infrastructure,
+        topology=infrastructure.topology if infrastructure else [],  # Передаем топологию
+        links=infrastructure.links if infrastructure else []         # Передаем связи
     )
