@@ -5,10 +5,11 @@ from flask_login import LoginManager
 from flask import Flask, request, redirect, url_for, flash, render_template
 from werkzeug.utils import secure_filename
 import os
-
+import re
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'app/static/uploads/images'
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER_INFRA'] = 'app/static/uploads/infrastructure'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif','html'}
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 app.config['SECRET_KEY'] = 'your_secret_key'

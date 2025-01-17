@@ -1,85 +1,7 @@
 {% extends "base_competition.html" %}
 
 {% block content %}
-<style>
-  /* Основные стили для body */
-  body {
-      background-color: #1e1e1e;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      overflow-y: auto; /* Включаем вертикальную прокрутку */
-      height: 100vh; /* Высота body равна высоте окна браузера */
-  }
-
-  /* Контейнер для деталей инцидента */
-  .incident-details {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 15px;
-      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  /* Стили для кнопки "Назад" */
-  .back-button {
-      display: inline-block;
-      margin-bottom: 20px;
-      padding: 10px 20px;
-      background: rgba(147, 112, 219, 0.3); /* Фиолетовый цвет с прозрачностью */
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-      border-radius: 25px;
-      border: 1px solid rgba(147, 112, 219, 0.5);
-      transition: all 0.3s ease;
-  }
-
-  .back-button:hover {
-      background: rgba(147, 112, 219, 0.5); /* Увеличиваем прозрачность при наведении */
-      transform: translateY(-2px); /* Эффект поднятия кнопки */
-      box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.3); /* Тень при наведении */
-  }
-
-  option {
-    background-color: black;
-  }
-
-  /* Стили для скриншотов */
-  .screenshots-container {
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 15px;
-      box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .screenshot-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-  }
-
-  .screenshot-item img {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-</style>
-
-<div class="incident-details">
-    <!-- Кнопка "Назад" -->
-    <a href="{{ url_for('user_competition_incidents', competition_id=competition.id) }}" class="back-button">
-        ← Назад к списку инцидентов
-    </a>
-
+<div class="container">
     <h1>{{ incident.title }}</h1>
     <p><strong>Описание:</strong> {{ incident.description }}</p>
     <p><strong>Статус:</strong> {{ incident.status }}</p>
@@ -98,21 +20,20 @@
     <p><strong>ID события по матрице MITRE:</strong> {{ incident.mitre_id }}</p>
     <p><strong>ID события в SIEM:</strong> {{ incident.siem_id }}</p>
     <p><strong>Ссылка на событие в SIEM:</strong> <a href="{{ incident.siem_link }}" target="_blank">{{ incident.siem_link }}</a></p>
-</div>
 
-{% if incident.screenshots %}
+    {% if incident.screenshots %}
     <div class="screenshots-container">
         <h2>Скриншоты</h2>
         <div class="screenshot-grid">
             {% for screenshot in incident.screenshots %}
-                <div class="screenshot-item">
-                    <img src="{{ url_for('static', filename='uploads/images/' + screenshot) }}" alt="Скриншот">
-                </div>
+            <div class="screenshot-item">
+                <img src="{{ url_for('static', filename='uploads/images/' + screenshot) }}" alt="Скриншот">
+            </div>
             {% endfor %}
         </div>
     </div>
-{% else %}
+    {% else %}
     <p>Скриншоты отсутствуют.</p>
-{% endif %}
-
+    {% endif %}
+</div>
 {% endblock %}

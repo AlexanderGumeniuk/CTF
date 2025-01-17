@@ -21,6 +21,14 @@ from functools import wraps
 from flask import flash, redirect, url_for
 from flask_login import current_user
 from app.models import Competition
+import re
+
+
+def extract_number(title):
+    numbers = re.findall(r'\d+', title)
+    if numbers:
+        return int(numbers[0])  # Возвращаем первое найденное число
+    return 0  # Если числа нет, возвращаем 0
 
 def update_competition_status(competition):
     """
@@ -60,6 +68,7 @@ def delete_screenshots(screenshots):
                     print(f"Файл {screenshot} успешно удален.")
                 except Exception as e:
                     print(f"Ошибка при удалении файла {screenshot}: {e}")
+
 def generate_unique_filename(filename):
     ext = filename.rsplit('.', 1)[1].lower()  # Получаем расширение файла
     unique_name = f"{uuid.uuid4().hex}.{ext}"  # Генерируем уникальное имя
@@ -300,11 +309,13 @@ def view_flags_in_competition(competition_id):
 
     # Получаем все флаги, связанные с этим соревнованием
     flags = Challenge.query.filter_by(competition_id=competition_id).all()
-
+    challenges = Challenge.query.filter_by(competition_id=competition_id).all()
+    challenges = sorted(challenges, key=lambda x: extract_number(x.title))
+    #sorted_challenges = sorted(challenges, key=lambda x: extract_number(x['title']))
     return render_template(
         'competitions/admin/flags_in_competition.html',
         competition=competition,
-        flags=flags  # Передаем флаги в шаблон
+        flags=challenges  # Передаем флаги в шаблон
     )
 
 @app.route('/admin/competitions/<int:competition_id>/add_team', methods=['GET', 'POST'])
@@ -429,7 +440,7 @@ def competition_challenges(competition_id, filter):
     # Получаем ID решенных задач текущего пользователя
     solved_challenge_ids = [
         uc.challenge_id for uc in UserChallenge.query.filter_by(
-            user_id=current_user.id,
+            team_id=current_user.team.id,
             solved=True
         ).all()
     ]
@@ -439,6 +450,9 @@ def competition_challenges(competition_id, filter):
         challenges = [challenge for challenge in challenges if challenge.id in solved_challenge_ids]
     elif filter == 'unsolved':
         challenges = [challenge for challenge in challenges if challenge.id not in solved_challenge_ids]
+
+    # Сортируем задачи по числовому значению в названии
+    challenges = sorted(challenges, key=lambda x: extract_number(x.title))
 
     # Получаем список решенных задач для отображения статуса
     solved_challenges = [challenge for challenge in challenges if challenge.id in solved_challenge_ids]
@@ -1168,7 +1182,7 @@ def fill_critical_event(competition_id, event_id):
 
     # GET-запрос: отображаем форму
     steps = CriticalEventStep.query.filter_by(event_id=event.id, team_id=current_user.team_id).all()
-    return render_template('user/fill_critical_event.html', competition=competition, event=event, response=response, steps=steps)
+    return render_template('competitions/user/fill_critical_event.html', competition=competition, event=event, response=response, steps=steps)
 
 @app.route('/admin/competitions/<int:competition_id>/critical_events/reports')
 @login_required
@@ -1243,17 +1257,17 @@ def review_critical_event_report(competition_id, report_id):
         steps=steps
     )
 ######################################infrastructure##############################################
+from flask import request, flash
+import os
+import uuid
+
 @app.route('/admin/competitions/<int:competition_id>/infrastructure', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def manage_infrastructure(competition_id):
-    # Получаем соревнование
     competition = Competition.query.get_or_404(competition_id)
-
-    # Получаем инфраструктуру для этого соревнования (если она существует)
     infrastructure = Infrastructure.query.filter_by(competition_id=competition_id).first()
 
-    # Если инфраструктуры нет, создаем новую
     if not infrastructure:
         infrastructure = Infrastructure(competition=competition)
 
@@ -1262,31 +1276,55 @@ def manage_infrastructure(competition_id):
         infrastructure.title = request.form.get('title', infrastructure.title)
         infrastructure.description = request.form.get('description', infrastructure.description)
         infrastructure.organization_description = request.form.get('organization_description', infrastructure.organization_description)
-
+        print(request.files)
         # Обрабатываем JSON-данные
         try:
             infrastructure.topology = json.loads(request.form.get('topology', '[]'))
             infrastructure.links = json.loads(request.form.get('links', '[]'))
-            infrastructure.elements = json.loads(request.form.get('elements', '[]'))
-            infrastructure.files = json.loads(request.form.get('files', '[]'))
         except json.JSONDecodeError:
             flash('Ошибка в формате JSON. Проверьте введенные данные.', 'danger')
             return redirect(url_for('manage_infrastructure', competition_id=competition_id))
 
+        # Обрабатываем загрузку файлов
+        if 'files' in request.files:
+
+            files = request.files.getlist('files')
+            uploaded_files = []
+
+            for file in files:
+                if file.filename != '':
+                    # Генерируем уникальное имя файла
+                    unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER_INFRA'], unique_filename)
+                    file.save(file_path)  # Сохраняем файл на сервере
+                    uploaded_files.append({
+                        'filename': file.filename,
+                        'path': unique_filename
+                    })
+            print("Fiels:",uploaded_files)
+            # Обновляем список файлов
+            if uploaded_files:
+                if infrastructure.files:
+                    infrastructure.files.extend(uploaded_files)
+                else:
+                    infrastructure.files = uploaded_files
+
         # Сохраняем изменения
+        flag_modified(infrastructure, 'files')
+        db.session.commit()
         db.session.add(infrastructure)
         db.session.commit()
 
         flash('Инфраструктура успешно сохранена!', 'success')
         return redirect(url_for('manage_infrastructure', competition_id=competition_id))
 
-    # Если метод GET, передаем данные в шаблон
     return render_template(
         'competitions/admin/manage_infrastructure.html',
         competition=competition,
         infrastructure=infrastructure,
-        topology=infrastructure.topology if infrastructure else [],  # Передаем топологию
-        links=infrastructure.links if infrastructure else []         # Передаем связи
+        topology=infrastructure.topology if infrastructure.topology else [],
+        links=infrastructure.links if infrastructure.links else [],
+        files=infrastructure.files if infrastructure.files else []
     )
 @app.route('/competitions/<int:competition_id>/infrastructure/description')
 @login_required
@@ -1339,3 +1377,31 @@ def view_infrastructure_nodes(competition_id):
         competition=competition,
         topology=infrastructure.topology if infrastructure.topology else []
     )
+import os
+
+@app.route('/admin/competitions/<int:competition_id>/infrastructure/delete_file', methods=['POST'])
+@login_required
+@admin_required
+def delete_infrastructure_file(competition_id):
+    data = request.get_json()
+    file_path = data.get('file_path')
+
+    if not file_path:
+        return jsonify({'success': False, 'message': 'Не указан путь к файлу.'})
+
+    # Получаем инфраструктуру
+    infrastructure = Infrastructure.query.filter_by(competition_id=competition_id).first()
+    if not infrastructure:
+        return jsonify({'success': False, 'message': 'Инфраструктура не найдена.'})
+
+    # Удаляем файл из списка
+    if infrastructure.files:
+        infrastructure.files = [file for file in infrastructure.files if file['path'] != file_path]
+        db.session.commit()
+
+    # Удаляем файл с сервера
+    file_full_path = os.path.join(app.config['UPLOAD_FOLDER_INFRA'], file_path)
+    if os.path.exists(file_full_path):
+        os.remove(file_full_path)
+
+    return jsonify({'success': True})

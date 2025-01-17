@@ -53,5 +53,49 @@
   {% include 'includes/navbar_admin.html' %}
 {% block content %}
   <script src="{{ url_for('static', filename='js/particles.js') }}"></script>
+  <script>
+      // Функция для отображения flash-сообщений в модальном окне
+      function showFlashMessage(message, category) {
+          const modal = document.getElementById('flashModal');
+          const modalContent = modal.querySelector('.modal-content');
+          const flashMessage = document.getElementById('flashMessage');
 
+          // Устанавливаем текст сообщения
+          flashMessage.textContent = message;
+
+          // Меняем стили в зависимости от категории
+          modalContent.className = 'modal-content'; // Сбрасываем классы
+          if (category === 'success') {
+              modalContent.classList.add('success'); // Зелёный для успеха
+          } else if (category === 'error') {
+              modalContent.classList.add('error'); // Красный для ошибок
+          } else if (category === 'info') {
+              modalContent.classList.add('info'); // Фиолетовый для информации
+          }
+
+          // Показываем модальное окно
+          modal.style.display = 'flex';
+
+          // Закрытие модального окна при клике на крестик
+          modal.querySelector('.close').onclick = function() {
+              modal.style.display = 'none';
+          };
+
+          // Закрытие модального окна при клике вне его
+          window.onclick = function(event) {
+              if (event.target === modal) {
+                  modal.style.display = 'none';
+              }
+          };
+      }
+
+      // Проверяем наличие flash-сообщений и показываем их
+      {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for category, message in messages %}
+                  showFlashMessage("{{ message }}", "{{ category }}");
+              {% endfor %}
+          {% endif %}
+      {% endwith %}
+  </script>
 {% endblock %}

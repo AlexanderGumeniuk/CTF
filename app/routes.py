@@ -99,7 +99,7 @@ def submit_flag(challenge_id):
     if user_flag == challenge.flag:
         # Проверяем, решил ли пользователь задачу ранее
         user_challenge = UserChallenge.query.filter_by(
-            user_id=current_user.id,
+            team_id=current_user.team.id,
             challenge_id=challenge_id
         ).first()
 
@@ -308,48 +308,6 @@ def delete_screenshots(screenshots):
 
 
 
-# Настройка логирования
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-
-@app.route('/user/under_review_responses')
-@login_required
-def user_under_review_responses1():
-    if not current_user.team:
-        flash('Вы не состоите в команде.', 'warning')
-        return redirect(url_for('index'))
-
-    # Получаем отчёты команды пользователя, которые ожидают проверки
-    responses = CriticalEventResponse.query.filter_by(
-        team_id=current_user.team_id,
-        status='pending'
-    ).all()
-    return render_template('user/under_review_responses.html', responses=responses)
-
-
-@app.route('/view_event/<int:event_id>')
-@login_required
-def view_event(event_id):
-    event = CriticalEvent.query.get_or_404(event_id)
-    return render_template('view_event.html', event=event)
-
-
-@app.route('/submit_critical_event/<int:event_id>', methods=['POST'])
-@login_required
-def submit_critical_event(event_id):
-    event = CriticalEvent.query.get_or_404(event_id)
-    response = CriticalEventResponse.query.filter_by(event_id=event.id, user_id=current_user.id).first()
-
-    # Проверяем, что отчет можно отправить на проверку
-    if response and response.status in ['rejected', 'needs_revision']:
-        response.status = 'pending'  # Меняем статус на "pending"
-        db.session.commit()
-        flash('Отчет отправлен на проверку!', 'success')
-    else:
-        flash('Отчет уже находится на проверке или не может быть отправлен.', 'warning')
-
-    return redirect(url_for('user_pending_responses'))
 
 
 @app.route('/admin/create_user', methods=['GET', 'POST'])
@@ -566,16 +524,8 @@ def team_stats():
 
     return render_template('user/team_stats.html', team=team, members=team_members, total_points=total_points, team_rank=team_rank, all_teams=all_teams)
 
-@app.route('/infrastructure')
-@login_required
-def infrastructure():
-    # Получаем данные об инфраструктуре из базы данных
-    infra = Infrastructure.query.first()  # Предполагаем, что у нас только одна запись
-    if not infra:
-        flash('Информация об инфраструктуре пока недоступна.', 'warning')
-        return redirect(url_for('index'))
 
-    return render_template('infrastructure.html', infra=infra)
+
 
 @app.route('/download/<filename>')
 @login_required
@@ -609,92 +559,6 @@ def upload_file():
             flash('Недопустимый формат файла.', 'danger')
     return render_template('upload.html')
 
-
-@app.route('/infrastructure/topology')
-@login_required
-def infrastructure_topology():
-    # Получаем данные об инфраструктуре
-    infra = Infrastructure.query.first()
-    if not infra:
-        flash('Информация о топологии сети пока недоступна.', 'warning')
-        return redirect(url_for('infrastructure'))
-
-    # Преобразуем данные топологии в JSON
-    topology_data = {
-        "nodes": infra.topology.get("nodes", []),
-        "links": infra.topology.get("links", [])
-    }
-
-    return render_template('infrastructure_topology.html', topology_data=topology_data )
-
-from flask import request, redirect, url_for, flash
-
-
-@app.route('/admin/topology', methods=['GET'])
-@login_required
-def admin_topology():
-    if not current_user.is_admin:
-        flash('У вас нет прав доступа к этой странице.', 'danger')
-        return redirect(url_for('index'))
-
-    # Получаем данные топологии
-    infra = Infrastructure.query.first()
-
-    # Проверяем, что данные существуют
-    if not infra:
-        flash('Данные об инфраструктуре отсутствуют.', 'warning')
-        return redirect(url_for('index'))
-
-    # Проверяем и преобразуем данные
-    topology = infra.topology if infra.topology else []  # Убедимся, что topology — это список
-    links = infra.links if infra.links else []
-
-    # Формируем данные для передачи в шаблон
-    topology_data = {
-        "nodes": topology,  # Узлы (список)
-        "links": links      # Связи
-    }
-
-    # Передаем данные в шаблон как объект JSON
-    return render_template('admin_topology.html', topology_data=topology_data)
-
-
-from flask import request, jsonify
-
-@app.route('/save_topology', methods=['POST'])
-@login_required
-def save_topology():
-    if not current_user.is_admin:
-        return jsonify({"success": False, "message": "У вас нет прав доступа к этой странице."})
-
-    # Получаем данные из запроса
-    data = request.get_json()
-
-    # Логируем полученные данные
-    print("Полученные данные:", data)
-
-    # Проверяем, что данные существуют
-    if not data:
-        return jsonify({"success": False, "message": "Нет данных для сохранения."})
-
-    # Получаем объект инфраструктуры из базы данных
-    infra = Infrastructure.query.first()
-    if not infra:
-        return jsonify({"success": False, "message": "Инфраструктура не найдена."})
-
-    try:
-        # Обновляем данные топологии
-        infra.topology = {
-            "nodes": data["nodes"],  # Сохраняем все узлы (новые и отредактированные)
-            "links": data["links"]   # Сохраняем все связи (новые и существующие)
-        }
-        db.session.commit()
-        print("Топология успешно сохранена в базе данных.")
-        return jsonify({"success": True, "message": "Топология успешно сохранена."})
-    except Exception as e:
-        db.session.rollback()
-        print(f"Ошибка при сохранении топологии: {str(e)}")
-        return jsonify({"success": False, "message": f"Ошибка при сохранении топологии: {str(e)}"})
 
 @app.route('/upload_avatar', methods=['POST'])
 @login_required

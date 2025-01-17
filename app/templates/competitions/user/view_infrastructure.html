@@ -4,7 +4,6 @@
 <div class="container">
     <h1>Инфраструктура для соревнования: {{ competition.title }}</h1>
 
-    <!-- Вкладки -->
     <ul class="nav nav-tabs" id="infrastructureTabs" role="tablist">
         <li class="nav-item">
             <a class="nav-link active" id="description-tab" data-toggle="tab" href="#description" role="tab" aria-controls="description" aria-selected="true">Описание</a>
@@ -17,11 +16,9 @@
         </li>
     </ul>
 
-    <!-- Содержимое вкладок -->
     <div class="tab-content" id="infrastructureTabsContent">
-        <!-- Вкладка "Описание" -->
         <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
-            <div class="card mt-3">
+            <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">{{ infrastructure.title }}</h5>
                     <p class="card-text">{{ infrastructure.description }}</p>
@@ -30,24 +27,20 @@
             </div>
         </div>
 
-        <!-- Вкладка "Схема" -->
         <div class="tab-pane fade" id="scheme" role="tabpanel" aria-labelledby="scheme-tab">
-            <div class="mt-3">
-                <div id="scheme-container" style="height: 500px; width: 100%; background-color: white; position: relative;">
-                    <!-- Подсказка для элемента -->
-                    <div id="element-tooltip" style="position: absolute; top: 10px; right: 10px; background-color: white; border: 1px solid black; padding: 5px; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); z-index: 1000; display: none;">
-                        <p id="element-info"></p>
-                    </div>
+            <div id="scheme-container" style="height: 500px; width: 100%; background-color: white; position: relative;">
+                <div id="element-tooltip" style="position: absolute; top: 10px; right: 10px; background-color: white; border: 1px solid black; padding: 5px; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); z-index: 1000; display: none;">
+                    <p id="element-info"></p>
                 </div>
             </div>
         </div>
 
-        <!-- Вкладка "Список узлов" -->
         <div class="tab-pane fade" id="nodes" role="tabpanel" aria-labelledby="nodes-tab">
-            <div class="mt-3">
-                <h4>Список узлов</h4>
-                <div id="nodes-list">
-                    {% for node in topology %}
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Список узлов</h5>
+                    <div id="nodes-list">
+                        {% for node in topology %}
                         <div class="card mb-2">
                             <div class="card-body">
                                 <h5 class="card-title">{{ node.label }}</h5>
@@ -57,13 +50,13 @@
                                 <p class="card-text"><strong>Интерфейсы:</strong> {{ node.interfaces | default('Не указаны') }}</p>
                             </div>
                         </div>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Кнопка "Назад" -->
     <div class="mt-3">
         <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="btn btn-secondary">
             Назад к соревнованию
@@ -80,118 +73,50 @@
   let topology = {{ topology | tojson | safe if topology else '[]' }};
   let links = {{ links | tojson | safe if links else '[]' }};
 
-  // Переменные для управления отображением подсказки
-  let currentSelectedElement = null; // Текущий выбранный элемент
-
-  // Функция для получения пути к изображению по типу узла
-  function getImageForNodeType(nodeType) {
-    const imageMap = {
-      firewall: "{{ url_for('static', filename='images/cisco asa 5500.jpg') }}",
-      router: "{{ url_for('static', filename='images/router.jpg') }}",
-      server: "{{ url_for('static', filename='images/server.jpg') }}",
-      switch: "{{ url_for('static', filename='images/workgroup switch.jpg') }}",
-      workstation: "{{ url_for('static', filename='images/macintosh.jpg') }}",
-      dataBase: "{{ url_for('static', filename='images/relational database.jpg') }}",
-    };
-    return imageMap[nodeType] || "{{ url_for('static', filename='images/default.png') }}"; // Если тип неизвестен, используем изображение по умолчанию
-  }
-
   // Функция для обновления схемы
   function updateDiagram() {
     const nodes = new vis.DataSet(topology);
     const edges = new vis.DataSet(links);
 
     const container = document.getElementById('scheme-container');
-    const data = {
-      nodes: nodes,
-      edges: edges,
-    };
+    const data = { nodes: nodes, edges: edges };
     const options = {
-      nodes: {
-        shape: 'image',
-        image: undefined,
-        size: 30,
-        font: {
-          size: 15,
-          color: '#000000',
-        },
-        borderWidth: 2,
-      },
-      edges: {
-        width: 2,
-        arrows: {
-          to: { enabled: true, scaleFactor: 1, type: 'arrow' },
-        },
-      },
+      nodes: { shape: 'image', size: 30, font: { size: 15, color: '#000000' }, borderWidth: 2 },
+      edges: { width: 2, arrows: { to: { enabled: true, scaleFactor: 1, type: 'arrow' } } },
       physics: false,
-      layout: {
-        improvedLayout: false,
-      },
+      layout: { improvedLayout: false },
     };
 
-    // Очищаем контейнер схемы
-    container.innerHTML = '';
-
-    // Строим схему
     const network = new vis.Network(container, data, options);
 
-    // Устанавливаем изображения для узлов
-    nodes.forEach(node => {
-      network.body.data.nodes.update({
-        id: node.id,
-        image: node.image,
-        x: node.x,
-        y: node.y,
-      });
-    });
-
-    // Обработчик клика по элементу схемы
     network.on("click", function (params) {
       const tooltip = document.getElementById('element-tooltip');
       const elementInfo = document.getElementById('element-info');
 
       if (params.nodes.length > 0) {
-        // Клик по узлу
         const nodeId = params.nodes[0];
         const node = nodes.get(nodeId);
-
-        if (currentSelectedElement === nodeId) {
-          tooltip.style.display = 'none';
-          currentSelectedElement = null;
-        } else {
-          currentSelectedElement = nodeId;
-          elementInfo.innerHTML = `
-            <strong>Узел:</strong> ${node.label}<br>
-            <strong>Описание:</strong> ${node.description || 'Нет описания'}<br>
-            <strong>Пользователь:</strong> ${node.user || 'Не указан'}<br>
-            <strong>Интерфейсы:</strong> ${node.interfaces || 'Не указаны'}
-          `;
-          tooltip.style.display = 'block';
-        }
+        elementInfo.innerHTML = `
+          <strong>Узел:</strong> ${node.label}<br>
+          <strong>Описание:</strong> ${node.description || 'Нет описания'}<br>
+          <strong>Пользователь:</strong> ${node.user || 'Не указан'}<br>
+          <strong>Интерфейсы:</strong> ${node.interfaces || 'Не указаны'}
+        `;
+        tooltip.style.display = 'block';
       } else if (params.edges.length > 0) {
-        // Клик по связи
         const edgeId = params.edges[0];
         const edge = edges.get(edgeId);
-
-        if (currentSelectedElement === edgeId) {
-          tooltip.style.display = 'none';
-          currentSelectedElement = null;
-        } else {
-          currentSelectedElement = edgeId;
-          elementInfo.innerHTML = `
-            <strong>Связь:</strong> ${edge.label || 'Без метки'}<br>
-            <strong>Описание:</strong> ${edge.description || 'Нет описания'}
-          `;
-          tooltip.style.display = 'block';
-        }
+        elementInfo.innerHTML = `
+          <strong>Связь:</strong> ${edge.label || 'Без метки'}<br>
+          <strong>Описание:</strong> ${edge.description || 'Нет описания'}
+        `;
+        tooltip.style.display = 'block';
       } else {
         tooltip.style.display = 'none';
-        currentSelectedElement = null;
       }
     });
   }
 
-  // Инициализация при загрузке страницы
   document.addEventListener('DOMContentLoaded', () => {
     updateDiagram();
   });

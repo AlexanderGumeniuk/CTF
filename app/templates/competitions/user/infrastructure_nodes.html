@@ -2,84 +2,127 @@
 
 {% block content %}
 <div class="container">
+  <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="btn btn-secondary">
+      ← Назад к соревнованию
+  </a>
+  <div class="button-container">
+      <a href="{{ url_for('view_infrastructure_description', competition_id=competition.id) }}" class="btn btn-primary">
+          Перейти к описанию
+      </a>
+      <a href="{{ url_for('view_infrastructure_scheme', competition_id=competition.id) }}" class="btn btn-primary">
+          Перейти к схеме
+      </a>
+
+  </div>
     <h1>Список узлов для соревнования: {{ competition.title }}</h1>
 
-
-        <table class="event-table" style="width: 1400px;">
+    <!-- Таблица узлов -->
+    <div class="table-container">
+        <table class="event-table">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Название</th>
                     <th>Тип</th>
-                    <th class="event-description">Описание</th>
+                    <th>Описание</th>
                     <th>Пользователь</th>
-                    <th class="event-description">Интерфейсы</th>
+                    <th>Интерфейсы</th>
                 </tr>
             </thead>
             <tbody>
                 {% for node in topology %}
-                    <tr>
+                    <tr class="event-row">
                         <td>{{ node.id }}</td>
                         <td>{{ node.label }}</td>
                         <td>{{ node.group }}</td>
-                        <td>
-                            {% if node.description %}
-                                {{ node.description | replace(',', '<br>') | safe }}
-                            {% else %}
-                                Нет описания
-                            {% endif %}
-                        </td>
+                        <td class="event-description">{{ node.description | default('Нет описания') }}</td>
                         <td>{{ node.user | default('Не указан') }}</td>
-                        <td>
-                            {% if node.interfaces %}
-                                {{ node.interfaces | replace(',', '<br>') | safe }}
-                            {% else %}
-                                Не указаны
-                            {% endif %}
-                        </td>
+                        <td class="event-description">{{ node.interfaces | default('Не указаны') }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
-
+    </div>
 
     <!-- Кнопки для навигации -->
-    <div class="mt-3">
-        <a href="{{ url_for('view_infrastructure_description', competition_id=competition.id) }}" class="btn btn-primary">
-            Перейти к описанию
-        </a>
-        <a href="{{ url_for('view_infrastructure_scheme', competition_id=competition.id) }}" class="btn btn-primary">
-            Перейти к схеме
-        </a>
-        <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="btn btn-secondary">
-            Назад к соревнованию
-        </a>
-    </div>
+
 </div>
 
 <style>
+    /* Контейнер для таблицы */
+    .table-container {
+        display: flex;
+        justify-content: center; /* Центрирование таблицы */
+        margin-bottom: 20px;
+    }
+
+    /* Стили для таблицы */
     .event-table {
-        width: 1400px; /* Фиксированная ширина таблицы */
-        table-layout: fixed; /* Фиксированный макет ячеек */
-        border-collapse: collapse; /* Убираем двойные границы */
+        width: 90%; /* Ширина таблицы */
+        max-width: 1200px; /* Максимальная ширина */
+        border-collapse: collapse;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0px 0px 20px rgba(147, 112, 219, 0.3); /* Фиолетовая тень */
     }
 
     .event-table th,
     .event-table td {
-        padding: 8px; /* Отступы внутри ячеек */
-        border: 1px solid #ddd; /* Границы ячеек */
-        word-wrap: break-word; /* Перенос длинных слов */
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .event-table th {
-        background-color: #f5f5f5; /* Цвет фона заголовков */
-        font-weight: bold; /* Жирный шрифт для заголовков */
+        background: rgba(147, 112, 219, 0.2); /* Фиолетовый фон для заголовков */
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
     }
 
+    .event-table tbody tr:hover {
+        background: rgba(147, 112, 219, 0.1); /* Фиолетовый фон при наведении */
+    }
 
-
+    /* Стили для описаний */
     .event-description {
-        width: 300px; /* Ширина столбцов с описанием и интерфейсами */
+        white-space: pre-wrap; /* Сохраняет переносы строк */
+        word-wrap: break-word; /* Переносит длинные слова */
+        max-width: 400px; /* Ограничиваем ширину для удобства */
+    }
+
+    /* Контейнер для кнопок */
+    .button-container {
+        display: flex;
+        justify-content: center; /* Центрирование кнопок */
+        gap: 10px; /* Расстояние между кнопками */
+        margin-top: 20px;
+    }
+
+    /* Стили для кнопок */
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background: rgba(147, 112, 219, 0.3); /* Фиолетовый фон */
+        color: white;
+        border-radius: 25px;
+        text-decoration: none;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(147, 112, 219, 0.5);
+    }
+
+    .btn:hover {
+        background: rgba(147, 112, 219, 0.5); /* Фиолетовый фон при наведении */
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: rgba(147, 112, 219, 0.3); /* Основная кнопка */
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1); /* Вторичная кнопка */
     }
 </style>
 {% endblock %}

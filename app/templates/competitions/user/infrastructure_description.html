@@ -2,27 +2,134 @@
 
 {% block content %}
 <div class="container">
-    <h1>Описание инфраструктуры для соревнования: {{ competition.title }}</h1>
+  <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="btn btn-secondary">
+      ← Назад к соревнованию
+  </a>
+  <div class="button-container mt-3">
+      <a href="{{ url_for('view_infrastructure_scheme', competition_id=competition.id) }}" class="btn btn-primary">
+          Перейти к схеме
+      </a>
+      <a href="{{ url_for('view_infrastructure_nodes', competition_id=competition.id) }}" class="btn btn-primary">
+          Перейти к списку узлов
+      </a>
+  </div>
+  <h1>Описание инфраструктуры для соревнования: {{ competition.title }}</h1>
 
-    <div class="card mt-3">
-        <div class="card-body">
-            <h5 class="card-title">{{ infrastructure.title }}</h5>
-            <p class="card-text">{{ infrastructure.description }}</p>
-            <p class="card-text"><strong>Описание организации:</strong> {{ infrastructure.organization_description }}</p>
-        </div>
-    </div>
+  <!-- Карточка с описанием инфраструктуры -->
+  <div class="card">
+      <div class="card-body">
+          <h5 class="card-title">{{ infrastructure.title }}</h5>
+          <p class="card-text">{{ infrastructure.description }}</p>
+          <p class="card-text"><strong>Описание организации:</strong> {{ infrastructure.organization_description }}</p>
+      </div>
+  </div>
 
-    <!-- Кнопки для навигации -->
-    <div class="mt-3">
-        <a href="{{ url_for('view_infrastructure_scheme', competition_id=competition.id) }}" class="btn btn-primary">
-            Перейти к схеме
-        </a>
-        <a href="{{ url_for('view_infrastructure_nodes', competition_id=competition.id) }}" class="btn btn-primary">
-            Перейти к списку узлов
-        </a>
-        <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="btn btn-secondary">
-            Назад к соревнованию
-        </a>
-    </div>
+  <!-- Список файлов с паролями (.kdbx) -->
+  {% if infrastructure.files %}
+      <div class="mt-4">
+          <h3>Файлы с паролями (.kdbx)</h3>
+          <ul class="list-group">
+              {% for file in infrastructure.files %}
+                  {% if file.filename.endswith('.kdbx') %}
+                      <li class="list-group-item">
+                          <a href="{{ url_for('static', filename='uploads/infrastructure/' + file.path) }}" target="_blank" class="btn btn-link">
+                              {{ file.filename }}
+                          </a>
+                      </li>
+                  {% endif %}
+              {% endfor %}
+          </ul>
+      </div>
+  {% endif %}
+
+  <!-- Список файлов с конфигами VPN (.ovpn) -->
+  {% if infrastructure.files %}
+      <div class="mt-4">
+          <h3>Файлы с конфигами VPN (.ovpn)</h3>
+          <ul class="list-group">
+              {% for file in infrastructure.files %}
+                  {% if file.filename.endswith('.ovpn') %}
+                      <li class="list-group-item">
+                          <a href="{{ url_for('static', filename='uploads/infrastructure/' + file.path) }}" target="_blank" class="btn btn-link">
+                              {{ file.filename }}
+                          </a>
+                      </li>
+                  {% endif %}
+              {% endfor %}
+          </ul>
+      </div>
+  {% endif %}
 </div>
+
+<style>
+    /* Контейнер для кнопок */
+    .button-container {
+        display: flex;
+        justify-content: center; /* Центрирование кнопок */
+        gap: 10px; /* Расстояние между кнопками */
+        margin-top: 20px;
+    }
+
+    /* Основные стили для кнопок */
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background: rgba(147, 112, 219, 0.3); /* Фиолетовый фон */
+        color: white;
+        border-radius: 25px;
+        text-decoration: none;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(147, 112, 219, 0.5);
+    }
+
+    /* Эффект при наведении */
+    .btn:hover {
+        background: rgba(147, 112, 219, 0.5); /* Фиолетовый фон при наведении */
+        transform: translateY(-2px);
+        box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.4); /* Тень при наведении */
+    }
+
+    /* Стили для основной кнопки */
+    .btn-primary {
+        background: rgba(147, 112, 219, 0.3); /* Основная кнопка */
+    }
+
+    /* Стили для вторичной кнопки */
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1); /* Вторичная кнопка */
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Эффект при наведении для вторичной кнопки */
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2); /* Светлый фон при наведении */
+        border-color: rgba(147, 112, 219, 0.5);
+    }
+
+    /* Стили для списка файлов */
+    .list-group {
+        margin-top: 10px;
+    }
+
+    .list-group-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px;
+        border: 1px solid rgba(147, 112, 219, 0.3);
+        border-radius: 5px;
+        margin-bottom: 5px;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .list-group-item a {
+        color: rgba(147, 112, 219, 0.8);
+        text-decoration: none;
+    }
+
+    .list-group-item a:hover {
+        color: rgba(147, 112, 219, 1);
+    }
+</style>
 {% endblock %}

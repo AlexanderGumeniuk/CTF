@@ -1,34 +1,34 @@
 {% extends "base_competition.html" %}
 
 {% block content %}
-<div class="container1">
-
+<div class="container">
     <h1>Инциденты соревнования: {{ competition.title }}</h1>
-    <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="back-button">
+    <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="btn back-button">
         ← Назад к соревнованию
     </a>
+
     <!-- Фильтр по статусу -->
-    <div class="mb-3">
+    <div class="filter-buttons">
         <a href="{{ url_for('admin_competition_incidents', competition_id=competition.id, status='all') }}"
-           class="btn btn-secondary {% if status == 'all' %}active{% endif %}">
+           class="btn {% if status == 'all' %}active{% endif %}">
             Все
         </a>
         <a href="{{ url_for('admin_competition_incidents', competition_id=competition.id, status='pending') }}"
-           class="btn btn-warning {% if status == 'pending' %}active{% endif %}">
+           class="btn {% if status == 'pending' %}active{% endif %}">
             Ожидают проверки
         </a>
         <a href="{{ url_for('admin_competition_incidents', competition_id=competition.id, status='approved') }}"
-           class="btn btn-success {% if status == 'approved' %}active{% endif %}">
+           class="btn {% if status == 'approved' %}active{% endif %}">
             Одобрены
         </a>
         <a href="{{ url_for('admin_competition_incidents', competition_id=competition.id, status='rejected') }}"
-           class="btn btn-danger {% if status == 'rejected' %}active{% endif %}">
+           class="btn {% if status == 'rejected' %}active{% endif %}">
             Отклонены
         </a>
     </div>
 
     <!-- Таблица с инцидентами -->
-    <table class="table table-bordered">
+    <table class="table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -52,11 +52,11 @@
                 </td>
                 <td>
                     {% if incident.status == 'pending' %}
-                        <span class="badge bg-warning">Ожидает проверки</span>
+                        <span class="status-badge pending">Ожидает проверки</span>
                     {% elif incident.status == 'approved' %}
-                        <span class="badge bg-success">Одобрен</span>
+                        <span class="status-badge approved">Одобрен</span>
                     {% elif incident.status == 'rejected' %}
-                        <span class="badge bg-danger">Отклонен</span>
+                        <span class="status-badge rejected">Отклонен</span>
                     {% endif %}
                 </td>
                 <td>

@@ -69,8 +69,6 @@
         <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
         <a href="{{ url_for('leaderboard') }}" class="nav-link">Рейтинг Пользователей</a>
         <a href="{{ url_for('team_leaderboard') }}" class="nav-link">Рейтинг команд</a>
-        <!-- Новая ссылка на описание инфраструктуры -->
-        <a href="{{ url_for('infrastructure') }}" class="nav-link">Инфраструктура</a>
 
         {% if current_user.is_authenticated and current_user.team %}
             <div class="dropdown">

@@ -89,6 +89,27 @@
             <textarea class="form-control" id="organization_description" name="organization_description" rows="3" required>{{ infrastructure.organization_description if infrastructure else '' }}</textarea>
         </div>
 
+        <!-- Загрузка файлов -->
+        <div class="form-group">
+            <label for="files">Загрузить файлы (пароли, конфиги VPN)</label>
+            <input type="file" class="form-control-file" id="files" name="files" multiple>
+        </div>
+
+        <!-- Список загруженных файлов -->
+        {% if infrastructure.files %}
+            <div class="mt-3">
+                <h4>Загруженные файлы:</h4>
+                <ul>
+                    {% for file in infrastructure.files %}
+                        <li>
+                            <a href="{{ url_for('static', filename='uploads/infrastructure/' + file.path) }}" target="_blank">{{ file.filename }}</a>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteFile('{{ file.path }}')">Удалить</button>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
         <!-- Скрытые поля для JSON -->
         <input type="hidden" id="topology" name="topology" value="{{ topology | tojson if topology else '[]' }}">
         <input type="hidden" id="links" name="links" value="{{ links | tojson if links else '[]' }}">
@@ -361,6 +382,27 @@
         currentSelectedElement = null;
       }
     });
+  }
+
+  // Функция для удаления файла
+  function deleteFile(filePath) {
+    if (confirm('Вы уверены, что хотите удалить этот файл?')) {
+      fetch(`/admin/competitions/{{ competition.id }}/infrastructure/delete_file`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ file_path: filePath }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload(); // Перезагружаем страницу
+        } else {
+          alert('Ошибка при удалении файла.');
+        }
+      });
+    }
   }
 
   // Инициализация при загрузке страницы

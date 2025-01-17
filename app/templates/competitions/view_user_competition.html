@@ -26,15 +26,7 @@
         </div>
     </div>
 
-    <!-- Информация о пользователе -->
-    <h3>Информация о пользователе</h3>
-    <div class="list-group">
-        <div class="list-group-item">
-            <h5>Имя пользователя: {{ current_user.username }}</h5>
-            <p><strong>Роль:</strong> {{ "Администратор" if current_user.is_admin else "Участник" }}</p>
-            <p><strong>Очки:</strong> {{ current_user.total_points }}</p>
-        </div>
-    </div>
+
 
     <!-- Информация о флагах -->
     <h3>Флаги</h3>
