@@ -1,0 +1,85 @@
+{% extends "base_competition.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Список узлов для соревнования: {{ competition.title }}</h1>
+
+
+        <table class="event-table" style="width: 1400px;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Тип</th>
+                    <th class="event-description">Описание</th>
+                    <th>Пользователь</th>
+                    <th class="event-description">Интерфейсы</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for node in topology %}
+                    <tr>
+                        <td>{{ node.id }}</td>
+                        <td>{{ node.label }}</td>
+                        <td>{{ node.group }}</td>
+                        <td>
+                            {% if node.description %}
+                                {{ node.description | replace(',', '<br>') | safe }}
+                            {% else %}
+                                Нет описания
+                            {% endif %}
+                        </td>
+                        <td>{{ node.user | default('Не указан') }}</td>
+                        <td>
+                            {% if node.interfaces %}
+                                {{ node.interfaces | replace(',', '<br>') | safe }}
+                            {% else %}
+                                Не указаны
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+
+    <!-- Кнопки для навигации -->
+    <div class="mt-3">
+        <a href="{{ url_for('view_infrastructure_description', competition_id=competition.id) }}" class="btn btn-primary">
+            Перейти к описанию
+        </a>
+        <a href="{{ url_for('view_infrastructure_scheme', competition_id=competition.id) }}" class="btn btn-primary">
+            Перейти к схеме
+        </a>
+        <a href="{{ url_for('view_user_competition', competition_id=competition.id) }}" class="btn btn-secondary">
+            Назад к соревнованию
+        </a>
+    </div>
+</div>
+
+<style>
+    .event-table {
+        width: 1400px; /* Фиксированная ширина таблицы */
+        table-layout: fixed; /* Фиксированный макет ячеек */
+        border-collapse: collapse; /* Убираем двойные границы */
+    }
+
+    .event-table th,
+    .event-table td {
+        padding: 8px; /* Отступы внутри ячеек */
+        border: 1px solid #ddd; /* Границы ячеек */
+        word-wrap: break-word; /* Перенос длинных слов */
+    }
+
+    .event-table th {
+        background-color: #f5f5f5; /* Цвет фона заголовков */
+        font-weight: bold; /* Жирный шрифт для заголовков */
+    }
+
+
+
+    .event-description {
+        width: 300px; /* Ширина столбцов с описанием и интерфейсами */
+    }
+</style>
+{% endblock %}

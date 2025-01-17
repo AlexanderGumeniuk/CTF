@@ -1,4 +1,3 @@
-<!-- templates/includes/_navbar.html -->
 <nav>
     <style>
         /* Основные стили для навигации */
@@ -30,13 +29,7 @@
             color: #bb86fc; /* Более яркий фиолетовый при наведении */
         }
 
-        /* Стили для активной ссылки */
-        .nav-link.active {
-            color: #bb86fc;
-            background: rgba(147, 112, 219, 0.1); /* Легкий фиолетовый фон */
-        }
-
-        /* Стили для выпадающего списка */
+        /* Стили для раскрывающегося списка */
         .dropdown {
             position: relative;
         }
@@ -73,38 +66,44 @@
     </style>
 
     <div class="nav-container">
-        <!-- Ссылка на флаги -->
         <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
-        <a href="{{ url_for('competition_challenges', competition_id=competition.id) }}"
-           class="nav-link {% if request.endpoint == 'competition_challenges' %}active{% endif %}">
-            Флаги
-        </a>
+        <a href="{{ url_for('leaderboard') }}" class="nav-link">Рейтинг Пользователей</a>
+        <a href="{{ url_for('team_leaderboard') }}" class="nav-link">Рейтинг команд</a>
+        <!-- Новая ссылка на описание инфраструктуры -->
+        <a href="{{ url_for('infrastructure') }}" class="nav-link">Инфраструктура</a>
 
-        <!-- Выпадающий список для инцидентов -->
-        <div class="dropdown">
-            <a href="#" class="nav-link {% if request.endpoint in ['create_incident', 'user_competition_incidents'] %}active{% endif %}">
-                Инциденты
-            </a>
-            <a href="{{ url_for('view_infrastructure_description', competition_id=competition.id) }}">
-                Критические события
-            </a>
-
-            <div class="dropdown-content">
-                <a href="{{ url_for('create_incident', competition_id=competition.id) }}"
-                   class="{% if request.endpoint == 'create_incident' %}active{% endif %}">
-                    Создать инцидент
-                </a>
-                <a href="{{ url_for('user_competition_incidents', competition_id=competition.id) }}"
-                   class="{% if request.endpoint == 'user_competition_incidents' %}active{% endif %}">
-                    Мои инциденты
-                </a>
+        {% if current_user.is_authenticated and current_user.team %}
+            <div class="dropdown">
+                <a href="#" class="nav-link">Команда</a>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('team_stats') }}">Статистика команды</a>
+                </div>
             </div>
-        </div>
+        {% endif %}
 
-        <!-- Ссылка на критические события -->
-        <a href="{{ url_for('list_critical_events', competition_id=competition.id) }}"
-           class="nav-link {% if request.endpoint == 'list_critical_events' %}active{% endif %}">
-            Критические события
-        </a>
+        {% if current_user.is_authenticated %}
+        {% if not current_user.is_admin %}
+        <ul class="navbar-nav">
+        <a class="nav-link" href="{{ url_for('user_competitions') }}">Соревнования</a>
+
+</ul>
+
+            {% endif %}
+
+
+
+            <!-- Ссылка на администрирование (только для админа) -->
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">Администрирование</a>
+                <a href="{{ url_for('list_competitions') }}" class="nav-link">Администрирование Соревнований</a>
+
+            {% endif %}
+
+            <a href="{{ url_for('profile') }}" class="nav-link">Профиль</a>
+
+        {% else %}
+            <a href="{{ url_for('login') }}" class="nav-link">Войти</a>
+            <a href="{{ url_for('register') }}" class="nav-link">Регистрация</a>
+        {% endif %}
     </div>
 </nav>

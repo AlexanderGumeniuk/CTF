@@ -1288,3 +1288,54 @@ def manage_infrastructure(competition_id):
         topology=infrastructure.topology if infrastructure else [],  # Передаем топологию
         links=infrastructure.links if infrastructure else []         # Передаем связи
     )
+@app.route('/competitions/<int:competition_id>/infrastructure/description')
+@login_required
+@active_competition_required
+def view_infrastructure_description(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    infrastructure = Infrastructure.query.filter_by(competition_id=competition_id).first()
+
+    if not infrastructure:
+        flash('Инфраструктура для этого соревнования еще не создана.', 'warning')
+        return redirect(url_for('view_user_competition', competition_id=competition_id))
+
+    return render_template(
+        'competitions/user/infrastructure_description.html',
+        competition=competition,
+        infrastructure=infrastructure
+    )
+
+@app.route('/competitions/<int:competition_id>/infrastructure/scheme')
+@login_required
+@active_competition_required
+def view_infrastructure_scheme(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    infrastructure = Infrastructure.query.filter_by(competition_id=competition_id).first()
+
+    if not infrastructure:
+        flash('Инфраструктура для этого соревнования еще не создана.', 'warning')
+        return redirect(url_for('view_user_competition', competition_id=competition_id))
+
+    return render_template(
+        'competitions/user/infrastructure_scheme.html',
+        competition=competition,
+        topology=infrastructure.topology if infrastructure.topology else [],
+        links=infrastructure.links if infrastructure.links else []
+    )
+
+@app.route('/competitions/<int:competition_id>/infrastructure/nodes')
+@login_required
+@active_competition_required
+def view_infrastructure_nodes(competition_id):
+    competition = Competition.query.get_or_404(competition_id)
+    infrastructure = Infrastructure.query.filter_by(competition_id=competition_id).first()
+
+    if not infrastructure:
+        flash('Инфраструктура для этого соревнования еще не создана.', 'warning')
+        return redirect(url_for('view_user_competition', competition_id=competition_id))
+
+    return render_template(
+        'competitions/user/infrastructure_nodes.html',
+        competition=competition,
+        topology=infrastructure.topology if infrastructure.topology else []
+    )
