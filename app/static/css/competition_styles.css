@@ -174,6 +174,9 @@ option
 }
 
 .tab-icon.unsolved::before {
+    content: "?";
+}
+.tab-icon.block::before {
     content: "❌";
 }
 .tab-icon.pending::before{
@@ -204,6 +207,11 @@ option
     box-shadow: 0px 0px 20px rgba(76, 175, 80, 0.3); /* Зеленое свечение */
 }
 
+.challenge-item.block {
+    border: 2px solid red; /* Зеленая обводка */
+    box-shadow: 0px 0px 20px rgba(76, 175, 80, 0.3); /* Зеленое свечение */
+}
+
 .challenge-item {
     box-shadow: 0px 0px 20px rgba(147, 112, 219, 0.3); /* Фиолетовое свечение */
 }
@@ -227,6 +235,18 @@ option
 }
 
 .status-icon-red {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: rgba(255, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+}
+
+.status-icon-block {
     width: 30px;
     height: 30px;
     border-radius: 50%;

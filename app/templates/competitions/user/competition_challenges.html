@@ -23,22 +23,33 @@
            class="tab-link {% if filter_type == 'unsolved' %}active{% endif %}">
             <span class="tab-icon unsolved"></span> Нерешённые
         </a>
+        <a href="{{ url_for('competition_challenges', competition_id=competition.id, filter='blocked') }}"
+           class="tab-link {% if filter_type == 'blocked' %}active{% endif %}">
+            <span class="tab-icon block"></span> Заблокированые
+        </a>
     </div>
 
     <!-- Список задач -->
     <div class="challenges-list">
         {% for challenge in challenges %}
-            <div class="challenge-item {% if challenge in solved_challenges %}solved{% endif %}">
+            <div class="challenge-item {% if challenge in solved_challenges %}
+                                solved
+                                {% elif challenge in blocked_challenge %}
+                                block
+                                {% endif %}">
                 <div class="challenge-header">
                     <!-- Иконка статуса -->
                     {% if challenge in solved_challenges %}
                         <div class="status-icon">
-                            <span class="icon">✔️</span>
+                          <span class="icon">✔️</span>
                         </div>
-                    {% else %}
-                        <div class="status-icon-red">
-                            <span class="icon">✖️</span>
-                        </div>
+                    {% elif challenge  in  blocked_challenge %}
+                      <div class="status-icon-block">
+                        <span class="icon">✖️</span>
+                      </div>
+                      {%else%}
+                        <div class="status-icon">
+                        <span class="icon">?</span></div>
                     {% endif %}
 
                     <div>
@@ -85,7 +96,7 @@
                         {% endif %}
                     </div>
                     <!-- Форма для отправки флага (только для нерешенных задач) -->
-                    {% if challenge not in solved_challenges %}
+                    {% if (challenge not in solved_challenges) and (challenge not in blocked_challenge) %}
                         <div class="challenge-form">
                             <form method="POST" action="{{ url_for('submit_flag', challenge_id=challenge.id) }}">
                                 <input type="text" name="flag" placeholder="Введите флаг" required>

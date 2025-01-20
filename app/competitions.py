@@ -2,7 +2,7 @@ from app import app, db
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from datetime import datetime
-from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalEvent, CriticalEventResponse,CriticalEventStep,Infrastructure,PointsHistory, Competition, db
+from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalEvent, CriticalEventResponse,CriticalEventStep,Infrastructure,PointsHistory, Competition, db,FlagResponse
 from functools import wraps
 from flask import redirect, url_for, flash
 from flask_login import current_user
@@ -218,6 +218,7 @@ def add_flag_to_competition(competition_id):
         flag = data.get("flag")
         points = data.get("points")
         category = data.get("category")
+        max_attempts = data.get("max_attempts")
 
         # Проверяем, что все поля заполнены
         if not all([title, description, flag, points, category]):
@@ -233,6 +234,7 @@ def add_flag_to_competition(competition_id):
             flag=flag,
             points=points,
             category=category,
+            max_attempts=max_attempts,
             competition_id=competition_id
         )
         db.session.add(challenge)
@@ -259,6 +261,7 @@ def edit_flag_in_competition(competition_id, challenge_id):
     flag = data.get("flag")
     points = data.get("points")
     category = data.get("category")
+    max_attempts = data.get("max_attempts")
 
     if not all([title, description, flag, points, category]):
         return jsonify({"success": False, "message": "Все поля обязательны для заполнения."})
@@ -272,6 +275,7 @@ def edit_flag_in_competition(competition_id, challenge_id):
         challenge.description = description
         challenge.flag = flag
         challenge.points = points
+        challenge.max_attempts = max_attempts
         challenge.category = category
         db.session.commit()
         return jsonify({"success": True, "message": "Флаг успешно обновлен."})
@@ -421,6 +425,59 @@ def view_user_competition(competition_id):
         critical_events=critical_events
     )
 
+@app.route('/admin/competitions/<int:competition_id>/flag_responses')
+@login_required
+@admin_required
+def admin_flag_responses(competition_id):
+    # Получаем соревнование
+    competition = Competition.query.get_or_404(competition_id)
+
+    # Получаем все команды, участвующие в соревновании
+    teams = Team.query.filter_by(competition_id=competition_id).all()
+
+    # Получаем выбранную команду из параметра запроса
+    selected_team_id = request.args.get('team_id', type=int)
+    selected_team = Team.query.get(selected_team_id) if selected_team_id else None
+
+    # Собираем данные о ответах на флаги для каждой команды
+    team_responses = []
+    for team in teams:
+        # Если выбрана конкретная команда, пропускаем остальные
+        if selected_team_id and team.id != selected_team_id:
+            continue
+
+        # Получаем все ответы команды на флаги, которые связаны с задачами этого соревнования
+        responses = (
+            db.session.query(FlagResponse)
+            .join(Challenge, FlagResponse.challenge_id == Challenge.id)
+            .filter(
+                FlagResponse.team_id == team.id,
+                Challenge.competition_id == competition_id
+            )
+            .all()
+        )
+
+        # Группируем ответы по задачам
+        challenge_responses = {}
+        for response in responses:
+            if response.challenge_id not in challenge_responses:
+                challenge_responses[response.challenge_id] = []
+            challenge_responses[response.challenge_id].append(response)
+
+        # Добавляем данные команды в список
+        team_responses.append({
+            'team': team,
+            'responses': challenge_responses
+        })
+
+    return render_template(
+        'competitions/admin/flag_responses.html',
+        competition=competition,
+        teams=teams,
+        team_responses=team_responses,
+        selected_team_id=selected_team_id
+    )
+    
 @app.route('/competitions/<int:competition_id>/challenges', defaults={'filter': 'all'})
 @app.route('/competitions/<int:competition_id>/challenges/<filter>')
 @login_required
@@ -436,6 +493,15 @@ def competition_challenges(competition_id, filter):
 
     # Получаем все задачи для этого соревнования
     challenges = Challenge.query.filter_by(competition_id=competition_id).all()
+    blocked_challenge_ids = []
+    for challenge in challenges:
+        attempts_used = FlagResponse.query.filter_by(
+            team_id=current_user.team_id,
+            challenge_id=challenge.id
+        ).count()
+
+        if attempts_used == challenge.max_attempts:
+            blocked_challenge_ids.append(challenge.id)
 
     # Получаем ID решенных задач текущего пользователя
     solved_challenge_ids = [
@@ -449,19 +515,22 @@ def competition_challenges(competition_id, filter):
     if filter == 'solved':
         challenges = [challenge for challenge in challenges if challenge.id in solved_challenge_ids]
     elif filter == 'unsolved':
-        challenges = [challenge for challenge in challenges if challenge.id not in solved_challenge_ids]
+        challenges = [challenge for challenge in challenges if (challenge.id not in solved_challenge_ids) and (challenge.id  not in blocked_challenge_ids)]
+    elif filter == 'blocked':
+        challenges = [challenge for challenge in challenges if challenge.id  in blocked_challenge_ids]
 
     # Сортируем задачи по числовому значению в названии
     challenges = sorted(challenges, key=lambda x: extract_number(x.title))
 
     # Получаем список решенных задач для отображения статуса
     solved_challenges = [challenge for challenge in challenges if challenge.id in solved_challenge_ids]
-
+    blocked_challenge = [challenge for challenge in challenges if challenge.id  in blocked_challenge_ids]
     return render_template(
         'competitions/user/competition_challenges.html',
         competition=competition,
         challenges=challenges,
         solved_challenges=solved_challenges,
+        blocked_challenge = blocked_challenge,
         filter_type=filter  # Передаем текущий фильтр в шаблон
     )
 

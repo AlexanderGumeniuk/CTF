@@ -55,7 +55,7 @@
     #flags-table th,
     #flags-table td {
         padding: 1rem;
-        text-align: left;
+        text-align: center;
         color: #fff; /* Белый текст */
     }
 
@@ -221,6 +221,7 @@
             <th>Описание</th>
             <th>Флаг</th>
             <th>Баллы</th>
+            <th>Количество попыток</th>
             <th>Категория</th>
             <th>Действия</th>
         </tr>
@@ -233,6 +234,7 @@
                     <td>{{ flag.description }}</td>
                     <td>{{ flag.flag }}</td>
                     <td>{{ flag.points }}</td>
+                    <td>{{ flag.max_attempts }}</td>
                     <td>{{ flag.category }}</td>
                     <td>
                         <button class="edit-flag-button" data-challenge-id="{{ flag.id }}">Редактировать</button>
@@ -263,6 +265,8 @@
             <input type="text" id="flag" required>
             <label for="points">Баллы:</label>
             <input type="number" id="points" required>
+            <label for="max_attempts">Максимальное количество попытоко ответа</label>
+            <input type="number" id="max_attempts" required>
             <label for="category">Категория:</label>
             <input type="text" id="category" required>
             <button type="submit">Сохранить</button>
@@ -305,6 +309,7 @@
             const description = document.getElementById('description').value;
             const flag = document.getElementById('flag').value;
             const points = parseInt(document.getElementById('points').value);
+            const max_attempts = parseInt(document.getElementById('max_attempts').value);
             const category = document.getElementById('category').value;
 
             const url = challengeId
@@ -324,6 +329,7 @@
                         description,
                         flag,
                         points,
+                        max_attempts,
                         category,
                     }),
                 });

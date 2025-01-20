@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request
 from app import app, db
-from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalEvent, CriticalEventResponse,CriticalEventStep,Infrastructure,PointsHistory
+from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalEvent, CriticalEventResponse,CriticalEventStep,Infrastructure,PointsHistory,FlagResponse
 from flask_login import login_user, current_user, logout_user, login_required
 from sqlalchemy import func
 from datetime import datetime
@@ -96,65 +96,55 @@ def submit_flag(challenge_id):
     challenge = Challenge.query.get_or_404(challenge_id)
     user_flag = request.form['flag']
 
-    if user_flag == challenge.flag:
-        # Проверяем, решил ли пользователь задачу ранее
-        user_challenge = UserChallenge.query.filter_by(
-            team_id=current_user.team.id,
-            challenge_id=challenge_id
-        ).first()
+    # Проверяем, состоит ли пользователь в команде
+    if not current_user.team:
+        flash('Вы не состоите в команде. Ответы принимаются только от команд.', 'danger')
+        return redirect(url_for('competition_challenges', competition_id=challenge.competition_id))
 
-        if not user_challenge:
-            # Отмечаем задачу как решённую для текущего пользователя
-            user_challenge = UserChallenge(
-                user_id=current_user.id,
-                team_id=current_user.team.id,
-                challenge_id=challenge_id,
-                solved=True
-            )
-            db.session.add(user_challenge)
+    # Проверяем, сколько попыток уже использовано командой
+    attempts_used = FlagResponse.query.filter_by(
+        team_id=current_user.team_id,
+        challenge_id=challenge_id
+    ).count()
 
-            # Начисляем баллы текущему пользователю
-            current_user.total_points += challenge.points
+    if attempts_used >= challenge.max_attempts:
+        flash('Ваша команда исчерпала все попытки для этой задачи.', 'danger')
+        return redirect(url_for('competition_challenges', competition_id=challenge.competition_id))
+
+    # Проверяем, правильный ли флаг
+    is_correct = (user_flag == challenge.flag)
+
+    # Сохраняем ответ команды
+    response = FlagResponse(
+        user_id=current_user.id,
+        team_id=current_user.team_id,
+        challenge_id=challenge_id,
+        response=user_flag,
+        flag=challenge.flag,
+        is_correct=is_correct
+    )
+    db.session.add(response)
+
+    if is_correct:
+        # Начисляем баллы всем членам команды
+        team_members = User.query.filter_by(team_id=current_user.team_id).all()
+        for member in team_members:
+            member.total_points += challenge.points
 
             # Добавляем запись в историю начисления баллов
             points_history = PointsHistory(
-                user_id=current_user.id,
+                user_id=member.id,
                 points=challenge.points,
                 note=f"За решение задачи: {challenge.title}"
             )
             db.session.add(points_history)
 
-            db.session.commit()
-
-            # Если пользователь в команде, отмечаем задачу как решённую для всех членов команды
-            if current_user.team:
-                team_members = User.query.filter_by(team_id=current_user.team_id).all()
-                for member in team_members:
-                    if member.id != current_user.id:  # Пропускаем текущего пользователя
-                        member_challenge = UserChallenge.query.filter_by(
-                            user_id=member.id,
-                            challenge_id=challenge_id
-                        ).first()
-
-                        if not member_challenge:
-                            member_challenge = UserChallenge(
-                                user_id=member.id,
-                                challenge_id=challenge_id,
-                                solved=True
-                            )
-                            db.session.add(member_challenge)
-
-                db.session.commit()
-
-            flash('Correct flag! Well done!', 'success')
-        else:
-            flash('You have already solved this challenge!', 'info')
+        flash('Правильный флаг! Задача решена вашей командой.', 'success')
     else:
-        flash('Incorrect flag. Try again!', 'danger')
+        flash('Неправильный флаг. Попробуйте еще раз.', 'danger')
 
-    # Перенаправляем на страницу задач текущего соревнования
+    db.session.commit()
     return redirect(url_for('competition_challenges', competition_id=challenge.competition_id))
-
 
 @app.route('/leaderboard')
 @login_required

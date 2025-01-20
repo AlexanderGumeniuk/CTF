@@ -1,0 +1,62 @@
+{% extends "admin_base_competition.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Ответы на флаги для соревнования: {{ competition.title }}</h1>
+
+    <!-- Форма для фильтрации по команде -->
+    <form id="team-filter-form" method="GET" action="{{ url_for('admin_flag_responses', competition_id=competition.id) }}">
+        <div class="form-group">
+            <label for="team-select">Выберите команду:</label>
+            <select id="team-select" name="team_id" class="form-control">
+                <option value="">Все команды</option>
+                {% for team in teams %}
+                    <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>
+                        {{ team.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    <!-- Отображение ответов -->
+    {% for team_data in team_responses %}
+        <div class="team-responses">
+            <h2>Команда: {{ team_data.team.name }}</h2>
+
+            {% for challenge_id, responses in team_data.responses.items() %}
+                <div class="challenge-responses">
+                    <h3>Задача: {{ responses[0].challenge.title }}</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Пользователь</th>
+                                <th>Ответ</th>
+                                <th>Правильный</th>
+                                <th>Время</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for response in responses %}
+                                <tr>
+                                    <td>{{ response.user.username }}</td>
+                                    <td>{{ response.response }}</td>
+                                    <td>{{ "Да" if response.is_correct else "Нет" }}</td>
+                                    <td>{{ response.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+</div>
+
+<!-- JavaScript для автоматической отправки формы -->
+<script>
+    document.getElementById('team-select').addEventListener('change', function() {
+        document.getElementById('team-filter-form').submit();
+    });
+</script>
+{% endblock %}

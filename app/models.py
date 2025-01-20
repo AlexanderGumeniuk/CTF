@@ -34,6 +34,7 @@ class Challenge(db.Model):
     hint = db.Column(db.Text, nullable=True)  # Новое поле: подсказка
     hint_penalty = db.Column(db.Integer, default=10)  # Штраф за использование подсказки (например, 10% от points)
     competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=True)
+    max_attempts = db.Column(db.Integer, default=3)  # Максимальное число попыток (по умолчанию 3)
 
     user_challenges = db.relationship('UserChallenge', backref='challenge', cascade='all, delete-orphan')
     def solved_by_user(self, user):
@@ -258,7 +259,7 @@ class Competition(db.Model):
     end_date = db.Column(db.DateTime, nullable=False)    # Дата окончания
     status = db.Column(db.String(20), default='planned')  # Статус: planned, active, finished
     created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Дата создания
-    
+
     teams = db.relationship(
         'Team',
         secondary=team_competition,
@@ -273,3 +274,20 @@ class Competition(db.Model):
     def __repr__(self):
         return f"Competition('{self.title}', Status: '{self.status}')"
 # Ассоциативная таблица для связи Team и Competition
+class FlagResponse(db.Model):
+    id = db.Column(db.Integer, primary_key=True)  # Уникальный идентификатор ответа
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Связь с пользователем
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)  # Связь с командой (если есть)
+    challenge_id = db.Column(db.Integer, db.ForeignKey('challenge.id'), nullable=False)  # Связь с задачей (флагом)
+    response = db.Column(db.String(255), nullable=False)  # Содержание ответа (введенный флаг)
+    flag = db.Column(db.String(255), nullable=False)  # Ожидаемый флаг
+    is_correct = db.Column(db.Boolean, default=False)  # Правильный ли ответ
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)  # Время отправки ответа
+
+    # Связи с другими моделями
+    user = db.relationship('User', backref='flag_responses')  # Связь с пользователем
+    team = db.relationship('Team', backref='flag_responses')  # Связь с командой
+    challenge = db.relationship('Challenge', backref='flag_responses')  # Связь с задачей
+
+    def __repr__(self):
+        return f"FlagResponse(User {self.user_id}, Challenge {self.challenge_id}, Correct: {self.is_correct})"
