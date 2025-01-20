@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style media="screen">
+  /* Стили для таблицы */
+  .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background: rgba(147, 112, 219, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+  }
+
+  .table th, .table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(147, 112, 219, 0.3);
+      color: rgba(255, 255, 255, 0.9);
+  }
+
+  .table th {
+      background: rgba(147, 112, 219, 0.2);
+      font-weight: bold;
+  }
+
+  .table tr:hover {
+      background: rgba(147, 112, 219, 0.05);
+  }
+
+  /* Стили для кнопки */
+  .btn-primary {
+      background: rgba(147, 112, 219, 0.3);
+      border: 1px solid rgba(147, 112, 219, 0.5);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+      background: rgba(147, 112, 219, 0.5);
+      transform: translateY(-2px);
+  }
+
+  /* Стили для кнопки "Решено" */
+  .btn-solved {
+      background: rgba(0, 128, 0, 0.3); /* Зеленый цвет */
+      border: 1px solid rgba(0, 128, 0, 0.5);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+  }
+
+  .btn-solved:hover {
+      background: rgba(0, 128, 0, 0.5);
+      transform: translateY(-2px);
+  }
+
+  h1 {
+      color: white;
+  }
+</style>
+
+<div class="container">
+    <h1>Список шерлоков</h1>
+
+    <!-- Таблица с шерлоками -->
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Категория</th>
+                <th>Сложность</th>
+                <th>Баллы</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sherlock in sherlocks %}
+            <tr>
+                <td>{{ sherlock.title }}</td>
+                <td>{{ sherlock.category }}</td>
+                <td>{{ sherlock.difficulty }}</td>
+                <td>{{ sherlock.points }}</td>
+                <td>
+                    {% if sherlock.is_solved %}
+                    <a href="{{ url_for('solve_sherlock', sherlock_id=sherlock.id) }}" class="btn btn-solved">Решено</a>
+                    {% else %}
+                    <a href="{{ url_for('solve_sherlock', sherlock_id=sherlock.id) }}" class="btn btn-primary">Решить</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

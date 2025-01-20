@@ -350,11 +350,11 @@ def add_team_to_competition(competition_id):
         db.session.commit()
 
         flash(f'Команда "{team.name}" успешно добавлена в соревнование!', 'success')
-        return redirect(url_for('view_competition', competition_id=competition_id))
+        return redirect(url_for('add_team_to_competition', competition_id=competition_id))
 
     # Получаем список всех команд, которые еще не участвуют в этом соревновании
     teams = Team.query.filter((Team.competition_id != competition_id) | (Team.competition_id.is_(None))).all()
-    logger.error(f"Ошибка IntegrityError: {con_team}")
+
     return render_template('competitions/admin/add_team_to_competition.html', competition=competition, teams=teams,con_team=con_team)
 
 @app.route('/admin/competitions/<int:competition_id>/remove_team/<int:team_id>', methods=['POST'])
@@ -477,7 +477,7 @@ def admin_flag_responses(competition_id):
         team_responses=team_responses,
         selected_team_id=selected_team_id
     )
-    
+
 @app.route('/competitions/<int:competition_id>/challenges', defaults={'filter': 'all'})
 @app.route('/competitions/<int:competition_id>/challenges/<filter>')
 @login_required
@@ -751,7 +751,7 @@ def review_incident(competition_id, incident_id):
 
             # Начисляем баллы пользователю
             user = User.query.get(incident.user_id)
-            user.total_points += points
+            user.team.total_points += points
 
             # Добавляем запись в историю начисления баллов
             points_history = PointsHistory(
@@ -1293,7 +1293,7 @@ def review_critical_event_report(competition_id, report_id):
 
             # Начисляем баллы пользователю
             user = User.query.get(report.user_id)
-            user.total_points += points
+            user.team.total_points += points
 
             # Добавляем запись в историю начисления баллов
             points_history = PointsHistory(

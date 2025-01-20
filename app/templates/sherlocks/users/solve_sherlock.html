@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style media="screen">
+  /* Общие стили */
+  .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+  }
+
+  h1 {
+      color: white;
+      margin-bottom: 1.5rem;
+  }
+
+  .lead {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+  }
+
+  /* Стили для списка файлов */
+  ul {
+      list-style: none;
+      padding: 0;
+  }
+
+  ul li {
+      margin-bottom: 0.5rem;
+  }
+
+  ul li a {
+      color: rgba(147, 112, 219, 0.9);
+      text-decoration: none;
+      transition: color 0.3s ease;
+  }
+
+  ul li a:hover {
+      color: rgba(147, 112, 219, 1);
+  }
+
+  /* Стили для флагов */
+  .flag-container {
+      background: rgba(147, 112, 219, 0.1);
+      border: 1px solid rgba(147, 112, 219, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 1rem;
+  }
+
+  .flag-container h4 {
+      color: white;
+      margin-bottom: 0.5rem;
+  }
+
+  .flag-container p {
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 1rem;
+  }
+
+  .alert {
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+  }
+
+  .alert-success {
+      background: rgba(40, 167, 69, 0.2);
+      border: 1px solid rgba(40, 167, 69, 0.3);
+      color: rgba(255, 255, 255, 0.9);
+  }
+
+  .alert-danger {
+      background: rgba(220, 53, 69, 0.2);
+      border: 1px solid rgba(220, 53, 69, 0.3);
+      color: rgba(255, 255, 255, 0.9);
+  }
+
+  .input-group {
+      display: flex;
+      gap: 10px;
+  }
+
+  .form-control {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(147, 112, 219, 0.3);
+      color: rgba(255, 255, 255, 0.9);
+      border-radius: 5px;
+      padding: 10px;
+      flex: 1;
+  }
+
+  .form-control:focus {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(147, 112, 219, 0.5);
+      box-shadow: 0 0 5px rgba(147, 112, 219, 0.5);
+  }
+
+  .btn-primary {
+      background: rgba(147, 112, 219, 0.3);
+      border: 1px solid rgba(147, 112, 219, 0.5);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+      background: rgba(147, 112, 219, 0.5);
+      transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+  }
+
+  .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+  }
+  h2
+  {
+    color:white;
+  }
+</style>
+
+<div class="container">
+    <h1>Решить шерлок: {{ sherlock.title }}</h1>
+    <p class="lead">{{ sherlock.description }}</p>
+
+    <!-- Список файлов -->
+    {% if sherlock.files %}
+    <h2>Файлы</h2>
+    <ul>
+        {% for filename, filepath in sherlock.files.items() %}
+        <li>
+            <a href="{{ url_for('static', filename='uploads/sherlocks/' + filepath) }}" download>{{ filename }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- Список флагов -->
+    <h2>Флаги</h2>
+    <div id="flagsContainer">
+        {% for flag in sherlock.flags %}
+        <div class="flag-container">
+            <h4>{{ flag.title }}</h4>
+            <p>{{ flag.description }}</p>
+            {% if flag.id in solved_flags %}
+            <div class="alert alert-success">Флаг уже решен!</div>
+            <form class="flag-form" data-flag-id="{{ flag.id }}">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Введите флаг" disabled>
+                    <button type="submit" class="btn btn-primary" disabled>Отправить</button>
+                </div>
+            </form>
+            {% else %}
+            <form class="flag-form" data-flag-id="{{ flag.id }}">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Введите флаг" required>
+                    <button type="submit" class="btn btn-primary">Отправить</button>
+                </div>
+                <div class="flag-result mt-2"></div>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Кнопка для возврата к списку шерлоков -->
+    <a href="{{ url_for('user_sherlocks') }}" class="btn btn-secondary mt-4">Вернуться к списку шерлоков</a>
+</div>
+
+<script>
+    // Обработка отправки флага
+    document.querySelectorAll('.flag-form').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const flagId = form.dataset.flagId;
+            const input = form.querySelector('input');
+            const resultDiv = form.querySelector('.flag-result');
+
+            const response = await fetch(`/sherlocks/{{ sherlock.id }}/submit-flag`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    flag_id: flagId,
+                    flag: input.value
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                resultDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                window.location.reload();  // Перезагружаем страницу, чтобы обновить состояние флагов
+            } else {
+                resultDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style media="screen">
+  /* Стили для формы */
+  .form-container {
+      background: rgba(147, 112, 219, 0.1);
+      border: 1px solid rgba(147, 112, 219, 0.3);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 2rem;
+  }
+
+  .form-label {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+  }
+
+  .form-control {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(147, 112, 219, 0.3);
+      color: rgba(255, 255, 255, 0.9);
+      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 1rem;
+  }
+
+  .form-control:focus {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(147, 112, 219, 0.5);
+      box-shadow: 0 0 5px rgba(147, 112, 219, 0.5);
+  }
+
+  .btn-primary {
+      background: rgba(147, 112, 219, 0.3);
+      border: 1px solid rgba(147, 112, 219, 0.5);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+      background: rgba(147, 112, 219, 0.5);
+      transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+  }
+
+  .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+  }
+
+  /* Стили для таблицы */
+  .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+  }
+
+  .table th, .table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(147, 112, 219, 0.3);
+      color: rgba(255, 255, 255, 0.9);
+  }
+
+  .table th {
+      background: rgba(147, 112, 219, 0.1);
+  }
+
+  .table tr:hover {
+      background: rgba(147, 112, 219, 0.05);
+  }
+
+  .btn-sm {
+      padding: 5px 10px;
+      font-size: 0.9rem;
+      border-radius: 15px;
+  }
+
+  .btn-info {
+      background: rgba(0, 123, 255, 0.3);
+      border: 1px solid rgba(0, 123, 255, 0.5);
+  }
+
+  .btn-info:hover {
+      background: rgba(0, 123, 255, 0.5);
+  }
+
+  .btn-danger {
+      background: rgba(220, 53, 69, 0.3);
+      border: 1px solid rgba(220, 53, 69, 0.5);
+  }
+
+  .btn-danger:hover {
+      background: rgba(220, 53, 69, 0.5);
+  }
+
+  h1, h2 {
+      color: white;
+  }
+</style>
+
+<div class="container">
+    <h1>Управление шерлоками</h1>
+
+    <!-- Форма для добавления/редактирования шерлока -->
+    <div class="form-container">
+        <h2 id="formTitle">Добавить новый шерлок</h2>
+        <form id="sherlockForm" enctype="multipart/form-data">
+            <input type="hidden" id="sherlockId" name="sherlock_id">
+            <div class="mb-3">
+                <label for="title" class="form-label">Название</label>
+                <input type="text" class="form-control" id="title" name="title" required>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Описание</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="category" class="form-label">Категория</label>
+                <input type="text" class="form-control" id="category" name="category" required>
+            </div>
+            <div class="mb-3">
+                <label for="difficulty" class="form-label">Сложность</label>
+                <select class="form-control" id="difficulty" name="difficulty" required>
+                    <option value="Легкий">Легкий</option>
+                    <option value="Средний">Средний</option>
+                    <option value="Сложный">Сложный</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="points" class="form-label">Баллы</label>
+                <input type="number" class="form-control" id="points" name="points" required>
+            </div>
+            <div class="mb-3">
+                <label for="files" class="form-label">Файлы</label>
+                <input type="file" class="form-control" id="files" name="files" multiple>
+            </div>
+            <div class="mb-3">
+                <label for="flags" class="form-label">Флаги</label>
+                <div id="flagsContainer">
+                    <div class="flag-input mb-2">
+                        <input type="text" class="form-control" name="flags[]" placeholder="Название флага" required>
+                        <input type="text" class="form-control mt-2" name="flags[]" placeholder="Описание флага" required>
+                        <input type="text" class="form-control mt-2" name="flags[]" placeholder="Ответ" required>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary mt-2" onclick="addFlagField()">Добавить флаг</button>
+            </div>
+            <button type="submit" class="btn btn-primary" id="submitButton">Добавить шерлок</button>
+            <button type="button" class="btn btn-secondary" onclick="resetForm()">Сбросить</button>
+        </form>
+    </div>
+
+    <!-- Таблица с существующими шерлоками -->
+    <h2 class="mt-5">Список шерлоков</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Категория</th>
+                <th>Сложность</th>
+                <th>Баллы</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sherlock in sherlocks %}
+            <tr>
+                <td>{{ sherlock.id }}</td>
+                <td>{{ sherlock.title }}</td>
+                <td>{{ sherlock.category }}</td>
+                <td>{{ sherlock.difficulty }}</td>
+                <td>{{ sherlock.points }}</td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="editSherlock({{ sherlock.id }})">Редактировать</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteSherlock({{ sherlock.id }})">Удалить</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Функция для добавления полей для нового флага
+    function addFlagField() {
+        const container = document.getElementById('flagsContainer');
+        const flagInput = document.createElement('div');
+        flagInput.className = 'flag-input mb-2';
+        flagInput.innerHTML = `
+            <input type="text" class="form-control" name="flags[]" placeholder="Название флага" required>
+            <input type="text" class="form-control mt-2" name="flags[]" placeholder="Описание флага" required>
+            <input type="text" class="form-control mt-2" name="flags[]" placeholder="Ответ" required>
+        `;
+        container.appendChild(flagInput);
+    }
+
+    // Функция для сброса формы
+    function resetForm() {
+        document.getElementById('sherlockForm').reset();
+        document.getElementById('flagsContainer').innerHTML = `
+            <div class="flag-input mb-2">
+                <input type="text" class="form-control" name="flags[]" placeholder="Название флага" required>
+                <input type="text" class="form-control mt-2" name="flags[]" placeholder="Описание флага" required>
+                <input type="text" class="form-control mt-2" name="flags[]" placeholder="Ответ" required>
+            </div>
+        `;
+        document.getElementById('formTitle').innerText = 'Добавить новый шерлок';
+        document.getElementById('submitButton').innerText = 'Добавить шерлок';
+        document.getElementById('sherlockId').value = '';
+    }
+
+    // Функция для редактирования шерлока
+    function editSherlock(sherlockId) {
+        fetch(`/admin/sherlocks/${sherlockId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Заполняем форму данными шерлока
+                document.getElementById('sherlockId').value = data.id;
+                document.getElementById('title').value = data.title;
+                document.getElementById('description').value = data.description;
+                document.getElementById('category').value = data.category;
+                document.getElementById('difficulty').value = data.difficulty;
+                document.getElementById('points').value = data.points;
+
+                // Очищаем контейнер с флагами
+                const flagsContainer = document.getElementById('flagsContainer');
+                flagsContainer.innerHTML = '';
+
+                // Добавляем флаги
+                data.flags.forEach(flag => {
+                    addFlagField();
+                    const flagInputs = flagsContainer.lastElementChild.querySelectorAll('input');
+                    flagInputs[0].value = flag.title;
+                    flagInputs[1].value = flag.description;
+                    flagInputs[2].value = flag.answer;
+                });
+
+                // Меняем заголовок и текст кнопки
+                document.getElementById('formTitle').innerText = 'Редактировать шерлок';
+                document.getElementById('submitButton').innerText = 'Сохранить изменения';
+            });
+    }
+
+    // Функция для удаления шерлока
+    function deleteSherlock(sherlockId) {
+        if (confirm('Вы уверены, что хотите удалить этот шерлок?')) {
+            fetch(`/admin/sherlocks/${sherlockId}/delete`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Шерлок успешно удален!');
+                    window.location.reload();
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            });
+        }
+    }
+
+    // Обработка отправки формы
+    document.getElementById('sherlockForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const sherlockId = document.getElementById('sherlockId').value;
+
+        const url = sherlockId ? `/admin/sherlocks/${sherlockId}/edit` : '/admin/sherlocks/create';
+        const method = sherlockId ? 'POST' : 'POST';
+
+        const response = await fetch(url, {
+            method: method,
+            body: formData
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert(sherlockId ? 'Шерлок успешно обновлен!' : 'Шерлок успешно добавлен!');
+            window.location.reload();
+        } else {
+            alert('Ошибка: ' + result.message);
+        }
+    });
+</script>
+{% endblock %}

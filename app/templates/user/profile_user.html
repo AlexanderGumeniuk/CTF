@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style media="screen">
+  /* Общие стили */
+  .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+  }
+
+  h1 {
+      color: white;
+      margin-bottom: 1.5rem;
+  }
+
+  h2 {
+      color: white;
+      margin-bottom: 1rem;
+  }
+
+  .lead {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+  }
+
+  /* Стили для аватара */
+  .rounded-circle {
+      border: 3px solid rgba(147, 112, 219, 0.3);
+      transition: all 0.3s ease;
+  }
+
+  .rounded-circle:hover {
+      border-color: rgba(147, 112, 219, 0.7);
+      transform: scale(1.05);
+  }
+
+  /* Стили для информации о пользователе */
+  .user-info {
+      background: rgba(147, 112, 219, 0.1);
+      border: 1px solid rgba(147, 112, 219, 0.3);
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 2rem;
+  }
+
+  .user-info p {
+      margin-bottom: 0.5rem;
+  }
+</style>
+
+<div class="container">
+    <h1>Профиль пользователя: {{ user.username }}</h1>
+
+    <!-- Аватар и основная информация -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            {% if user.avatar %}
+            <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" alt="Аватар" class="img-fluid rounded-circle">
+            {% else %}
+            <img src="{{ url_for('static', filename='default_avatar.png') }}" alt="Аватар" class="img-fluid rounded-circle">
+            {% endif %}
+        </div>
+        <div class="col-md-9">
+            <h2>{{ user.username }}</h2>
+            <p class="lead">Баллы: {{ user.total_points }}</p>
+            {% if team %}
+            <p class="lead">Команда: {{ team.name }}</p>
+            {% else %}
+            <p class="lead">Команда: Не состоит в команде</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

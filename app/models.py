@@ -62,7 +62,7 @@ class User(db.Model, UserMixin):
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
     total_points = db.Column(db.Integer, default=0)
     avatar = db.Column(db.String(255), nullable=True)  # Поле для хранения пути к аватару
-
+    sherlock_submissions = db.relationship('SherlockSubmission', backref='user', lazy=True)
     # Связь с командой (без backref, так как он уже определен в Team)
     team = db.relationship('Team', foreign_keys=[team_id])
 
@@ -100,7 +100,7 @@ class Team(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     users = db.relationship('User', back_populates='team', lazy=True)  # Связь с пользователями
     competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=True)
-
+    total_points = db.Column(db.Integer, default=0)
     competitions = db.relationship(
         'Competition',
         secondary=team_competition,
@@ -291,3 +291,68 @@ class FlagResponse(db.Model):
 
     def __repr__(self):
         return f"FlagResponse(User {self.user_id}, Challenge {self.challenge_id}, Correct: {self.is_correct})"
+from app import db
+from datetime import datetime
+from sqlalchemy.dialects.postgresql import JSON
+
+class Sherlock(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)  # Название задания
+    description = db.Column(db.Text, nullable=False)  # Описание задания
+    category = db.Column(db.String(50), nullable=False)  # Категория (например, криптография, стеганография)
+    difficulty = db.Column(db.String(20), nullable=False)  # Уровень сложности (легкий, средний, сложный)
+    points = db.Column(db.Integer, nullable=False)  # Количество баллов за решение
+    files = db.Column(JSON, nullable=True)  # Список файлов (например, {"file1": "path/to/file1", "file2": "path/to/file2"})
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Дата создания задания
+    is_active = db.Column(db.Boolean, default=True)  # Активно ли задание
+
+    # Связь с флагами (один шерлок может иметь несколько флагов)
+    flags = db.relationship('SherlockFlag', backref='sherlock', cascade='all, delete-orphan', lazy=True)
+
+    # Связь с решениями пользователей
+    submissions = db.relationship('SherlockSubmission', backref='sherlock', lazy=True)
+
+    def __repr__(self):
+        return f"Sherlock('{self.title}', {self.points} points)"
+
+class SherlockFlag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)  # Название флага (например, "Флаг 1")
+    description = db.Column(db.Text, nullable=False)  # Описание флага (подсказка или задание)
+    answer = db.Column(db.String(100), nullable=False)  # Правильный ответ (флаг)
+    sherlock_id = db.Column(db.Integer, db.ForeignKey('sherlock.id'), nullable=False)  # Связь с заданием
+
+    def __repr__(self):
+        return f"SherlockFlag('{self.title}', Sherlock {self.sherlock_id})"
+
+class SherlockSubmission(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Кто отправил решение
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)  # Команда (если есть)
+    sherlock_id = db.Column(db.Integer, db.ForeignKey('sherlock.id'), nullable=False)  # Какое задание решалось
+    flag_id = db.Column(db.Integer, db.ForeignKey('sherlock_flag.id'), nullable=False)  # Какой флаг был введен
+    submitted_flag = db.Column(db.String(100), nullable=False)  # Введенный флаг
+    is_correct = db.Column(db.Boolean, default=False)  # Правильный ли флаг
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)  # Время отправки решения
+
+    def has_solved_flag(user_id, flag_id):
+    # Ищем успешные попытки пользователя для данного флага
+        solved = SherlockSubmission.query.filter_by(
+            user_id=user_id,
+            flag_id=flag_id,
+            is_correct=True
+        ).first()
+        return solved is not None
+
+    def has_solved_sherlock(user_id, sherlock_id):
+        # Находим все флаги для данного шерлока
+        flags = SherlockFlag.query.filter_by(sherlock_id=sherlock_id).all()
+
+        # Проверяем, решил ли пользователь каждый флаг
+        for flag in flags:
+            if not has_solved_flag(user_id, flag.id):
+                return False  # Если хотя бы один флаг не решен
+
+        return True  # Все флаги решены
+    def __repr__(self):
+        return f"SherlockSubmission(User {self.user_id}, Flag {self.flag_id}, Correct: {self.is_correct})"

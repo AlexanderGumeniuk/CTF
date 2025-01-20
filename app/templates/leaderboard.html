@@ -142,15 +142,18 @@
                             <!-- Аватарка пользователя -->
                             <div class="leaderboard-avatar">
                                 {% if user.avatar %}
-
                                     <img src="{{ url_for('static', filename='uploads/images/' + user.avatar) }}" alt="Аватар">
                                 {% else %}
                                     <div class="default-avatar">👤</div>
                                 {% endif %}
                             </div>
                         </td>
-                        <td>{{ user.username }}</td>
-                        
+                        <td>
+                            <!-- Ссылка на профиль пользователя -->
+                            <a href="{{ url_for('view_profile', username=user.username) }}" style="color: #fff; text-decoration: none;">
+                                {{ user.username }}
+                            </a>
+                        </td>
                         <td>{{ user.total_points }}</td>
                     </tr>
                 {% endfor %}

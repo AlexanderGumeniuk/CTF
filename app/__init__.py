@@ -9,6 +9,7 @@ import re
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'app/static/uploads/images'
 app.config['UPLOAD_FOLDER_INFRA'] = 'app/static/uploads/infrastructure'
+app.config['UPLOAD_FOLDER_SHERLOCKS'] = 'app/static/uploads/sherlocks'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif','html'}
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])

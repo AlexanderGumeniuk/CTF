@@ -14,6 +14,7 @@ from flask import send_from_directory
 import logging
 
 from . import competitions
+from . import sherlocks
 
 # Настройка логирования
 logging.basicConfig(level=logging.DEBUG)
@@ -129,7 +130,7 @@ def submit_flag(challenge_id):
         # Начисляем баллы всем членам команды
         team_members = User.query.filter_by(team_id=current_user.team_id).all()
         for member in team_members:
-            member.total_points += challenge.points
+            member.team.total_points += challenge.points
 
             # Добавляем запись в историю начисления баллов
             points_history = PointsHistory(
@@ -149,26 +150,23 @@ def submit_flag(challenge_id):
 @app.route('/leaderboard')
 @login_required
 def leaderboard():
-    # Запрашиваем данные пользователей, включая аватарки
+    # Запрашиваем данные пользователей, исключая администраторов
     leaderboard_data = db.session.query(
         User.username,
         User.total_points,
         User.avatar  # Добавляем поле avatar
-    ).order_by(User.total_points.desc()) \
-     .all()
+    ).filter(User.is_admin == False).order_by(User.total_points.desc()).all()
 
     return render_template('leaderboard.html', leaderboard=leaderboard_data)
 
 @app.route('/team_leaderboard')
 @login_required
 def team_leaderboard():
-    # Подсчитываем общее количество баллов для каждой команды
+    # Получаем данные для таблицы лидеров
     leaderboard_data = db.session.query(
         Team.name,
-        func.sum(User.total_points).label('total_points')
-    ).join(User, User.team_id == Team.id) \
-     .group_by(Team.id) \
-     .order_by(func.sum(User.total_points).desc()) \
+        Team.total_points
+    ).order_by(Team.total_points.desc()) \
      .all()
 
     return render_template('team_leaderboard.html', leaderboard=leaderboard_data)
@@ -519,7 +517,7 @@ def team_stats():
 
 @app.route('/download/<filename>')
 @login_required
-def download_file(filename):
+def download_file1(filename):
     # Убедитесь, что файл существует и безопасен для скачивания
     if not filename or not filename.endswith(('.pdf', '.txt', '.docx')):
         flash('Недопустимый файл.', 'danger')
@@ -621,3 +619,25 @@ def edit_profile():
         return redirect(url_for('profile'))
 
     return render_template('edit_profile.html')
+@app.route('/profile/<username>')
+@login_required
+def view_profile(username):
+    # Находим пользователя по имени
+    user = User.query.filter_by(username=username).first_or_404()
+
+    # Проверяем, что пользователь не администратор (если нужно)
+    if user.is_admin:
+        return "Профиль администратора недоступен для просмотра.", 403
+
+    # Получаем команду пользователя (если есть)
+    team = Team.query.get(user.team_id) if user.team_id else None
+
+    # Получаем список решенных шерлоков
+
+
+    return render_template(
+        'user/profile_user.html',
+        user=user,
+        team=team,
+    
+    )
