@@ -91,6 +91,7 @@
                     <div class="challenge-info">
                         <p><strong>Описание:</strong> {{ challenge.description }}</p>
                         <p><strong>Категория:</strong> {{ challenge.category }}</p>
+                        <p><strong>Осталось Попыток:</strong> {{ challenges_attempts.get(challenge.id, {}).get('attempts', 'Нет данных') }}</p>
                         {% if challenge.hint %}
                             <p><strong>Подсказка:</strong> {{ challenge.hint }}</p>
                         {% endif %}

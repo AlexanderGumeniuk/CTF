@@ -203,6 +203,16 @@ def delete_sherlock(sherlock_id):
     # Находим шерлок по ID
     sherlock = Sherlock.query.get_or_404(sherlock_id)
 
+    # Находим все флаги, связанные с данным шерлоком
+    flags = SherlockFlag.query.filter_by(sherlock_id=sherlock.id).all()
+
+# Удаляем все связанные записи из sherlock_submission
+    for flag in flags:
+        SherlockSubmission.query.filter_by(flag_id=flag.id).delete()
+
+# Теперь можно удалить записи из sherlock_flag
+    SherlockFlag.query.filter_by(sherlock_id=sherlock.id).delete()
+    db.session.commit()
     # Удаляем связанные флаги
     SherlockFlag.query.filter_by(sherlock_id=sherlock.id).delete()
 

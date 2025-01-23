@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request
 from app import app, db
-from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalEvent, CriticalEventResponse,CriticalEventStep,Infrastructure,PointsHistory,FlagResponse
+from app.models import User, Challenge, UserChallenge, Team, Incident, CriticalEvent, CriticalEventResponse,CriticalEventStep,Infrastructure,PointsHistory,FlagResponse,SherlockSubmission
 from flask_login import login_user, current_user, logout_user, login_required
 from sqlalchemy import func
 from datetime import datetime
@@ -106,8 +106,18 @@ def submit_flag(challenge_id):
     attempts_used = FlagResponse.query.filter_by(
         team_id=current_user.team_id,
         challenge_id=challenge_id
+
     ).count()
 
+    attempts_used1 = FlagResponse.query.filter_by(
+        team_id=current_user.team_id,
+        challenge_id=challenge_id,
+        is_correct=True
+    ).count()
+    if attempts_used1 >= 1:
+        flash('Ваша команда Уже ответила на флаг.', 'danger')
+        return redirect(url_for('competition_challenges', competition_id=challenge.competition_id))
+    logger.debug(f"Проверка инцидента: {attempts_used1}")
     if attempts_used >= challenge.max_attempts:
         flash('Ваша команда исчерпала все попытки для этой задачи.', 'danger')
         return redirect(url_for('competition_challenges', competition_id=challenge.competition_id))
@@ -126,7 +136,19 @@ def submit_flag(challenge_id):
     )
     db.session.add(response)
 
+
+        # Проверяем, решил ли пользователь задачу ранее
+    user_challenge = UserChallenge.query.filter_by(team_id=current_user.team.id, challenge_id=challenge_id).first()
     if is_correct:
+        if not user_challenge:
+            # Отмечаем задачу как решённую для текущего пользователя
+            user_challenge = UserChallenge(
+                user_id=current_user.id,
+                team_id=current_user.team.id,
+                challenge_id=challenge_id,
+                solved=True
+            )
+            db.session.add(user_challenge)
         # Начисляем баллы всем членам команды
         team_members = User.query.filter_by(team_id=current_user.team_id).all()
         for member in team_members:
@@ -380,9 +402,7 @@ def admin_dashboard():
 
 
 
-# Настройка логирования
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+
 
 @app.route('/admin/manage_users', methods=['GET', 'POST'])
 @login_required
@@ -433,6 +453,9 @@ def manage_users():
             user_id = request.form['user_id']
             user = User.query.get(user_id)
             if user:
+                SherlockSubmission.query.filter_by(user_id=user.id).delete()
+                db.session.delete(user)
+                db.session.commit()
                 try:
                     # Находим администратора (например, первого администратора в системе)
                     admin_user = User.query.filter_by(is_admin=True).first()
@@ -639,5 +662,5 @@ def view_profile(username):
         'user/profile_user.html',
         user=user,
         team=team,
-    
+
     )

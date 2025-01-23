@@ -37,6 +37,7 @@ class Challenge(db.Model):
     max_attempts = db.Column(db.Integer, default=3)  # Максимальное число попыток (по умолчанию 3)
 
     user_challenges = db.relationship('UserChallenge', backref='challenge', cascade='all, delete-orphan')
+    fflag_responses = db.relationship('FlagResponse', cascade='all, delete-orphan')  # Убрали backref  # Убрали backref
     def solved_by_user(self, user):
         # Проверяем, решил ли пользователь задачу
         return UserChallenge.query.filter_by(
@@ -242,7 +243,7 @@ class PointsHistory(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Дата и время начисления баллов
 
     # Связь с пользователем
-    user = db.relationship('User', backref='points_history')
+    user = db.relationship('User', backref=db.backref('points_history', cascade='all, delete-orphan'))
 
     def __repr__(self):
         return f"PointsHistory(User {self.user_id}, Points {self.points}, Note: {self.note})"
@@ -276,7 +277,7 @@ class Competition(db.Model):
 # Ассоциативная таблица для связи Team и Competition
 class FlagResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # Уникальный идентификатор ответа
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Связь с пользователем
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)  # Связь с командой (если есть)
     challenge_id = db.Column(db.Integer, db.ForeignKey('challenge.id'), nullable=False)  # Связь с задачей (флагом)
     response = db.Column(db.String(255), nullable=False)  # Содержание ответа (введенный флаг)
@@ -287,7 +288,7 @@ class FlagResponse(db.Model):
     # Связи с другими моделями
     user = db.relationship('User', backref='flag_responses')  # Связь с пользователем
     team = db.relationship('Team', backref='flag_responses')  # Связь с командой
-    challenge = db.relationship('Challenge', backref='flag_responses')  # Связь с задачей
+    challenge = db.relationship('Challenge', backref='flag_responses')  # Используйте строковое имя
 
     def __repr__(self):
         return f"FlagResponse(User {self.user_id}, Challenge {self.challenge_id}, Correct: {self.is_correct})"
@@ -320,7 +321,7 @@ class SherlockFlag(db.Model):
     title = db.Column(db.String(100), nullable=False)  # Название флага (например, "Флаг 1")
     description = db.Column(db.Text, nullable=False)  # Описание флага (подсказка или задание)
     answer = db.Column(db.String(100), nullable=False)  # Правильный ответ (флаг)
-    sherlock_id = db.Column(db.Integer, db.ForeignKey('sherlock.id'), nullable=False)  # Связь с заданием
+    sherlock_id = db.Column(db.Integer, db.ForeignKey('sherlock.id', ondelete='CASCADE'), nullable=False)  # Связь с заданием
 
     def __repr__(self):
         return f"SherlockFlag('{self.title}', Sherlock {self.sherlock_id})"

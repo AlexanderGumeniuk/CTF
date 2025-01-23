@@ -293,6 +293,11 @@ def delete_flag_from_competition(competition_id, challenge_id):
     challenge = Challenge.query.filter_by(id=challenge_id, competition_id=competition_id).first_or_404()
 
     try:
+        # Проверяем, есть ли связанные данные, которые могут вызвать ошибку
+        if challenge.flag_responses:
+            # Можно добавить логирование или уведомление о том, что удаляются связанные данные
+            pass
+
         # Удаляем задачу (каскадное удаление удалит связанные записи)
         db.session.delete(challenge)
         db.session.commit()
@@ -493,6 +498,17 @@ def competition_challenges(competition_id, filter):
 
     # Получаем все задачи для этого соревнования
     challenges = Challenge.query.filter_by(competition_id=competition_id).all()
+    challenges_attempts = {}
+    for challenge in challenges:
+        attempts_used_count = FlagResponse.query.filter_by(
+            team_id=current_user.team_id,
+            challenge_id=challenge.id
+        ).count()
+        attempts_left = challenge.max_attempts - attempts_used_count
+        challenges_attempts[challenge.id] = {
+        'attempts': attempts_left
+        }
+
     blocked_challenge_ids = []
     for challenge in challenges:
         attempts_used = FlagResponse.query.filter_by(
@@ -531,6 +547,7 @@ def competition_challenges(competition_id, filter):
         challenges=challenges,
         solved_challenges=solved_challenges,
         blocked_challenge = blocked_challenge,
+        challenges_attempts=challenges_attempts,
         filter_type=filter  # Передаем текущий фильтр в шаблон
     )
 
