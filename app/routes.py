@@ -60,6 +60,11 @@ def login():
         # Проверяем пароль с помощью хэша
         if user and user.check_password(password):
             login_user(user)
+            # Редирект для администратора
+            if user.is_admin:
+                return redirect(url_for('admin'))
+
+            # Редирект для обычных пользователей
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('profile'))
         else:
@@ -83,11 +88,47 @@ def profile():
 @app.route('/admin')
 @login_required
 def admin():
-    if current_user.is_admin:
-        return render_template('admin.html')
-    else:
-        flash('You do not have permission to access this page', 'danger')
+    if not current_user.is_admin:
+        flash('У вас нет прав доступа к этой странице.', 'danger')
         return redirect(url_for('index'))
+
+    # Статистика команд
+    teams = Team.query.all()
+    team_stats = []
+    for team in teams:
+        team_stats.append({
+            'name': team.name,
+            'members': len(team.users),
+            'points': sum(user.total_points for user in team.users)
+        })
+
+    # Статистика флагов
+    challenges = Challenge.query.all()
+    solved_flags = UserChallenge.query.filter_by(solved=True).count()
+    unsolved_flags = UserChallenge.query.filter_by(solved=False).count()
+
+    # Статистика по критическим событиям
+    critical_events = CriticalEvent.query.all()
+    critical_events_stats = {
+        'total': len(critical_events),
+        'pending': CriticalEventResponse.query.filter_by(status='pending').count(),
+        'resolved': CriticalEventResponse.query.filter_by(status='resolved').count()
+    }
+
+    # Статистика по инцидентам
+    incidents = Incident.query.all()
+    incidents_stats = {
+        'total': len(incidents),
+        'open': Incident.query.filter_by(status='open').count(),
+        'closed': Incident.query.filter_by(status='closed').count()
+    }
+
+    return render_template('admin.html',
+                           team_stats=team_stats,
+                           solved_flags=solved_flags,
+                           unsolved_flags=unsolved_flags,
+                           critical_events_stats=critical_events_stats,
+                           incidents_stats=incidents_stats)
 
   # Импортируем модель PointsHistory
 
@@ -151,8 +192,9 @@ def submit_flag(challenge_id):
             db.session.add(user_challenge)
         # Начисляем баллы всем членам команды
         team_members = User.query.filter_by(team_id=current_user.team_id).all()
+        current_user.team.total_points += challenge.points
         for member in team_members:
-            member.team.total_points += challenge.points
+            #member.team.total_points += challenge.points
 
             # Добавляем запись в историю начисления баллов
             points_history = PointsHistory(
@@ -354,50 +396,7 @@ def create_user():
     return render_template('/admin/create_user.html')
 
 
-@app.route('/admin/dashboard')
-@login_required
-def admin_dashboard():
-    if not current_user.is_admin:
-        flash('У вас нет прав доступа к этой странице.', 'danger')
-        return redirect(url_for('index'))
 
-    # Статистика команд
-    teams = Team.query.all()
-    team_stats = []
-    for team in teams:
-        team_stats.append({
-            'name': team.name,
-            'members': len(team.users),
-            'points': sum(user.total_points for user in team.users)
-        })
-
-    # Статистика флагов
-    challenges = Challenge.query.all()
-    solved_flags = UserChallenge.query.filter_by(solved=True).count()
-    unsolved_flags = UserChallenge.query.filter_by(solved=False).count()
-
-    # Статистика по критическим событиям
-    critical_events = CriticalEvent.query.all()
-    critical_events_stats = {
-        'total': len(critical_events),
-        'pending': CriticalEventResponse.query.filter_by(status='pending').count(),
-        'resolved': CriticalEventResponse.query.filter_by(status='resolved').count()
-    }
-
-    # Статистика по инцидентам
-    incidents = Incident.query.all()
-    incidents_stats = {
-        'total': len(incidents),
-        'open': Incident.query.filter_by(status='open').count(),
-        'closed': Incident.query.filter_by(status='closed').count()
-    }
-
-    return render_template('admin/admin_dashboard.html',
-                           team_stats=team_stats,
-                           solved_flags=solved_flags,
-                           unsolved_flags=unsolved_flags,
-                           critical_events_stats=critical_events_stats,
-                           incidents_stats=incidents_stats)
 
 
 

@@ -68,15 +68,15 @@ h2 {
 
 /* Стили для кнопок */
 .btn-primary {
-    background: rgba(147, 112, 219, 0.3);
+    background: rgba(147, 112, 219, 0.25); /* Прозрачность 25% как в исходнике */
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 25px;
+    padding: 40px 50px;                    /* Увеличенный padding (было 10px 20px) */
+    border-radius: 30px;                   /* Увеличил скругление (было 25px) */
     text-decoration: none;
-    font-size: 16px;
+    font-size: 1.1rem;                     /* Увеличенный шрифт (было 16px ≈ 1rem) */
     transition: all 0.3s ease;
-    border: 1px solid rgba(147, 112, 219, 0.5);
+    border: 2px solid #9370db;             /* Граница как в вашем первом примере */
 }
 
 .btn-primary:hover {

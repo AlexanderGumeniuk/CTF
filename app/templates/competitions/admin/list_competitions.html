@@ -1,82 +1,118 @@
 {% extends "base.html" %}
 
 {% block content %}
-<<style media="screen">
-  /* Стили для списка соревнований */
-.competition-list {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 2rem;
-}
+<style>
+    .competition-container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+    }
 
-.competition-item {
-    background: rgba(147, 112, 219, 0.1);
-    border: 1px solid rgba(147, 112, 219, 0.3);
-    border-radius: 10px;
-    margin-bottom: 10px;
-    transition: all 0.3s ease;
-}
+    .competition-title {
+        text-align: center;
+        font-size: 2.2rem;
+        color: #bb86fc;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
 
-.competition-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0px 4px 15px rgba(147, 112, 219, 0.3);
-}
+    .competition-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 2rem 0;
+    }
 
-.competition-link {
-    display: block;
-    padding: 15px;
-    text-decoration: none;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 1.1rem;
-}
+    .competition-item {
+        background: #2a2b38;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(147, 112, 219, 0.3);
+    }
 
-.competition-status {
-    float: right;
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.7);
-    background: rgba(255, 255, 255, 0.1);
-    padding: 4px 8px;
-    border-radius: 12px;
-}
+    .competition-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(147, 112, 219, 0.3);
+    }
 
-.no-competitions {
-    text-align: center;
-    color: rgba(255, 255, 255, 0.7);
-    font-style: italic;
-    padding: 20px;
-}
+    .competition-link {
+        display: block;
+        padding: 15px;
+        text-decoration: none;
+        color: #e0e0ff;
+        font-size: 1.1rem;
+    }
 
-/* Кнопка "Создать новое соревнование" */
-.btn-primary {
-    display: inline-block;
-    padding: 10px 20px;
-    background: rgba(147, 112, 219, 0.3);
-    color: white;
-    border-radius: 25px;
-    text-decoration: none;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(147, 112, 219, 0.5);
-}
+    .competition-status {
+        float: right;
+        font-size: 0.9rem;
+        color: #e0e0ff;
+        background: rgba(147, 112, 219, 0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
 
-.btn-primary:hover {
-    background: rgba(147, 112, 219, 0.5);
-    transform: translateY(-2px);
-}
-h1
-{
-  color:white;
-}
+    .no-competitions {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+        font-style: italic;
+        padding: 20px;
+    }
+
+    .btn-primary {
+        display: inline-block;
+        padding: 10px 20px;
+        background: rgba(147, 112, 219, 0.3);
+        color: #e0e0ff;
+        border-radius: 25px;
+        text-decoration: none;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(147, 112, 219, 0.5);
+    }
+
+    .btn-primary:hover {
+        background: rgba(147, 112, 219, 0.5);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .competition-container {
+            padding: 15px;
+            margin: 20px auto;
+        }
+
+        .competition-title {
+            font-size: 1.8rem;
+        }
+
+        .competition-link {
+            padding: 12px;
+            font-size: 1rem;
+        }
+
+        .competition-status {
+            font-size: 0.8rem;
+            padding: 3px 10px;
+        }
+
+        .btn-primary {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
+    }
 </style>
-<div class="container">
-    <h1>Список соревнований</h1>
+
+<div class="competition-container">
+    <h1 class="competition-title">Список соревнований</h1>
 
     <!-- Список соревнований -->
     <ul class="competition-list">
         {% for competition in competitions %}
         <li class="competition-item">
             <a href="{{ url_for('view_competition', competition_id=competition.id) }}" class="competition-link">
-                {{ competition.title }} <span class="competition-status">{{ competition.status }}</span>
+                {{ competition.title }}
+                <span class="competition-status">{{ competition.status }}</span>
             </a>
         </li>
         {% else %}
@@ -85,6 +121,6 @@ h1
     </ul>
 
     <!-- Кнопка создания нового соревнования -->
-    <a href="{{ url_for('create_competition') }}" class="btn btn-primary">Создать новое соревнование</a>
+    <a href="{{ url_for('create_competition') }}" class="btn-primary">Создать новое соревнование</a>
 </div>
 {% endblock %}

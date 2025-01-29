@@ -1,19 +1,138 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h1>Создание соревнования</h1>
-<form method="POST">
-    <label for="title">Название:</label>
-    <input type="text" id="title" name="title" required>
+<style>
+    .competition-form-container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #1e1f26;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
 
-    <label for="description">Описание:</label>
-    <textarea id="description" name="description"></textarea>
+    .competition-form-title {
+        color: #bb86fc;
+        font-size: 2.2rem;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        text-align: center;
+    }
 
-    <label for="start_date">Дата начала:</label>
-    <input type="datetime-local" id="start_date" name="start_date" required>
+    .competition-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
 
-    <label for="end_date">Дата окончания:</label>
-    <input type="datetime-local" id="end_date" name="end_date" required>
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
 
-    <button type="submit">Создать</button>
-</form>
+    .competition-form label {
+        color: #e0e0ff;
+        font-size: 1.1rem;
+    }
+
+    .competition-form input[type="text"],
+    .competition-form input[type="datetime-local"],
+    .competition-form textarea {
+        width: 100%;
+        padding: 10px;
+        background: #2a2b38;
+        border: 1px solid rgba(147, 112, 219, 0.3);
+        border-radius: 8px;
+        color: #e0e0ff;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-sizing: border-box; /* Добавлено, чтобы поля не выходили за пределы контейнера */
+    }
+
+    .competition-form input[type="text"]:focus,
+    .competition-form input[type="datetime-local"]:focus,
+    .competition-form textarea:focus {
+        border-color: #bb86fc;
+        box-shadow: 0 0 8px rgba(187, 134, 252, 0.3);
+        outline: none;
+    }
+
+    .competition-form textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .competition-form button {
+        align-self: flex-start; /* Кнопка выравнивается по левому краю */
+        padding: 10px 20px;
+        background: rgba(147, 112, 219, 0.3);
+        color: #e0e0ff;
+        border: 1px solid rgba(147, 112, 219, 0.5);
+        border-radius: 25px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .competition-form button:hover {
+        background: rgba(147, 112, 219, 0.5);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .competition-form-container {
+            padding: 15px;
+            margin: 20px auto;
+        }
+
+        .competition-form-title {
+            font-size: 1.8rem;
+        }
+
+        .competition-form label {
+            font-size: 1rem;
+        }
+
+        .competition-form input[type="text"],
+        .competition-form input[type="datetime-local"],
+        .competition-form textarea {
+            font-size: 0.9rem;
+            padding: 8px;
+        }
+
+        .competition-form button {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
+    }
+</style>
+
+<div class="competition-form-container">
+    <h1 class="competition-form-title">Создание соревнования</h1>
+
+    <form method="POST" class="competition-form">
+        <div class="form-group">
+            <label for="title">Название:</label>
+            <input type="text" id="title" name="title" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Описание:</label>
+            <textarea id="description" name="description"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="start_date">Дата начала:</label>
+            <input type="datetime-local" id="start_date" name="start_date" required>
+        </div>
+
+        <div class="form-group">
+            <label for="end_date">Дата окончания:</label>
+            <input type="datetime-local" id="end_date" name="end_date" required>
+        </div>
+
+        <button type="submit">Создать</button>
+    </form>
+</div>
 {% endblock %}

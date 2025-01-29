@@ -1,6 +1,124 @@
 {% extends "admin_base_competition.html" %}
 
 {% block content %}
+<style>
+  /* Основные стили для контейнера */
+.container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    color: #F5F5F5;
+}
+
+/* Кнопка "Назад" */
+.btn-back {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background: rgba(147, 112, 219, 0.2);
+    color: #F5F5F5;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+.btn-back:hover {
+    background: rgba(147, 112, 219, 0.4);
+}
+
+/* Заголовок страницы */
+.page-title {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #FFFFFF;
+    text-shadow: 2px 2px 10px rgba(147, 112, 219, 0.5);
+}
+
+/* Контейнер для таблицы */
+.table-container {
+    background: rgba(30, 30, 30, 0.8);
+    border-radius: 10px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(147, 112, 219, 0.3);
+}
+
+/* Стили для таблицы */
+.team-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #F5F5F5;
+}
+
+.team-stats-table th,
+.team-stats-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(147, 112, 219, 0.2);
+}
+
+.team-stats-table th {
+    background: rgba(147, 112, 219, 0.2);
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+.team-stats-table tbody tr:hover {
+    background: rgba(147, 112, 219, 0.1);
+}
+
+/* Стили для ячеек */
+.team-name {
+    font-weight: bold;
+    color: #9370DB;
+}
+
+.team-members ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.team-members li {
+    margin-bottom: 5px;
+}
+
+.points {
+    color: #6A5ACD;
+    font-size: 0.9rem;
+}
+
+.total-points,
+.solved-challenges,
+.incidents,
+.critical-events {
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+/* Кнопка "Подробнее" */
+.btn-details {
+    display: inline-block;
+    padding: 8px 12px;
+    background: rgba(147, 112, 219, 0.3);
+    color: #F5F5F5;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+.btn-details:hover {
+    background: rgba(147, 112, 219, 0.5);
+}
+
+/* Сообщение "Команды не найдены" */
+.no-teams {
+    text-align: center;
+    padding: 20px;
+    color: #F5F5F5;
+    font-style: italic;
+}
+</style>>
 <div class="container">
     <!-- Кнопка "Назад к соревнованию" -->
     <a href="{{ url_for('view_competition', competition_id=competition.id) }}" class="btn btn-secondary">← Назад к соревнованию</a>

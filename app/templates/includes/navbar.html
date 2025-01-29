@@ -11,25 +11,28 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 1rem;
+            gap: 0.7rem;
+            flex-wrap: wrap;
         }
 
         /* Стили для ссылок */
         .nav-link {
-            color: #9370db; /* Фиолетовый цвет текста */
+            color: #9370db;
             text-decoration: none;
-            padding: 0.5rem 1rem;
-            font-size: 1rem;
-            transition: color 0.3s ease;
+            padding: 0.5rem 0.8rem;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
             border-radius: 5px;
-            background: transparent; /* Прозрачный фон */
+            background: transparent;
+            white-space: nowrap;
         }
 
         .nav-link:hover {
-            color: #bb86fc; /* Более яркий фиолетовый при наведении */
+            color: #bb86fc;
+            background: rgba(147, 112, 219, 0.1);
         }
 
-        /* Стили для раскрывающегося списка */
+        /* Раскрывающийся список */
         .dropdown {
             position: relative;
         }
@@ -47,21 +50,29 @@
         }
 
         .dropdown-content a {
-            color: #9370db; /* Фиолетовый цвет текста */
+            color: #9370db;
             padding: 0.5rem 1rem;
             text-decoration: none;
             display: block;
-            transition: color 0.3s ease;
-            background: transparent; /* Прозрачный фон */
+            transition: all 0.2s ease;
         }
 
         .dropdown-content a:hover {
-            color: #bb86fc; /* Более яркий фиолетовый при наведении */
+            color: #bb86fc;
+            background: rgba(147, 112, 219, 0.1);
         }
 
-        /* Показ выпадающего списка */
         .dropdown:hover .dropdown-content {
             display: block;
+        }
+
+        /* Убраны лишние отступы */
+        .navbar-nav {
+            display: flex;
+            gap: 0.7rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
         }
     </style>
 
@@ -69,11 +80,13 @@
         <a href="{{ url_for('index') }}" class="nav-link">Главная</a>
         <a href="{{ url_for('leaderboard') }}" class="nav-link">Рейтинг Пользователей</a>
         <a href="{{ url_for('team_leaderboard') }}" class="nav-link">Рейтинг команд</a>
+
         {% if current_user.is_authenticated %}
-        {% if not current_user.is_admin %}
-        <a class="nav-link" href="{{ url_for('user_sherlocks') }}">Шерлоки</a>
+            {% if not current_user.is_admin %}
+                <a class="nav-link" href="{{ url_for('user_sherlocks') }}">Шерлоки</a>
+            {% endif %}
         {% endif %}
-        {% endif %}
+
         {% if current_user.is_authenticated and current_user.team %}
             <div class="dropdown">
                 <a href="#" class="nav-link">Команда</a>
@@ -84,27 +97,17 @@
         {% endif %}
 
         {% if current_user.is_authenticated %}
-        {% if not current_user.is_admin %}
-        <ul class="navbar-nav">
-        <a class="nav-link" href="{{ url_for('user_competitions') }}">Соревнования</a>
-
-</ul>
-
+            {% if not current_user.is_admin %}
+                <ul class="navbar-nav">
+                    <li><a class="nav-link" href="{{ url_for('user_competitions') }}">Соревнования</a></li>
+                </ul>
             {% endif %}
 
-
-            <ul class="navbar-nav">
-
-
-    </ul>
-
-
-            <!-- Ссылка на администрирование (только для админа) -->
             {% if current_user.is_admin %}
-                <a href="{{ url_for('admin_sherlocks') }}" class="nav-link">Администрирование Шерлоками</a>
-                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">Администрирование</a>
-                <a href="{{ url_for('list_competitions') }}" class="nav-link">Администрирование Соревнований</a>
-
+                <ul class="navbar-nav">
+                    <li><a href="{{ url_for('admin') }}" class="nav-link">Администрирование</a></li>
+                    <li><a href="{{ url_for('list_competitions') }}" class="nav-link">Администрирование Соревнований</a></li>
+                </ul>
             {% endif %}
 
             <a href="{{ url_for('profile') }}" class="nav-link">Профиль</a>

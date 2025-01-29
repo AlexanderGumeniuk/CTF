@@ -1,75 +1,111 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style media="screen">
-  /* Общие стили */
-  .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-  }
+<style>
+    .profile-container {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 20px;
+    }
 
-  h1 {
-      color: white;
-      margin-bottom: 1.5rem;
-  }
+    .profile-title {
+        color: #bb86fc;
+        font-size: 2.2rem;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
 
-  h2 {
-      color: white;
-      margin-bottom: 1rem;
-  }
+    .profile-subtitle {
+        color: #bb86fc;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
 
-  .lead {
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-  }
+    .profile-lead {
+        color: #e0e0ff;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
 
-  /* Стили для аватара */
-  .rounded-circle {
-      border: 3px solid rgba(147, 112, 219, 0.3);
-      transition: all 0.3s ease;
-  }
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 3px solid rgba(147, 112, 219, 0.3);
+        transition: all 0.3s ease;
+    }
 
-  .rounded-circle:hover {
-      border-color: rgba(147, 112, 219, 0.7);
-      transform: scale(1.05);
-  }
+    .profile-avatar:hover {
+        border-color: rgba(147, 112, 219, 0.7);
+        transform: scale(1.05);
+    }
 
-  /* Стили для информации о пользователе */
-  .user-info {
-      background: rgba(147, 112, 219, 0.1);
-      border: 1px solid rgba(147, 112, 219, 0.3);
-      border-radius: 10px;
-      padding: 20px;
-      margin-top: 2rem;
-  }
+    .profile-info {
+        background: #2a2b38;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 2rem;
+        border: 1px solid rgba(147, 112, 219, 0.3);
+    }
 
-  .user-info p {
-      margin-bottom: 0.5rem;
-  }
+    .profile-info p {
+        color: #e0e0ff;
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-info strong {
+        color: #bb86fc;
+    }
+
+    @media (max-width: 768px) {
+        .profile-container {
+            padding: 15px;
+            margin: 20px auto;
+        }
+
+        .profile-title {
+            font-size: 1.8rem;
+        }
+
+        .profile-subtitle {
+            font-size: 1.5rem;
+        }
+
+        .profile-lead {
+            font-size: 1rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+        }
+    }
 </style>
 
-<div class="container">
-    <h1>Профиль пользователя: {{ user.username }}</h1>
+<div class="profile-container">
+    <h1 class="profile-title">Профиль пользователя: {{ user.username }}</h1>
 
     <!-- Аватар и основная информация -->
-    <div class="row mt-4">
-        <div class="col-md-3">
+    <div class="profile-info">
+        <div style="display: flex; align-items: center; gap: 20px;">
             {% if user.avatar %}
-            <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" alt="Аватар" class="img-fluid rounded-circle">
+            <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}"
+                 alt="Аватар"
+                 class="profile-avatar">
             {% else %}
-            <img src="{{ url_for('static', filename='default_avatar.png') }}" alt="Аватар" class="img-fluid rounded-circle">
+            <img src="{{ url_for('static', filename='default_avatar.png') }}"
+                 alt="Аватар"
+                 class="profile-avatar">
             {% endif %}
-        </div>
-        <div class="col-md-9">
-            <h2>{{ user.username }}</h2>
-            <p class="lead">Баллы: {{ user.total_points }}</p>
-            {% if team %}
-            <p class="lead">Команда: {{ team.name }}</p>
-            {% else %}
-            <p class="lead">Команда: Не состоит в команде</p>
-            {% endif %}
+            <div>
+                <h2 class="profile-subtitle">{{ user.username }}</h2>
+                <p class="profile-lead"><strong>Баллы:</strong> {{ user.total_points }}</p>
+                {% if team %}
+                <p class="profile-lead"><strong>Команда:</strong> {{ team.name }}</p>
+                {% else %}
+                <p class="profile-lead"><strong>Команда:</strong> Не состоит в команде</p>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

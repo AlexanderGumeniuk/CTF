@@ -1,124 +1,222 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style media="screen">
-  /* Стили для формы */
+<style>
+  .manage-container {
+      background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.9));
+      border-radius: 20px;
+      padding: 2rem;
+      margin: 20px auto;
+      max-width: 1200px;
+      box-shadow: 0 0 50px rgba(147, 112, 219, 0.3);
+      border: 1px solid rgba(147, 112, 219, 0.3);
+  }
+
+  .manage-title {
+      color: #fff;
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      text-shadow: 2px 2px 10px rgba(147, 112, 219, 0.5);
+  }
+
   .form-container {
       background: rgba(147, 112, 219, 0.1);
-      border: 1px solid rgba(147, 112, 219, 0.3);
-      border-radius: 10px;
-      padding: 20px;
+      border-radius: 15px;
+      padding: 2rem;
       margin-bottom: 2rem;
+      backdrop-filter: blur(10px);
+       max-width: 1200px;
+  }
+
+  .form-title {
+      color: #fff;
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
   }
 
   .form-label {
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 1rem;
+      color: #f5f5f5;
+      font-size: 1.1rem;
       margin-bottom: 0.5rem;
+      display: block;
   }
 
   .form-control {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(147, 112, 219, 0.3);
-      color: rgba(255, 255, 255, 0.9);
-      border-radius: 5px;
-      padding: 10px;
-      margin-bottom: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(147, 112, 219, 0.5);
+      color: #fff;
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 1.1rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  textarea {
+      height: 30px;
+      min-width: 1000px;
+  }
+
+  textarea {
+      height: 120px !important;
+      resize: vertical;
+  }
+
+  select.form-control {
+      height: 50px;
+      padding-right: 45px;
+      background-position: right 15px center;
   }
 
   .form-control:focus {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(147, 112, 219, 0.5);
-      box-shadow: 0 0 5px rgba(147, 112, 219, 0.5);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: #bb86fc;
+      box-shadow: 0 0 15px rgba(147, 112, 219, 0.3);
+  }
+
+  .btn-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      justify-content: center;
   }
 
   .btn-primary {
-      background: rgba(147, 112, 219, 0.3);
-      border: 1px solid rgba(147, 112, 219, 0.5);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 25px;
-      font-size: 16px;
-      transition: all 0.3s ease;
-  }
-
-  .btn-primary:hover {
-      background: rgba(147, 112, 219, 0.5);
-      transform: translateY(-2px);
+    background: rgba(147, 112, 219, 0.25);
+    border: 2px solid #9370db;
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: auto;
   }
 
   .btn-secondary {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 25px;
-      font-size: 16px;
-      transition: all 0.3s ease;
+    background: rgba(255, 50, 50, 0.25);  /* Прозрачный красный фон */
+    border: 2px solid #ff3232;            /* Ярко-красная граница (#ff3232 = RGB(255,50,50)) */
+    color: #fff;                          /* Белый текст */
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: auto;
   }
 
   .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.2);
       transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(147, 112, 219, 0.4);
   }
 
-  /* Стили для таблицы */
-  .table {
+  .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(147, 112, 219, 0.4);
+  }
+
+  .add-flag-btn {
+      background: rgba(147, 112, 219, 0.25);
+      border: 2px solid #9370db;
+      color: #fff;
+      padding: 12px 25px;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      width: auto;
+  }
+
+  .add-flag-btn:hover {
+      background: rgba(147, 112, 219, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(147, 112, 219, 0.3);
+  }
+
+  .add-flag-btn::before {
+      content: "+";
+      font-size: 1.5rem;
+      font-weight: 300;
+      line-height: 1;
+  }
+
+  .sherlock-table {
       width: 100%;
+      background: rgba(30, 30, 30, 0.8);
+      border-radius: 15px;
+      overflow: hidden;
       border-collapse: collapse;
-      margin-top: 1rem;
+      margin-top: 2rem;
   }
 
-  .table th, .table td {
-      padding: 12px;
+  .sherlock-table th,
+  .sherlock-table td {
+      padding: 1rem;
       text-align: left;
-      border-bottom: 1px solid rgba(147, 112, 219, 0.3);
-      color: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(147, 112, 219, 0.2);
+      color: #fff;
   }
 
-  .table th {
-      background: rgba(147, 112, 219, 0.1);
+  .sherlock-table th {
+      background: rgba(147, 112, 219, 0.2);
+      font-weight: 600;
   }
 
-  .table tr:hover {
-      background: rgba(147, 112, 219, 0.05);
+  .action-buttons {
+      display: flex;
+      gap: 0.5rem;
   }
 
   .btn-sm {
-      padding: 5px 10px;
+      padding: 8px 15px;
       font-size: 0.9rem;
-      border-radius: 15px;
+      border-radius: 20px;
   }
 
-  .btn-info {
-      background: rgba(0, 123, 255, 0.3);
-      border: 1px solid rgba(0, 123, 255, 0.5);
-  }
+  @media (max-width: 768px) {
+      .manage-container {
+          padding: 1rem;
+          margin: 10px;
+      }
 
-  .btn-info:hover {
-      background: rgba(0, 123, 255, 0.5);
-  }
+      .manage-title {
+          font-size: 2rem;
+      }
 
-  .btn-danger {
-      background: rgba(220, 53, 69, 0.3);
-      border: 1px solid rgba(220, 53, 69, 0.5);
-  }
+      .form-control {
+          padding: 12px 15px;
+          font-size: 1rem;
+          min-width: auto;
+      }
 
-  .btn-danger:hover {
-      background: rgba(220, 53, 69, 0.5);
-  }
+      .add-flag-btn {
+          width: 100%;
+          justify-content: center;
+          padding: 10px 20px;
+      }
 
-  h1, h2 {
-      color: white;
+      .sherlock-table th,
+      .sherlock-table td {
+          padding: 0.8rem;
+      }
   }
 </style>
 
-<div class="container">
-    <h1>Управление шерлоками</h1>
+<div class="manage-container">
+    <h1 class="manage-title">Управление шерлоками</h1>
 
-    <!-- Форма для добавления/редактирования шерлока -->
     <div class="form-container">
-        <h2 id="formTitle">Добавить новый шерлок</h2>
+        <h2 class="form-title" id="formTitle">Добавить новый шерлок</h2>
         <form id="sherlockForm" enctype="multipart/form-data">
             <input type="hidden" id="sherlockId" name="sherlock_id">
             <div class="mb-3">
@@ -150,24 +248,24 @@
                 <input type="file" class="form-control" id="files" name="files" multiple>
             </div>
             <div class="mb-3">
-                <label for="flags" class="form-label">Флаги</label>
+                <label class="form-label">Флаги</label>
                 <div id="flagsContainer">
-                    <div class="flag-input mb-2">
-                        <input type="text" class="form-control" name="flags[]" placeholder="Название флага" required>
-                        <input type="text" class="form-control mt-2" name="flags[]" placeholder="Описание флага" required>
-                        <input type="text" class="form-control mt-2" name="flags[]" placeholder="Ответ" required>
+                    <div class="flag-input mb-3">
+                        <input type="text" class="form-control mb-2" name="flags[]" placeholder="Название флага" required>
+                        <input type="text" class="form-control mb-2" name="flags[]" placeholder="Описание флага" required>
+                        <input type="text" class="form-control" name="flags[]" placeholder="Ответ" required>
                     </div>
                 </div>
-                <button type="button" class="btn btn-secondary mt-2" onclick="addFlagField()">Добавить флаг</button>
+                <button type="button" class="add-flag-btn" onclick="addFlagField()">Добавить флаг</button>
             </div>
-            <button type="submit" class="btn btn-primary" id="submitButton">Добавить шерлок</button>
-            <button type="button" class="btn btn-secondary" onclick="resetForm()">Сбросить</button>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary" id="submitButton">Добавить шерлок</button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">Сбросить</button>
+            </div>
         </form>
     </div>
 
-    <!-- Таблица с существующими шерлоками -->
-    <h2 class="mt-5">Список шерлоков</h2>
-    <table class="table">
+    <table class="sherlock-table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -187,8 +285,10 @@
                 <td>{{ sherlock.difficulty }}</td>
                 <td>{{ sherlock.points }}</td>
                 <td>
-                    <button class="btn btn-sm btn-info" onclick="editSherlock({{ sherlock.id }})">Редактировать</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteSherlock({{ sherlock.id }})">Удалить</button>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary btn-sm" onclick="editSherlock({{ sherlock.id }})">Ред.</button>
+                        <button class="btn btn-secondary btn-sm" onclick="deleteSherlock({{ sherlock.id }})">Удл.</button>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -197,27 +297,25 @@
 </div>
 
 <script>
-    // Функция для добавления полей для нового флага
     function addFlagField() {
         const container = document.getElementById('flagsContainer');
         const flagInput = document.createElement('div');
-        flagInput.className = 'flag-input mb-2';
+        flagInput.className = 'flag-input mb-3';
         flagInput.innerHTML = `
-            <input type="text" class="form-control" name="flags[]" placeholder="Название флага" required>
-            <input type="text" class="form-control mt-2" name="flags[]" placeholder="Описание флага" required>
-            <input type="text" class="form-control mt-2" name="flags[]" placeholder="Ответ" required>
+            <input type="text" class="form-control mb-2" name="flags[]" placeholder="Название флага" required>
+            <input type="text" class="form-control mb-2" name="flags[]" placeholder="Описание флага" required>
+            <input type="text" class="form-control" name="flags[]" placeholder="Ответ" required>
         `;
         container.appendChild(flagInput);
     }
 
-    // Функция для сброса формы
     function resetForm() {
         document.getElementById('sherlockForm').reset();
         document.getElementById('flagsContainer').innerHTML = `
-            <div class="flag-input mb-2">
-                <input type="text" class="form-control" name="flags[]" placeholder="Название флага" required>
-                <input type="text" class="form-control mt-2" name="flags[]" placeholder="Описание флага" required>
-                <input type="text" class="form-control mt-2" name="flags[]" placeholder="Ответ" required>
+            <div class="flag-input mb-3">
+                <input type="text" class="form-control mb-2" name="flags[]" placeholder="Название флага" required>
+                <input type="text" class="form-control mb-2" name="flags[]" placeholder="Описание флага" required>
+                <input type="text" class="form-control" name="flags[]" placeholder="Ответ" required>
             </div>
         `;
         document.getElementById('formTitle').innerText = 'Добавить новый шерлок';
@@ -225,12 +323,10 @@
         document.getElementById('sherlockId').value = '';
     }
 
-    // Функция для редактирования шерлока
     function editSherlock(sherlockId) {
         fetch(`/admin/sherlocks/${sherlockId}`)
             .then(response => response.json())
             .then(data => {
-                // Заполняем форму данными шерлока
                 document.getElementById('sherlockId').value = data.id;
                 document.getElementById('title').value = data.title;
                 document.getElementById('description').value = data.description;
@@ -238,11 +334,9 @@
                 document.getElementById('difficulty').value = data.difficulty;
                 document.getElementById('points').value = data.points;
 
-                // Очищаем контейнер с флагами
                 const flagsContainer = document.getElementById('flagsContainer');
                 flagsContainer.innerHTML = '';
 
-                // Добавляем флаги
                 data.flags.forEach(flag => {
                     addFlagField();
                     const flagInputs = flagsContainer.lastElementChild.querySelectorAll('input');
@@ -251,13 +345,11 @@
                     flagInputs[2].value = flag.answer;
                 });
 
-                // Меняем заголовок и текст кнопки
                 document.getElementById('formTitle').innerText = 'Редактировать шерлок';
-                document.getElementById('submitButton').innerText = 'Сохранить изменения';
+                document.getElementById('submitButton').innerText = 'Сохранить';
             });
     }
 
-    // Функция для удаления шерлока
     function deleteSherlock(sherlockId) {
         if (confirm('Вы уверены, что хотите удалить этот шерлок?')) {
             fetch(`/admin/sherlocks/${sherlockId}/delete`, {
@@ -275,10 +367,8 @@
         }
     }
 
-    // Обработка отправки формы
     document.getElementById('sherlockForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const formData = new FormData(e.target);
         const sherlockId = document.getElementById('sherlockId').value;
 
@@ -292,7 +382,7 @@
 
         const result = await response.json();
         if (result.success) {
-            alert(sherlockId ? 'Шерлок успешно обновлен!' : 'Шерлок успешно добавлен!');
+            alert(sherlockId ? 'Изменения сохранены!' : 'Шерлок добавлен!');
             window.location.reload();
         } else {
             alert('Ошибка: ' + result.message);
